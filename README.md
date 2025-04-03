@@ -234,7 +234,7 @@ In the examples below, the time [RFC3339](https://www.rfc-editor.org/rfc/rfc3339
 | `{April 2}`            | `MMMMd`    | July 15             | 15. Juli           | 15 липня           | Full month + day  |
 | `{Apr 2}`              | `MMMd`     | Jul 15              | 15. Juli           | 15 лип.            | Abbr. month + day |
 | `{Apr 2025}`           | `MMMy`     | Jul 2025            | Jul. 2025          | лип. 2025          | Full month + year |
-| `{Monday}`             | `EEEE`     | Tuesday             | Dienstag           | вiвторок           | Weekday only      |
+| `{Monday}`             | `EEEE`     | Tuesday             | Dienstag           | Вiвторок           | Weekday only      |
 | `{April 2, 3:45PM}`    | `MMMMdjm`  | July 15, 7:44 PM    | 15. Juli, 19:44    | 15 липня, 19:44    | Date + short time |
 | `{2025}`               | `y`        | 2025                | 2025               | 2025               | Year only         |
 | `{April 2, 3:45:30PM}` | `MMMMdjms` | July 15, 7:44:11 PM | 15. Juli, 19:44:11 | 15 липня, 19:44:11 | Full datetime     |
