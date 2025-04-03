@@ -335,10 +335,16 @@ As with any technology, TIK introduces both advantages and trade-offs.
 
 ## FAQ
 
-### How about preloading translation texts by key using IDE plugins?
+### How about just preloading translation texts by key using IDE plugins?
 
 While theoretically viable, this approach is inherently limited to IDEs that support
 such a feature. Additionally, those IDEs/extensions must be compatible with your
 specific translation file format and message encoding (e.g., ICU, Fluent, ARB).
 It also breaks down entirely when browsing code outside the IDE — for example,
 on GitHub — where no plugin can preload or resolve translation keys.
+
+### Could Fluent be used instead of ICU?
+
+[Fluent](https://projectfluent.org/) can be considered a worthy
+[counterpart to the ICU MessageFormat](https://github.com/projectfluent/fluent/wiki/Fluent-and-ICU-MessageFormat)
+and nothing speaks against using it as an alternative TIK backend.
