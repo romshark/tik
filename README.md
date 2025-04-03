@@ -199,7 +199,7 @@ The constant `{4th}` represents an ordinal plural number.
 | `int(102)`  | 102nd   | 102.   | 102-ге   |
 | `int(103)`  | 103rd   | 103.   | 103-тє   |
 | `int(104)`  | 104th   | 104.   | 104-те   |
-| `int(1000)` | 1,000th | 1.000. | 1 000-те |
+| `int(1000)` | 1,000th | 1.000. | 1 000-не |
 
 Expected information type includes both integers and floating point numbers
 (e.g. in Go `int`, `float64`, etc.).
@@ -217,7 +217,7 @@ The constant `{4th}` also accepts numbers combined with gender.
 | `int(102)`  | `102-га`    | `102-ий`    | `102-ге`    | `102.`          |
 | `int(103)`  | `103-тя`    | `103-ій`    | `103-тє`    | `103.`          |
 | `int(104)`  | `104-та`    | `104-ий`    | `104-те`    | `104.`          |
-| `int(1000)` | `1 000-та`  | `1 000-ий`  | `1 000-те`  | `1,000.`        |
+| `int(1000)` | `1 000-та`  | `1 000-ий`  | `1 000-не`  | `1,000.`        |
 
 ### ICU Encoding - Time Placeholders
 
