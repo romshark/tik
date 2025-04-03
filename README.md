@@ -335,6 +335,16 @@ As with any technology, TIK introduces both advantages and trade-offs.
 
 ## FAQ
 
+### Is this overcomplication really worth it and aren't simple keys enough?
+
+The answer depends on perspective. While simple keys offer clear benefits, they also come
+with certain [limitations](#problem). It is likely that, for the foreseeable future,
+code will continue to be written and maintained primarily by humans. At the same time,
+large language models are demonstrating increasing proficiency in translation tasks.
+The concept behind TIK is to define clear, human-readable messages directly in the
+source code, delegating the complexity of generating accurate ICU messages for
+various languages to language models.
+
 ### How about just preloading translation texts by key using IDE plugins?
 
 While theoretically viable, this approach is inherently limited to IDEs that support
