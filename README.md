@@ -345,6 +345,9 @@ The concept behind TIK is to define clear, human-readable messages directly in t
 source code, delegating the complexity of generating accurate ICU messages for
 various languages to language models.
 
+To give you some context, only the last sentence of this answer was actually written
+by a human.
+
 ### How about just preloading translation texts by key using IDE plugins?
 
 While theoretically viable, this approach is inherently limited to IDEs that support
