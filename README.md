@@ -22,7 +22,7 @@ Currency codes are formatted according to
 ## Problem
 
 [ICU messages](https://support.crowdin.com/icu-message-syntax) are a powerful i18n tool
-but are too complex and unreadable when defined inside the application source code.
+but are too complex and unreadable when used directly inside the application source code.
 
 Consider the following example:
 
