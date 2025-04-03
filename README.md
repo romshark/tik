@@ -89,6 +89,10 @@ Today {he} earned {$1.20} for completing {2} tasks in section '{"job"}' at {3:45
 
 The constants (and any of their variants) are case insensitive.
 
+This concept is inspired by the
+[time formatting](https://cs.opensource.google/go/go/+/master:src/time/format.go;l=109)
+constants used in Go’s standard library `time` package.
+
 ### String Placeholders
 
 String placeholders `{"..."}` accept any arbitrary string value within the quotes:
