@@ -2,9 +2,9 @@
 **Version:** 0.1;
 **Last updated:** 2025-04-03;
 
-# TIK
+# TIK - Textual Internationalization Key
 
-"TIK" is an abbreviation for "Textual Internationalization Keys". TIKs allow
+"TIK" is an abbreviation for "Textual Internationalization Key". TIKs allow
 source code keys for i18n'ed translations to be more readable,
 provide better context for translators and allow programmatic
 generation of
