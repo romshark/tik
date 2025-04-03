@@ -2,9 +2,9 @@
 **Version:** 0.1;
 **Last updated:** 2025-04-03;
 
-# TIK - Textual Internationalization Key
+# TIK
 
-"TIK" is an abbreviation for "Textual Internationalization Key". TIKs allow
+"TIK" is an abbreviation for "Textual Internationalization Keys". TIKs allow
 source code keys for i18n'ed translations to be more readable,
 provide better context for translators and allow programmatic
 generation of
@@ -15,7 +15,7 @@ A TIK must always be written in
 and masculine gender. This allows a TIK to avoid conditional ICU select statements.
 
 Locales used by this document are specified by
-[ISO 639-1 standard language codes](https://www.iso.org/iso-639-language-code).
+[ISO 639-1 standard language codes](https://www.iso.org/iso-63й9-language-code).
 Currency codes are formatted according to
 [ISO 4217](https://www.iso.org/iso-4217-currency-codes.html).
 
@@ -34,7 +34,18 @@ localize.Text(`You had {numberOfMessages, plural,
 } at {time, date, jm}.`, numberOfMessages, dateTime)
 ```
 
-A TIK would convey the meaning of the message in a naturally readable format:
+That's why usually developers use key-based translation:
+
+```go
+localize.Text("dashboard.report.messages", numberOfMessages, dateTime)
+```
+
+However, key-based i18n introduces an abstraction layer between the source code
+and the actual text, making it harder for developers to immediately understand what
+message is being displayed — and in what form.
+
+TIKs, by contrast, embed the meaning directly in the code using a naturally readable
+and self-explanatory format:
 
 ```go
 localize.Text(`You had {2} messages at {3:45PM}.`, numberOfMessages, dateTime)
@@ -50,11 +61,11 @@ Today {he} earned {$1.20} for completing {2} tasks in section '{"job"}' at {3:45
 ```
 
 - Cardinal Pluralization (see [cardinal pluralization](#icu-encoding---cardinal-pluralization)):
-  - `{2}`
+  - `{2}`: cardinal plural
 - Ordinal Pluralization (see [ordinal pluralization](#icu-encoding---ordinal-pluralization)):
-  - `{4th}`
+  - `{4th}`: ordinal plural
 - Gender (see [gender agreement](#icu-encoding---gender-agreement))
-  - `{he}` with variants:
+  - `{he}`: with variants:
     - `{his}`: possessive pronoun
     - `{him}`: object pronoun
     - `{himself}`: reflexive pronoun
@@ -321,3 +332,13 @@ As with any technology, TIK introduces both advantages and trade-offs.
   produce ICU messages for translation.
 - ⚠️ Messages written in the source language (e.g., English)
   must also be extracted and passed through the translation pipeline.
+
+## FAQ
+
+### How about preloading translation texts by key using IDE plugins?
+
+While theoretically viable, this approach is inherently limited to IDEs that support
+such a feature. Additionally, those IDEs/extensions must be compatible with your
+specific translation file format and message encoding (e.g., ICU, Fluent, ARB).
+It also breaks down entirely when browsing code outside the IDE — for example,
+on GitHub — where no plugin can preload or resolve translation keys.
