@@ -193,6 +193,8 @@ The constant `{4th}` represents an ordinal plural number.
 | `int(3)`    | 3rd     | 3.     | 3-тє     |
 | `int(4)`    | 4th     | 4.     | 4-те     |
 | `int(5)`    | 5th     | 5.     | 5-те     |
+| `int(7)`    | 7th     | 7.     | 7-ме     |
+| `int(8)`    | 8th     | 8.     | 8-ме     |
 | `int(101)`  | 101st   | 101.   | 101-ше   |
 | `int(102)`  | 102nd   | 102.   | 102-ге   |
 | `int(103)`  | 103rd   | 103.   | 103-тє   |
