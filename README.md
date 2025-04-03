@@ -361,3 +361,8 @@ on GitHub — where no plugin can preload or resolve translation keys.
 [Fluent](https://projectfluent.org/) can be considered a worthy
 [counterpart to the ICU MessageFormat](https://github.com/projectfluent/fluent/wiki/Fluent-and-ICU-MessageFormat)
 and nothing speaks against using it as an alternative TIK backend.
+
+### Why use masculine gender by default instead of the neutral `they`?
+
+Valid point! The simple truth is that `he` is shorter than `she` and `they`.
+Luckily, this is [configurable](#configuration).
