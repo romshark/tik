@@ -50,11 +50,11 @@ Today {he} earned {$1.20} for completing {2} tasks in section '{"job"}' at {3:45
 ```
 
 - Cardinal Pluralization (see [cardinal pluralization](#icu-encoding---cardinal-pluralization)):
-  - `{2}`: cardinal plural
+  - `{2}`
 - Ordinal Pluralization (see [ordinal pluralization](#icu-encoding---ordinal-pluralization)):
-  - `{4th}`: ordinal plural
+  - `{4th}`
 - Gender (see [gender agreement](#icu-encoding---gender-agreement))
-  - `{he}`: with variants:
+  - `{he}` with variants:
     - `{his}`: possessive pronoun
     - `{him}`: object pronoun
     - `{himself}`: reflexive pronoun
