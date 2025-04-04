@@ -1,6 +1,6 @@
 **Author:** Roman Scharkov <roman.scharkov@gmail.com>;
-**Version:** 0.1;
-**Last updated:** 2025-04-03;
+**Version:** 0.2;
+**Last updated:** 2025-04-05;
 
 # TIK - Textual Internationalization Key
 
@@ -95,22 +95,10 @@ constants used in Go’s standard library `time` package.
 
 ### String Placeholders
 
-String placeholders `{"..."}` accept any arbitrary string value within the quotes:
+String placeholders `{"..."}` accept arbitrary string values within the quotes:
 
 ```
 This can be {"anything"} or {"anyone"}, {"cheers"}.
-```
-
-When a placeholder with gender or plural behavior is detected,
-wrap the placeholder and all tokens to the right,
-up to the first hard sentence boundary (`.`, `!`, `?`).:
-
-```go
-localize.Text(
-    `And so the journey began, {"John"} had embarked onto the ship.`+
-        `The captain welcomed him warmly!`, // TIK
-    localize.WithGender{ Value: "userName", Gender: localize.Male },  // value
-)
 ```
 
 generated ICU:
@@ -119,6 +107,18 @@ generated ICU:
 And so the journey began, {gender, select,
   other { {userName} had embarked onto the ship.}
 } The captain welcomed him warmly!
+```
+
+A string placeholder may be infused with gender and pluralization information,
+which isn't specified in the TIK but can be provided programmatically as in the
+following example in Go:
+
+```go
+localize.Text(
+    `And so the journey began, {"John"} had embarked onto the ship.`+
+      `The captain welcomed him warmly!`, // TIK
+    localize.WithGender{ Value: "userName", Gender: localize.Male },  // value
+)
 ```
 
 ℹ️ Gender may affect translation in some languages:
@@ -130,6 +130,31 @@ And so the journey began, {gender, select,
 | French    | `John est prêt`   | `Martha est prête`  |
 | Spanish   | `John está listo` | `Martha está lista` |
 | Russian   | `John готов`      | `Martha готова`     |
+
+#### String Placeholders Invariants
+
+The string placeholder text body (i.e., the text between the braces) must not be empty.
+
+```
+This is an invalid TIK: {""}.
+```
+
+The string placeholder text body must not start or end with a Unicode whitespace character
+(as defined by [Unicode](https://unicode.org/charts/collation/chart_Whitespace.html)):
+
+```
+This is an invalid TIK: {" foo "}.
+```
+
+The text body of a string placeholder must not contain any of: `\`, `{`, `}` and `"`.
+
+```
+This is an invalid TIK: {"abc\"def\"ghi"}.
+```
+
+```
+This is an invalid TIK: {"abc{def}ghi"}.
+```
 
 ## ICU Encoding
 
@@ -149,6 +174,11 @@ localize.Text(`By {3:45PM}, {"John"} received {2} emails.`,
     time.Now(), "Max", len(emailsReceived))
 ```
 
+### ICU Encoding - String Placeholders
+
+A string placeholder with gender or plural behavior wraps all tokens to the right,
+up to the first hard sentence boundary (`.`, `!`, `?`).:
+
 ### ICU Encoding - Gender Agreement
 
 Constants such as `{he}` (and all of its variations), as well as any `{"..."}` strings
@@ -167,7 +197,7 @@ include it in the ICU block:
 
 ### ICU Encoding - Cardinal Pluralization
 
-When a plural constant `{2}` is encountered, wrap the placeholder and all tokens to
+A plural constant `{2}` wraps the placeholder and all tokens to
 the right up to the first hard sentence boundary (`.`, `!`, `?`).:
 
 ```
