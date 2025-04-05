@@ -98,10 +98,10 @@ local.Text(`You had {2 messages} at {3:45PM}.`, numberOfMessages, dateTime)
 internationalization tool but are too complex, unreadable and error-prone when used
 directly inside the application source code.
 
-Consider the following example:
+Consider the following example in Go:
 
 ```go
-local.Text(`You had {numberOfMessages, plural,
+Localize(`You had {numberOfMessages, plural,
     =0 {no messages}
     one {# message}
     other {# messages}
