@@ -4,25 +4,96 @@
 
 # TIK - Textual Internationalization Key
 
-"TIK" is an abbreviation for "Textual Internationalization Key". TIKs allow
-source code keys for i18n'ed translations to be more readable,
-provide better context for translators and allow programmatic
-generation of
+**Table of Contents**
+
+- [Introduction](#introduction)
+- [Problem](#problem)
+  - [Key-based Translation](#key-based-translation)
+  - [ICU Messages](#icu-messages)
+- [TIK Syntax Rules](#tik-syntax-rules)
+  - [Magic Constants](#magic-constants)
+  - [String Placeholders](#string-placeholders)
+    - [String Placeholder Invariants](#string-placeholder-invariants)
+- [ICU Encoding](#icu-encoding)
+- [ICU Encoding – Positional Mapping](#icu-encoding--positional-mapping)
+  - [ICU Encoding - String Placeholders](#icu-encoding---string-placeholders)
+  - [ICU Encoding - Gender Agreement](#icu-encoding---gender-agreement)
+  - [ICU Encoding - Cardinal Pluralization](#icu-encoding---cardinal-pluralization)
+  - [ICU Encoding - Ordinal Pluralization](#icu-encoding---ordinal-pluralization)
+  - [ICU Encoding - Time Placeholders](#icu-encoding---time-placeholders)
+  - [ICU Encoding - Currency](#icu-encoding---currency)
+  - [ICU Encoding - Number](#icu-encoding---number)
+- [Configuration Guidelines](#configuration-guidelines)
+  - [Magic Constant Customization](#magic-constant-customization)
+  - [Domains](#domains)
+- [Limitations](#limitations)
+  - [Limitations of Algorithmic ICU Message Generation](#limitations-of-algorithmic-icu-message-generation)
+- [Standards and Conventions](#standards-and-conventions)
+- [FAQ](#faq)
+  - [Is this overcomplication really worth it and aren't simple keys enough?](#is-this-overcomplication-really-worth-it-and-arent-simple-keys-enough)
+  - [How about just preloading translation texts by key using IDE plugins?](#how-about-just-preloading-translation-texts-by-key-using-ide-plugins)
+  - [Could Fluent be used instead of ICU?](#could-fluent-be-used-instead-of-icu)
+  - [Why use masculine gender by default instead of the neutral `they`?](#why-use-masculine-gender-by-default-instead-of-the-neutral-they)
+
+---
+
+## Introduction
+
+"TIK" is an abbreviation for "Textual Internationalization Key".
+TIKs make translation keys in source code more readable, provide better context for
+translators, and enable programmatic generation of
 [ICU messages](https://unicode-org.github.io/icu/userguide/format_parse/messages/).
-
-A TIK must always be written in
-[CLDR plural rule `other`](https://cldr.unicode.org/index/cldr-spec/plural-rules)
-and masculine gender. This allows a TIK to avoid conditional ICU select statements.
-
-Locales used by this document are specified by
-[ISO 639-1 standard language codes](https://www.iso.org/iso-63й9-language-code).
-Currency codes are formatted according to
-[ISO 4217](https://www.iso.org/iso-4217-currency-codes.html).
 
 ## Problem
 
-[ICU messages](https://support.crowdin.com/icu-message-syntax) are a powerful i18n tool
-but are too complex and unreadable when used directly inside the application source code.
+Internationalization is hard - and most developers avoid it.
+Supporting multiple languages and regions often requires significant effort,
+costly tooling, complex workflows and discipline,
+which many teams are unwilling or unable to take on.
+
+Translators often lack context, leading to errors. Messages are fragmented for reuse,
+which breaks grammar in many languages, etc.
+
+All this often conveys lack of professionalism to the end user and reduces their trust
+in the product.
+
+### Key-based Translation
+
+Traditional internationalization relies heavily on key-based systems, where developers
+assign abstract identifiers (e.g. `"dashboard.report.summary"`) to strings
+stored in external files.
+
+```go
+localize.Text("dashboard.report.summary", numberOfMessages, dateTime)
+```
+
+Keys offer clear benefits, such as:
+
+- **Separation of concerns -** Developers reference keys,
+  while translators manage the actual text.
+- **Reusability** - the same message can be used across different contexts or interfaces.
+- **Integration** - keys work seamlessly with most existing localization infrastructure.
+
+However, key-based i18n introduces an abstraction layer between the source code
+and the actual text, making it harder for developers to immediately understand what
+message is being displayed - and in what form.
+
+Naming is inherently hard - and coming up with meaningful, consistent translation keys
+can be difficult, especially at scale. Poorly chosen keys often lead to confusion,
+redundancy, or fragile reuse patterns.
+
+TIKs, by contrast, embed the meaning directly in the code using a naturally readable
+and self-explanatory format:
+
+```go
+localize.Text(`You had {2} messages at {3:45PM}.`, numberOfMessages, dateTime)
+```
+
+### ICU Messages
+
+[ICU messages](https://support.crowdin.com/icu-message-syntax) are a powerful
+internationalization tool but are too complex, unreadable and error-prone when used
+directly inside the application source code.
 
 Consider the following example:
 
@@ -34,24 +105,16 @@ localize.Text(`You had {numberOfMessages, plural,
 } at {time, date, jm}.`, numberOfMessages, dateTime)
 ```
 
-That's why usually developers use key-based translation:
+With TIK, developers write simple, readable keys and still get the full power of
+ICU under the hood.
 
-```go
-localize.Text("dashboard.report.messages", numberOfMessages, dateTime)
-```
+## TIK Syntax Rules
 
-However, key-based i18n introduces an abstraction layer between the source code
-and the actual text, making it harder for developers to immediately understand what
-message is being displayed — and in what form.
+A TIK must always be written in
+[CLDR plural rule `other`](https://cldr.unicode.org/index/cldr-spec/plural-rules)
+and masculine gender. This allows a TIK to avoid conditional ICU select statements.
 
-TIKs, by contrast, embed the meaning directly in the code using a naturally readable
-and self-explanatory format:
-
-```go
-localize.Text(`You had {2} messages at {3:45PM}.`, numberOfMessages, dateTime)
-```
-
-## Magic Constants
+### Magic Constants
 
 Magic constants allow TIKs to be easily readable yet auto-translatable to ICU.
 Below is an example TIK that uses multiple magic constants.
@@ -131,7 +194,7 @@ localize.Text(
 | Spanish   | `John está listo` | `Martha está lista` |
 | Russian   | `John готов`      | `Martha готова`     |
 
-#### String Placeholders Invariants
+#### String Placeholder Invariants
 
 The string placeholder text body (i.e., the text between the braces) must not be empty.
 
@@ -424,17 +487,29 @@ and rewrite the ICU message with proper semantics:
 }
 ```
 
+## Standards and Conventions
+
+- Plural categories follow [Unicode CLDR](https://cldr.unicode.org/index/cldr-spec/plural-rules)
+- Language codes follow [ISO 639-1](https://www.iso.org/iso-639-language-codes.html)
+- Currency codes follow [ISO 4217](https://www.iso.org/iso-4217-currency-codes.html)
+
 ## FAQ
 
 ### Is this overcomplication really worth it and aren't simple keys enough?
 
-The answer depends on perspective. While simple keys offer clear benefits, they also come
-with certain [limitations](#problem). It is likely that, for the foreseeable future,
-code will continue to be written and maintained primarily by humans. At the same time,
-large language models are demonstrating increasing proficiency in translation tasks.
-The concept behind TIK is to define clear, human-readable messages directly in the
-source code, delegating the complexity of generating accurate ICU messages for
-various languages to language models.
+The answer depends on perspective. While simple keys like `dashboard.newsfeed.summary`
+offer clear benefits, such as:
+
+- separation of concerns
+- easy reuse across contexts
+- and compatibility with existing localization systems
+
+they also come with certain [limitations](#problem).
+It is likely that, for the foreseeable future, code will continue to be written and
+maintained primarily by humans. At the same time, large language models are demonstrating
+increasing proficiency in translation tasks. The concept behind TIK is to define clear,
+human-readable messages directly in the source code, delegating the complexity of
+generating accurate ICU messages for various languages to language models.
 
 To give you some context, only the last sentence of this answer was actually written
 by a human.
@@ -444,8 +519,8 @@ by a human.
 While theoretically viable, this approach is inherently limited to IDEs that support
 such a feature. Additionally, those IDEs/extensions must be compatible with your
 specific translation file format and message encoding (e.g., ICU, Fluent, ARB).
-It also breaks down entirely when browsing code outside the IDE — for example,
-on GitHub — where no plugin can preload or resolve translation keys.
+It also breaks down entirely when browsing code outside the IDE - for example,
+on GitHub - where no plugin can preload or resolve translation keys.
 
 ### Could Fluent be used instead of ICU?
 
