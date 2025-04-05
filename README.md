@@ -1,5 +1,5 @@
 **Author:** Roman Scharkov <roman.scharkov@gmail.com>;
-**Version:** 0.2;
+**Version:** 0.3;
 **Last updated:** 2025-04-05;
 
 # TIK - Textual Internationalization Key
@@ -12,12 +12,16 @@
   - [ICU Messages](#icu-messages)
 - [TIK Syntax Rules](#tik-syntax-rules)
   - [Magic Constants](#magic-constants)
+  - [Cardinal Pluralization](#cardinal-pluralization)
+    - [Cardinal Pluralization Invariants](#cardinal-pluralization-invariants)
   - [String Placeholders](#string-placeholders)
     - [String Placeholders with Gender and Pluralization](#string-placeholders-with-gender-and-pluralization)
     - [String Placeholder Invariants](#string-placeholder-invariants)
 - [ICU Encoding](#icu-encoding)
 - [ICU Encoding – Positional Mapping](#icu-encoding--positional-mapping)
   - [ICU Encoding - String Placeholders](#icu-encoding---string-placeholders)
+    - [ICU Encoding - String Placeholders With Gender](#icu-encoding---string-placeholders-with-gender)
+    - [ICU Encoding - String Placeholders With Pluralization](#icu-encoding---string-placeholders-with-pluralization)
   - [ICU Encoding - Gender Agreement](#icu-encoding---gender-agreement)
   - [ICU Encoding - Cardinal Pluralization](#icu-encoding---cardinal-pluralization)
   - [ICU Encoding - Ordinal Pluralization](#icu-encoding---ordinal-pluralization)
@@ -28,13 +32,13 @@
   - [Magic Constant Customization](#magic-constant-customization)
   - [Domains](#domains)
 - [Limitations](#limitations)
-  - [Limitations of Algorithmic ICU Message Generation](#limitations-of-algorithmic-icu-message-generation)
 - [Standards and Conventions](#standards-and-conventions)
 - [FAQ](#faq)
   - [Is this overcomplication really worth it and aren't simple keys enough?](#is-this-overcomplication-really-worth-it-and-arent-simple-keys-enough)
   - [How about just preloading translation texts by key using IDE plugins?](#how-about-just-preloading-translation-texts-by-key-using-ide-plugins)
   - [Could Fluent be used instead of ICU?](#could-fluent-be-used-instead-of-icu)
   - [Why use masculine gender by default instead of the neutral `they`?](#why-use-masculine-gender-by-default-instead-of-the-neutral-they)
+- [Special Thanks](#special-thanks)
 
 ## Introduction
 
@@ -63,7 +67,7 @@ assign abstract identifiers (e.g. `"dashboard.report.summary"`) to strings
 stored in external files.
 
 ```go
-localize.Text("dashboard.report.summary", numberOfMessages, dateTime)
+local.Text("dashboard.report.summary", numberOfMessages, dateTime)
 ```
 
 Keys offer clear benefits, such as:
@@ -85,7 +89,7 @@ TIKs, by contrast, embed the meaning directly in the code using a naturally read
 and self-explanatory format:
 
 ```go
-localize.Text(`You had {2} messages at {3:45PM}.`, numberOfMessages, dateTime)
+local.Text(`You had {2 messages} at {3:45PM}.`, numberOfMessages, dateTime)
 ```
 
 ### ICU Messages
@@ -97,7 +101,7 @@ directly inside the application source code.
 Consider the following example:
 
 ```go
-localize.Text(`You had {numberOfMessages, plural,
+local.Text(`You had {numberOfMessages, plural,
     =0 {no messages}
     one {# message}
     other {# messages}
@@ -119,11 +123,13 @@ Magic constants allow TIKs to be easily readable yet auto-translatable to ICU.
 Below is an example TIK that uses multiple magic constants.
 
 ```
-Today {he} earned {$1.20} for completing {2} tasks in section '{"job"}' at {3:45PM}.
+Today {he} earned {$1.20} for completing {2 tasks} in section '{"job"}' at {3:45PM}.
 ```
 
+- String Placeholders (see [string placeholders](#string-placeholders))
+  - `{"..."}`
 - Cardinal Pluralization (see [cardinal pluralization](#icu-encoding---cardinal-pluralization)):
-  - `{2}`: cardinal plural
+  - `{2 ...}`: cardinal plural
 - Ordinal Pluralization (see [ordinal pluralization](#icu-encoding---ordinal-pluralization)):
   - `{4th}`: ordinal plural
 - Gender (see [gender agreement](#icu-encoding---gender-agreement))
@@ -155,6 +161,56 @@ This concept is inspired by the
 [time formatting](https://cs.opensource.google/go/go/+/master:src/time/format.go;l=109)
 constants used in Go’s standard library `time` package.
 
+### Cardinal Pluralization
+
+A pluralization statement `{2 ...}` begins with `{2 ` and end with `}`.
+The `2` is the placeholder for the actual number value.
+The contents `...` may contain any text that is not explicitly forbidden
+(see [invariants](#cardinal-pluralization-invariants)).
+
+The contents may contain any number of string placeholders and magic constants:
+
+```
+You have {2 {"apples"} and {"bananas"}}.
+```
+
+```
+You had {2 of {his} tasks assigned at {3:45PM}}
+```
+
+#### Cardinal Pluralization Invariants
+
+1. Plural statements must not begin and end with a Unicode whitespace character.
+(as defined by [Unicode](https://unicode.org/charts/collation/chart_Whitespace.html)):
+
+```
+This TIK is illegal: {2  <- two spaces here}
+```
+
+```
+This TIK is illegal: {2 space here-> }
+```
+
+2. Plural statements cannot be nested:
+
+```
+This TIK is illegal: {2 first level {2 second level}}
+```
+
+3. Plural statement contents cannot start with a magic constant:
+
+```
+This TIK is illegal: {2 {3}}
+```
+
+```
+This TIK is illegal: {2 {USD 1}}
+```
+
+```
+This TIK is illegal: {2 {his}}
+```
+
 ### String Placeholders
 
 String placeholders `{"..."}` accept arbitrary string values within the quotes:
@@ -185,9 +241,9 @@ which isn't specified in the TIK but can be provided programmatically in the sou
 as in the following example in Go:
 
 ```go
-localize.Text(
+local.Text(
     `And so the journey began, {"John"} had embarked onto the ship.`, // TIK
-    localize.TextValue{ Value: "Ada", Gender: localize.Female },
+    localize.String{ Value: "Ada", Gender: localize.GenderFemale },
 )
 ```
 
@@ -256,53 +312,187 @@ All placeholders are mapped positionally, meaning that the order of occurrence i
 is the order expected for parameter inputs.
 
 ```
-By {3:45PM}, {"John"} received {2} emails.
+By {3:45PM}, {"John"} received {2 emails}.
 ```
 
-Example in Go:
+generated ICU:
+```
+By { 0_, time, short }, { 1_gender, select,
+  female { {1_value} received {2_, plural,
+    one {# email}
+    other {# emails}
+  }. }
+  male { {1_value} received {2_, plural,
+    one {# email}
+    other {# emails}
+  }. }
+  other { {1_value} received {2_, plural,
+    one {# email}
+    other {# emails}
+  }. }
+}
+```
+
+Usage example in Go:
 
 ```go
-localize.Text(`By {3:45PM}, {"John"} received {2} emails.`,
-    time.Now(), "Max", len(emailsReceived))
+local.Text(`By {3:45PM}, {"John"} received {2 emails}.`,
+  time.Now(), "Max", len(emailsReceived))
 ```
 
 ### ICU Encoding - String Placeholders
 
-A string placeholder with gender or plural behavior wraps all tokens to the right,
-up to the first hard sentence boundary (`.`, `!`, `?`).:
+A simple string placeholder without any additional information produces a simple
+ICU placeholder:
+
+TIK:
+
+```
+You are on page: {"Home"}!
+```
+
+generated ICU:
+
+```
+You are on page: {0_}!
+```
+
+Usage example in Go:
+
+```go
+local.Text(`You are on page: {"Home"}!`,
+  "Home & Garden")
+```
+
+```go
+local.Text(`You are on page: {"Home"}!`,
+  localize.String{Value: "Home & Garden"})
+```
+
+#### ICU Encoding - String Placeholders With Gender
+
+A string placeholder with gender information produces an ICU `select` expression:
+
+TIK:
+
+```
+{"John"} modified the file.
+```
+
+generated ICU:
+
+```
+{ 0_gender, select,
+  other { {0_value} }
+} modified the file.
+```
+
+Usage example in Go:
+
+```go
+local.Text(`{"John"} modified the file.`,
+  localize.String{Value: "Martha", Gender: localize.GenderFemale})
+```
+
+#### ICU Encoding - String Placeholders With Pluralization
+
+A string placeholder with pluralization information produce an ICU `select` expression:
+
+TIK:
+
+```
+{"Students"} submitted the form.
+```
+
+generated ICU:
+
+```
+{ 0_number, plural,
+  other { {0_value} }
+} submitted the form.
+```
+
+Usage example in Go:
+
+```go
+local.Text(`{"students"} submitted the form.`,
+  localize.String{Value: "teachers", Number: len(teachersWhoSubmitted)})
+```
+
+Even though for English this example seems nonsensical, for translation into other
+languages this information may often be neccessary.
+
+The translated ICU message in Ukrainian would be:
+
+```
+{ 0_number, plural,
+  one { {0_value} подав форму. }
+  few { {0_value} подали форму. }
+  many { {0_value} подали форму. }
+  other { {0_value} подали форму. }
+}
+```
+
+And as you can see, the plurality of the string value does affect the sentence structure.
 
 ### ICU Encoding - Gender Agreement
 
-Constants such as `{he}` (and all of its variations), as well as any `{"..."}` strings
-with gender information included affect the next word to the right and
-include it in the ICU block:
+Magic constants such as `{he}` (and all of its variations)
+produce an ICU `select` expression:
 
 ```
-{He} is awesome
+{He} built it {himself}
 ```
 
 ```
-{gender, select,
-    other { {gender} is awesome}
-}
+{He, select,
+  male {He}
+} built it {himself, select,
+  male {himself}
+}.
 ```
+
+Casing is preserved exactly as written in the TIK:
+
+- `He` -> `He`
+- `he` -> `he`
+- `HE` -> `HE`
 
 ### ICU Encoding - Cardinal Pluralization
 
-A plural constant `{2}` wraps the placeholder and all tokens to
-the right up to the first hard sentence boundary (`.`, `!`, `?`).:
+The `{2 ...}` cardinal pluralization statement is encoded into an ICU `plural` expression.
+The `2` is replaced with the `#` number placeholder and the contents `...` are wrapped
+into the `other` rule
+
+TIK:
 
 ```
-{2} messages are read. {2} are pending.
+{2 messages are unread.} {2 are pending.}
 ```
 
+ICU:
+
 ```
-{numMessages, plural,
+{numUnread, plural,
   other {# messages are read.}
 }
-{numMessages, plural,
+{numPending, plural,
   other {# are pending.}
 }
+```
+
+TIK:
+
+```
+{2 slots} remaining.
+```
+
+ICU:
+
+```
+{numSlots, plural,
+  other {# slots}
+} remaining.
 ```
 
 Expected information type includes both integers and floating point numbers
@@ -310,7 +500,7 @@ Expected information type includes both integers and floating point numbers
 
 ### ICU Encoding - Ordinal Pluralization
 
-The constant `{4th}` represents an ordinal plural number.
+The magic constant `{4th}` encodes into an ordinal plural number.
 
 | Value       | en-US   | de-DE  | uk-UA    |
 | :---------- | :------ | :----- | :------- |
@@ -381,15 +571,15 @@ In the examples below, `$39,250.45 USD` (`en-US`) is the value represented.
 
 ### ICU Encoding - Number
 
-The number constant `{3}` localizes the integer value to the appropriate format
+The magic constant `{3}` localizes the integer value to the appropriate format
 for the given locale:
 
-| Value        | en-US     | de-DE     | uk-UA     |
-| :----------- | :-------- | :-------- | --------- |
-| int(1)       | 1         | 1         | 1         |
-| int(2)       | 2         | 2         | 2         |
-| int(1000)    | 1,000     | 1.000     | 1 000     |
-| int(1234567) | 1,234,567 | 1.234.567 | 1 234 567 |
+| Value          | en-US     | de-DE     | uk-UA     |
+| :------------- | :-------- | :-------- | --------- |
+| `int(1)`       | 1         | 1         | 1         |
+| `int(2)`       | 2         | 2         | 2         |
+| `int(1000)`    | 1,000     | 1.000     | 1 000     |
+| `int(1234567)` | 1,234,567 | 1.234.567 | 1 234 567 |
 
 ## Configuration Guidelines
 
@@ -414,15 +604,16 @@ Die Kosten betragen {$1.20}
 
 Naturally, this code would benefit from overwriting the default magic constants:
 
-```toml
-# localization.toml
-
-[magic constants]
-"he/his/him/himself" = "er/ihn/ihm"
-"{3:45PM}" = "{15:45 Uhr}"
-"4th" = "4./4te/4ter"
-"$1.20" = "1,20€"
-"$1" = "1€"
+```json
+{
+  "magic constants": {
+    "he/his/him/himself": "er/ihn/ihm",
+    "{3:45PM}": "{15:45 Uhr}",
+    "4th": "4./4te/4ter",
+    "$1.20": "1,20€",
+    "$1": "1€"
+  }
+}
 ```
 
 ### Domains
@@ -430,20 +621,20 @@ Naturally, this code would benefit from overwriting the default magic constants:
 In large-scale projects with lots of translations it might make sense to group
 extracted texts into domains by defining the scopes of the domains in the configuration:
 
-```toml
-# localization.toml
-
-[domains]
-"domain_A" = [
-  "/domain_a/...",
-  "/templates/domain_a/_",
-]
-
-"domain_B" = [
-  "/domain_b/...",
-  "/templates/domain_b/_",
-  "/models/domain_b/_",
-]
+```json
+{
+  "domains": {
+    "domain_A": [
+      "/domain_a/...",
+      "/templates/domain_a/_"
+    ],
+    "domain_B": [
+      "/domain_b/...",
+      "/templates/domain_b/_",
+      "/models/domain_b/_"
+    ]
+  }
+}
 ```
 
 ## Limitations
@@ -469,58 +660,13 @@ As with any technology, TIK introduces both advantages and trade-offs.
   - ⚠️ **Source Language Translation**: Messages written in the source language
     (e.g., English) must also be extracted and passed through the translation pipeline.
 
-
-### Limitations of Algorithmic ICU Message Generation
-
-TIK processors avoid complex text analysis (NLP) and rely on simple,
-rule-based logic to decide which text belongs inside ICU `select` or `plural` blocks
-for gender and cardinal forms.
-
-Semantic adjustments - like restructuring sentences to reflect plurality or pronoun
-agreement - are deferred to more advanced systems, or in the worst case,
-handled manually by human experts.
-
-For example, consider the following TIK:
-
-```
-{2} files were deleted permanently.
-```
-
-A TIK processor would typically generate the following ICU message from the TIK above:
-
-```
-{ numFiles, plural, other { # files } } were deleted permanently.
-```
-
-This is structurally correct, but semantically broken: only “files” is conditionally
-pluralized, while “were deleted permanently” remains outside the block regardless
-of number.
-
-The correct ICU message should include **all text affected by the plural logic**:
-
-```
-{ numFiles, plural, other { # files were deleted permanently. } }
-```
-
-Automatically generating this structure isn't algorithmically feasible
-without full sentence understanding. For this reason, this responsibility is deferred
-to the translation layer (e.g. LLM-based translation), which can jointly translate
-and rewrite the ICU message with proper semantics:
-
-```
-{ numFiles, plural,
-  =0 { No files were deleted permanently. }
-  one { # file was deleted permanently. }
-  other { # files were deleted permanently. }
-}
-```
-
 ## Standards and Conventions
 
 - Plural categories follow [Unicode CLDR](https://cldr.unicode.org/index/cldr-spec/plural-rules)
 - Language codes follow [ISO 639-1](https://www.iso.org/iso-639-language-codes.html)
 - Currency codes follow [ISO 4217](https://www.iso.org/iso-4217-currency-codes.html)
 - Timestamps follow [RFC3339](https://www.rfc-editor.org/rfc/rfc3339.html)
+- JSON examples follow [RFC8259](https://datatracker.ietf.org/doc/html/rfc8259)
 
 ## FAQ
 
@@ -561,3 +707,7 @@ and nothing speaks against using it as an alternative TIK backend.
 
 Valid point! The simple truth is that `he` is shorter than `she` and `they`.
 Luckily, this is [configurable](#configuration).
+
+## Special Thanks
+
+Special thanks to Muthu Kumar ([@MKRhere](https://github.com/MKRhere))!
