@@ -355,19 +355,61 @@ extracted texts into domains by defining the scopes of the domains in the config
 
 As with any technology, TIK introduces both advantages and trade-offs.
 
-### Advantages
+- Advantages
+  - ✅ TIK keys convey the intent of the message in a clear and human-readable format.
+  - ✅ The TIK syntax can be programmatically converted into ICU message structures.
+  - ✅ The format is relatively straightforward to learn and apply consistently.
+- Limitations
+  - ⚠️ Developers must become familiar with the TIK syntax conventions.
+  - ⚠️ A dedicated extractor tool is required to parse and process TIK keys to eventually
+    produce ICU messages for translation.
+  - ⚠️ Messages written in the source language (e.g., English)
+    must also be extracted and passed through the translation pipeline.
 
-- ✅ TIK keys convey the intent of the message in a clear and human-readable format.
-- ✅ The TIK syntax can be programmatically converted into valid ICU message structures.
-- ✅ The format is relatively straightforward to learn and apply consistently.
+### Limitations of Algorithmic ICU Message Generation
 
-### Limitations
+TIK processors avoid complex text analysis (NLP) and rely on simple,
+rule-based logic to decide which text belongs inside ICU `select` or `plural` blocks
+for gender and cardinal forms.
 
-- ⚠️ Developers must become familiar with the TIK syntax conventions.
-- ⚠️ A dedicated extractor tool is required to parse and process TIK keys to eventually
-  produce ICU messages for translation.
-- ⚠️ Messages written in the source language (e.g., English)
-  must also be extracted and passed through the translation pipeline.
+Semantic adjustments - like restructuring sentences to reflect plurality or pronoun
+agreement - are deferred to more advanced systems, or in the worst case,
+handled manually by human experts.
+
+For example, consider the following TIK:
+
+```
+{2} files were deleted permanently.
+```
+
+A TIK processor would typically generate the following ICU message from the TIK above:
+
+```
+{ numFiles, plural, other { # files } } were deleted permanently.
+```
+
+This is structurally correct, but semantically broken: only “files” is conditionally
+pluralized, while “were deleted permanently” remains outside the block regardless
+of number.
+
+The correct ICU message should include **all text affected by the plural logic**:
+
+```
+{ numFiles, plural, other { # files were deleted permanently. } }
+```
+
+Automatically generating this structure isn't algorithmically feasible
+without full sentence understanding. For this reason, this responsibility is deferred
+to the translation layer (e.g. LLM-based translation), which can jointly translate
+and rewrite the ICU message with proper semantics:
+
+```
+{ numFiles, plural,
+  =0 { No files were deleted permanently. }
+  one { # file was deleted permanently. }
+  other { # files were deleted permanently. }
+}
+```
 
 ## FAQ
 
