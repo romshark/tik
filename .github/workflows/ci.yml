@@ -17,9 +17,11 @@ jobs:
 
       # Test
       - name: Run tests with coverage
+        working-directory: tik-go
         run: go test -covermode=atomic -coverprofile=coverage.out ./...
 
       - name: Upload to Coveralls
+        working-directory: tik-go
         run: |
           go install github.com/mattn/goveralls@latest
           goveralls -coverprofile=coverage.out -service=github
