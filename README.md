@@ -300,7 +300,11 @@ for the given locale:
 | int(1000)    | 1,000     | 1.000     | 1 000     |
 | int(1234567) | 1,234,567 | 1.234.567 | 1 234 567 |
 
-## Configuration
+## Configuration Guidelines
+
+The TIK specification defines guidelines only
+and imposes no strict format or requirements.
+The exact configuration format is left entirely to the processor implementation.
 
 ### Magic Constant Customization
 
