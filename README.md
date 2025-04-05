@@ -35,8 +35,6 @@
   - [Could Fluent be used instead of ICU?](#could-fluent-be-used-instead-of-icu)
   - [Why use masculine gender by default instead of the neutral `they`?](#why-use-masculine-gender-by-default-instead-of-the-neutral-they)
 
----
-
 ## Introduction
 
 "TIK" is an abbreviation for "Textual Internationalization Key".
