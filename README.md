@@ -360,15 +360,24 @@ extracted texts into domains by defining the scopes of the domains in the config
 As with any technology, TIK introduces both advantages and trade-offs.
 
 - Advantages
-  - ✅ TIK keys convey the intent of the message in a clear and human-readable format.
-  - ✅ The TIK syntax can be programmatically converted into ICU message structures.
-  - ✅ The format is relatively straightforward to learn and apply consistently.
+  - ✅ **Readability**: TIK keys convey the intent of the message
+    in a clear and human-readable format.
+  - ✅ **Automation**: The TIK syntax can be programmatically converted into
+    ICU message structures and translation can mostly be automated through LLMs.
+  - ✅ **Simplicity**: The format is relatively straightforward to learn
+    and apply consistently.
 - Limitations
-  - ⚠️ Developers must become familiar with the TIK syntax conventions.
-  - ⚠️ A dedicated extractor tool is required to parse and process TIK keys to eventually
+  - ⚠️ **Learning Curve**: Developers must become familiar
+    with the TIK syntax conventions.
+  - ⚠️ **Developer Responsibility**: Developers must write somewhat meaningful texts and
+    can't fully rely on translators. They can only rely on translators and software
+    to improve those texts later in the translation pipeline.
+  - ⚠️ **Tooling Requirements**: A dedicated extractor tool (referred to as TIK processor
+    through this document) is required to parse and process TIK keys to eventually
     produce ICU messages for translation.
-  - ⚠️ Messages written in the source language (e.g., English)
-    must also be extracted and passed through the translation pipeline.
+  - ⚠️ **Source Language Translation**: Messages written in the source language
+    (e.g., English) must also be extracted and passed through the translation pipeline.
+
 
 ### Limitations of Algorithmic ICU Message Generation
 
