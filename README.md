@@ -13,6 +13,7 @@
 - [TIK Syntax Rules](#tik-syntax-rules)
   - [Magic Constants](#magic-constants)
   - [String Placeholders](#string-placeholders)
+    - [String Placeholders with Gender and Pluralization](#string-placeholders-with-gender-and-pluralization)
     - [String Placeholder Invariants](#string-placeholder-invariants)
 - [ICU Encoding](#icu-encoding)
 - [ICU Encoding – Positional Mapping](#icu-encoding--positional-mapping)
@@ -162,24 +163,44 @@ String placeholders `{"..."}` accept arbitrary string values within the quotes:
 This can be {"anything"} or {"anyone"}, {"cheers"}.
 ```
 
+The quoted text is not literal output! It serves as a label or hint about the kind of
+content that might appear there (e.g., a person's name, an object, etc.):
+
+TIK:
+
+```
+And so the journey began, {"John"} had embarked onto the ship.
+```
+
 generated ICU:
 
 ```
-And so the journey began, {gender, select,
-  other { {userName} had embarked onto the ship.}
-} The captain welcomed him warmly!
+And so the journey began, {userName} had embarked onto the ship.
 ```
 
+#### String Placeholders with Gender and Pluralization
+
 A string placeholder may be infused with gender and pluralization information,
-which isn't specified in the TIK but can be provided programmatically as in the
-following example in Go:
+which isn't specified in the TIK but can be provided programmatically in the source code
+as in the following example in Go:
 
 ```go
 localize.Text(
-    `And so the journey began, {"John"} had embarked onto the ship.`+
-      `The captain welcomed him warmly!`, // TIK
-    localize.WithGender{ Value: "userName", Gender: localize.Male },  // value
+    `And so the journey began, {"John"} had embarked onto the ship.`, // TIK
+    localize.TextValue{ Value: "Ada", Gender: localize.Female },
 )
+```
+
+TIK doesn't define how gender or plural information is attached to placeholders.
+This is determined by the TIK processor, which inspects the provided values in the
+source code and applies grammar rules as needed.
+
+generated ICU:
+
+```
+And so the journey began, {userName_gender, select,
+  other { {userName} had embarked onto the ship.}
+}
 ```
 
 ℹ️ Gender may affect translation in some languages:
@@ -191,6 +212,16 @@ localize.Text(
 | French    | `John est prêt`   | `Martha est prête`  |
 | Spanish   | `John está listo` | `Martha está lista` |
 | Russian   | `John готов`      | `Martha готова`     |
+
+The translated ICU message for locale `uk` would be:
+
+```
+І так розпочалася подорож, {userName_gender, select,
+  female { {userName} вирушила на корабель. }
+  male { {userName} вирушив на корабель. }
+  other { {userName} вирушило на корабель. }
+}
+```
 
 #### String Placeholder Invariants
 
