@@ -319,8 +319,7 @@ The constant `{4th}` also accepts numbers combined with gender.
 Time placeholders are automatically localized to the appropriate format
 for the given locale and expect both date and time information (e.g. in Go `time.Time`).
 
-In the examples below, the time [RFC3339](https://www.rfc-editor.org/rfc/rfc3339.html)
-`"2025-07-14T19:44:11Z"` is the value represented.
+In the examples below, the time `"2025-07-14T19:44:11Z"` is the value represented.
 
 | Constant               | ICU        | en-US               | de-DE              | uk-UA              | Description       |
 | :--------------------- | :--------- | :------------------ | :----------------- | :----------------- | :---------------- |
@@ -490,6 +489,7 @@ and rewrite the ICU message with proper semantics:
 - Plural categories follow [Unicode CLDR](https://cldr.unicode.org/index/cldr-spec/plural-rules)
 - Language codes follow [ISO 639-1](https://www.iso.org/iso-639-language-codes.html)
 - Currency codes follow [ISO 4217](https://www.iso.org/iso-4217-currency-codes.html)
+- Timestamps follow [RFC3339](https://www.rfc-editor.org/rfc/rfc3339.html)
 
 ## FAQ
 
