@@ -20,8 +20,9 @@ jobs:
         working-directory: tik-go
         run: go test -covermode=atomic -coverprofile=coverage.out ./...
 
-      - name: Upload to Coveralls
-        working-directory: tik-go
-        run: |
-          go install github.com/mattn/goveralls@latest
-          goveralls -coverprofile=coverage.out -service=github
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2.3.6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: coverage.out
+          working-directory: tik-go
