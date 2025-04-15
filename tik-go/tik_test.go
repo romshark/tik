@@ -1,6 +1,7 @@
 package tik_test
 
 import (
+	"bytes"
 	"errors"
 	"os"
 	"reflect"
@@ -9,116 +10,156 @@ import (
 	tik "github.com/romshark/tik/tik-go"
 )
 
+type Token struct {
+	Str  string
+	Type tik.TokenType
+}
+
+func ToTestTokens(input string, toks tik.Tokens) []Token {
+	if len(toks) == 0 {
+		return nil
+	}
+	t := make([]Token, len(toks))
+	for i, tok := range toks {
+		t[i] = Token{
+			Str:  tok.String(input),
+			Type: tok.Type,
+		}
+	}
+	return t
+}
+
 func TestParse(t *testing.T) {
 	t.Parallel()
 
-	parser := tik.NewParser(nil) // With default config.
-	f := func(t *testing.T, input string, expect tik.TIK) {
+	parser := tik.NewParser(tik.DefaultConfig())
+	f := func(t *testing.T, input string, expect ...Token) {
 		t.Helper()
 		got, err := parser.Parse(input)
 		requireNoErr(t, err)
-		reflect.DeepEqual(expect, got)
+		actual := ToTestTokens(input, got.Tokens)
+		requireDeepEqual(t, expect, actual)
 	}
 
-	// Empty string literal only
-	f(t, "", tik.TIK{})
-
 	// String literal only
-	f(t, "hello world", tik.TIK{Tokens: tik.Tokens{
-		tik.Token{
-			Str:   "hello world",
-			Index: 0,
-			Type:  tik.TokenTypeStringLiteral,
-		},
-	}})
+	f(t, "hello world",
+		Token{"hello world", tik.TokenTypeStringLiteral},
+	)
 
 	// Number placeholder
-	f(t, "{3} items", tik.TIK{Tokens: tik.Tokens{
-		{Str: "{3}", Index: 0, Type: tik.TokenTypeNumber},
-		{Str: " items", Index: 3, Type: tik.TokenTypeStringLiteral},
-	}})
+	f(t, "{3} items",
+		Token{"{3}", tik.TokenTypeNumber},
+		Token{" items", tik.TokenTypeStringLiteral},
+	)
 
 	// String placeholders
-	f(t, `{"first"} {"second"}, {"_"}{"fourth"}`, tik.TIK{Tokens: tik.Tokens{
-		{Str: `{"first"}`, Index: 0, Type: tik.TokenTypeStringPlaceholder},
-		{Str: " ", Index: 9, Type: tik.TokenTypeStringLiteral},
-		{Str: `{"second"}`, Index: 10, Type: tik.TokenTypeStringPlaceholder},
-		{Str: ", ", Index: 21, Type: tik.TokenTypeStringLiteral},
-		{Str: `{"_"}`, Index: 22, Type: tik.TokenTypeStringPlaceholder},
-		{Str: `{"fourth"}`, Index: 27, Type: tik.TokenTypeStringPlaceholder},
-	}})
+	f(t, `{"first"} {"second"}, {"_"}{"fourth"}`,
+		Token{`{"first"}`, tik.TokenTypeStringPlaceholder},
+		Token{" ", tik.TokenTypeStringLiteral},
+		Token{`{"second"}`, tik.TokenTypeStringPlaceholder},
+		Token{", ", tik.TokenTypeStringLiteral},
+		Token{`{"_"}`, tik.TokenTypeStringPlaceholder},
+		Token{`{"fourth"}`, tik.TokenTypeStringPlaceholder},
+	)
 
-	// Gender agreement
-	f(t, "{he} lost {himself} in {his} thoughts", tik.TIK{Tokens: tik.Tokens{
-		{Str: "{he}", Index: 0, Type: tik.TokenTypeGenderAgreement},
-		{Str: " lost ", Index: 4, Type: tik.TokenTypeStringLiteral},
-		{Str: "{himself}", Index: 10, Type: tik.TokenTypeGenderAgreement},
-		{Str: " in ", Index: 19, Type: tik.TokenTypeStringLiteral},
-		{Str: "{his}", Index: 23, Type: tik.TokenTypeGenderAgreement},
-		{Str: " thoughts", Index: 28, Type: tik.TokenTypeStringLiteral},
-	}})
-	// Pluralization
-	f(t, "You're {4th} out of {2} contenders", tik.TIK{Tokens: tik.Tokens{
-		{Str: "You're ", Index: 0, Type: tik.TokenTypeStringLiteral},
-		{Str: "{4th}", Index: 7, Type: tik.TokenTypeOrdinalPlural},
-		{Str: " out of ", Index: 12, Type: tik.TokenTypeStringLiteral},
-		{Str: "{2}", Index: 20, Type: tik.TokenTypeCardinalPlural},
-		{Str: " contenders", Index: 23, Type: tik.TokenTypeStringLiteral},
-	}})
+	// Gender agreement.
+	f(t, "{They} lost {themself} in {their} thoughts",
+		Token{"{They}", tik.TokenTypeGenderPronoun},
+		Token{" lost ", tik.TokenTypeStringLiteral},
+		Token{"{themself}", tik.TokenTypeGenderPronoun},
+		Token{" in ", tik.TokenTypeStringLiteral},
+		Token{"{their}", tik.TokenTypeGenderPronoun},
+		Token{" thoughts", tik.TokenTypeStringLiteral},
+	)
+	// Pluralization.
+	f(t, "You're {4th} out of {2 contenders}",
+		Token{"You're ", tik.TokenTypeStringLiteral},
+		Token{"{4th}", tik.TokenTypeOrdinalPlural},
+		Token{" out of ", tik.TokenTypeStringLiteral},
+		Token{"{2 ", tik.TokenTypeCardinalPluralStart},
+		Token{"contenders", tik.TokenTypeStringLiteral},
+		Token{"}", tik.TokenTypeCardinalPluralEnd},
+	)
+	f(t, `{2 files are being copied to folder '{"foo"}'}`,
+		Token{"{2 ", tik.TokenTypeCardinalPluralStart},
+		Token{"files are being copied to folder '", tik.TokenTypeStringLiteral},
+		Token{`{"foo"}`, tik.TokenTypeStringPlaceholder},
+		Token{"'", tik.TokenTypeStringLiteral},
+		Token{"}", tik.TokenTypeCardinalPluralEnd},
+	)
+	f(t, `{2 messages from {"folder"} at {3:45PM} on {Apr 2}{2025}}`,
+		Token{"{2 ", tik.TokenTypeCardinalPluralStart},
+		Token{"messages from ", tik.TokenTypeStringLiteral},
+		Token{`{"folder"}`, tik.TokenTypeStringPlaceholder},
+		Token{" at ", tik.TokenTypeStringLiteral},
+		Token{"{3:45PM}", tik.TokenTypeTimeShort},
+		Token{" on ", tik.TokenTypeStringLiteral},
+		Token{"{Apr 2}", tik.TokenTypeTimeShortMonthAndDay},
+		Token{"{2025}", tik.TokenTypeTimeYear},
+		Token{"}", tik.TokenTypeCardinalPluralEnd},
+	)
+	f(t, `{2 new files in}{2 folders}`,
+		Token{"{2 ", tik.TokenTypeCardinalPluralStart},
+		Token{"new files in", tik.TokenTypeStringLiteral},
+		Token{"}", tik.TokenTypeCardinalPluralEnd},
+		Token{"{2 ", tik.TokenTypeCardinalPluralStart},
+		Token{`folders`, tik.TokenTypeStringLiteral},
+		Token{"}", tik.TokenTypeCardinalPluralEnd},
+	)
 
-	// Time
+	// Time.
 	f(t, `{3:45PM}{3:45:30PM}{April 2}{Apr 2}
 		{Apr 2025}{Monday}{April 2, 3:45PM}
-		{2025}{April 2, 3:45:30PM}`, tik.TIK{Tokens: tik.Tokens{
-		{Str: "{3:45PM}", Index: 0, Type: tik.TokenTypeTimeShort},
-		{Str: "{3:45:30PM}", Index: 8, Type: tik.TokenTypeTimeShortSeconds},
-		{Str: "{April 2}", Index: 19, Type: tik.TokenTypeTimeFullMonthAndDay},
-		{Str: "{Apr 2}", Index: 28, Type: tik.TokenTypeTimeShortMonthAndDay},
-		{Str: "\n\t\t", Index: 35, Type: tik.TokenTypeStringLiteral},
-		{Str: "{Apr 2025}", Index: 38, Type: tik.TokenTypeTimeFullMonthAndYear},
-		{Str: "{Monday}", Index: 48, Type: tik.TokenTypeTimeWeekday},
-		{Str: "{April 2, 3:45PM}", Index: 56, Type: tik.TokenTypeTimeDateAndShort},
-		{Str: "\n\t\t", Index: 73, Type: tik.TokenTypeStringLiteral},
-		{Str: "{2025}", Index: 76, Type: tik.TokenTypeTimeYear},
-		{Str: "{April 2, 3:45:30PM}", Index: 82, Type: tik.TokenTypeTimeFull},
-	}})
+		{2025}{April 2, 3:45:30PM}`,
+		Token{"{3:45PM}", tik.TokenTypeTimeShort},
+		Token{"{3:45:30PM}", tik.TokenTypeTimeShortSeconds},
+		Token{"{April 2}", tik.TokenTypeTimeFullMonthAndDay},
+		Token{"{Apr 2}", tik.TokenTypeTimeShortMonthAndDay},
+		Token{"\n\t\t", tik.TokenTypeStringLiteral},
+		Token{"{Apr 2025}", tik.TokenTypeTimeFullMonthAndYear},
+		Token{"{Monday}", tik.TokenTypeTimeWeekday},
+		Token{"{April 2, 3:45PM}", tik.TokenTypeTimeDateAndShort},
+		Token{"\n\t\t", tik.TokenTypeStringLiteral},
+		Token{"{2025}", tik.TokenTypeTimeYear},
+		Token{"{April 2, 3:45:30PM}", tik.TokenTypeTimeFull},
+	)
 
-	// Escaped brace.
-	f(t, `\{not a placeholder}`, tik.TIK{Tokens: tik.Tokens{
-		{Str: `{not a placeholder}`, Index: 0, Type: tik.TokenTypeStringLiteral},
-	}})
-
-	// Escaped reverse solidus.
-	f(t, `\\text after`, tik.TIK{Tokens: tik.Tokens{
-		{Str: `\text after`, Index: 0, Type: tik.TokenTypeStringLiteral},
-	}})
-	// Escaped reverse solidus.
-	f(t, `\ntext after\n\t\\\n`, tik.TIK{Tokens: tik.Tokens{
-		{Str: `\ttext after\n\t\\\n`, Index: 0, Type: tik.TokenTypeStringLiteral},
-	}})
+	// Escaped braces.
+	f(t, `\{not a placeholder\}`,
+		Token{`{not a placeholder}`, tik.TokenTypeStringLiteral},
+	)
+	f(t, `\\\{not a placeholder\\\}`,
+		Token{`\{not a placeholder\}`, tik.TokenTypeStringLiteral},
+	)
+	f(t, `\\text after`,
+		Token{`\text after`, tik.TokenTypeStringLiteral},
+	)
+	f(t, `\ntext after\n\t\\\n`,
+		Token{`\ntext after\n\t\\n`, tik.TokenTypeStringLiteral},
+	)
 
 	// Sequence of escaped reverse solidus.
-	f(t, `before \\\\{Monday} after`, tik.TIK{Tokens: tik.Tokens{
-		{Str: `before \\`, Index: 0, Type: tik.TokenTypeStringLiteral},
-		{Str: `{Monday}`, Index: 11, Type: tik.TokenTypeTimeWeekday},
-		{Str: ` after`, Index: 19, Type: tik.TokenTypeStringLiteral},
-	}})
+	f(t, `before \\\\{Monday} after`,
+		Token{`before \\`, tik.TokenTypeStringLiteral},
+		Token{`{Monday}`, tik.TokenTypeTimeWeekday},
+		Token{` after`, tik.TokenTypeStringLiteral},
+	)
 
 	// Case insensitivity.
-	f(t, `{He}{HIMSELF}{3:45pm}{3:45:30pM}{april 2}{mOnDaY}`, tik.TIK{Tokens: tik.Tokens{
-		{Str: "{He}", Index: 0, Type: tik.TokenTypeGenderAgreement},
-		{Str: "{HIMSELF}", Index: 4, Type: tik.TokenTypeGenderAgreement},
-		{Str: "{3:45pm}", Index: 13, Type: tik.TokenTypeTimeShort},
-		{Str: "{3:45:30pM}", Index: 21, Type: tik.TokenTypeTimeShortSeconds},
-		{Str: "{april 2}", Index: 32, Type: tik.TokenTypeTimeFullMonthAndDay},
-		{Str: "{mOnDaY}", Index: 41, Type: tik.TokenTypeTimeWeekday},
-	}})
+	f(t, `{They}{THEMSELF}{3:45pm}{3:45:30pM}{april 2}{mOnDaY}`,
+		Token{"{They}", tik.TokenTypeGenderPronoun},
+		Token{"{THEMSELF}", tik.TokenTypeGenderPronoun},
+		Token{"{3:45pm}", tik.TokenTypeTimeShort},
+		Token{"{3:45:30pM}", tik.TokenTypeTimeShortSeconds},
+		Token{"{april 2}", tik.TokenTypeTimeFullMonthAndDay},
+		Token{"{mOnDaY}", tik.TokenTypeTimeWeekday},
+	)
 }
 
 func TestParseErr(t *testing.T) {
 	t.Parallel()
 
-	parser := tik.NewParser(nil) // With default config.
+	parser := tik.NewParser(tik.DefaultConfig())
 
 	f := func(t *testing.T, expectErr error, input string) {
 		t.Helper()
@@ -127,11 +168,16 @@ func TestParseErr(t *testing.T) {
 		requireDeepEqual(t, tik.TIK{}, tk)
 	}
 
+	f(t, tik.ErrEmpty, ``)
+	f(t, tik.ErrEmpty, `   `)
+	f(t, tik.ErrEmpty, "\t\r\n ")
+	f(t, tik.ErrUknownPlaceholder, `no space after cardinal plural: {2abc}`)
+	f(t, tik.ErrUknownPlaceholder, `unknown placeholder: {2026}`)
+	f(t, tik.ErrUknownPlaceholder, `unknown placeholder: {April 21}`)
 	f(t, tik.ErrUnclosedPlaceholder, `unexpected EOF: {`)
-	f(t, tik.ErrUnclosedStringPlaceholder, `unexpected EOF: {"`)
-	f(t, tik.ErrUnclosedStringPlaceholder, `unexpected EOF: {"_`)
-	f(t, tik.ErrUnclosedStringPlaceholder, `unexpected EOF: {""`)
-	f(t, tik.ErrUnclosedStringPlaceholder, `unexpected EOF: {"abc }`)
+	f(t, tik.ErrUnclosedPlaceholder, `unexpected EOF: {"`)
+	f(t, tik.ErrUnclosedPlaceholder, `unexpected EOF: {"_`)
+	f(t, tik.ErrUnclosedPlaceholder, `unexpected EOF: {""`)
 	f(t, tik.ErrUnclosedPlaceholder, `unexpected EOF: {x`)
 	f(t, tik.ErrUnclosedPlaceholder, `unexpected EOF: {{`)
 	f(t, tik.ErrStringPlaceholderEmpty, `this is illegal: {""}`)
@@ -140,90 +186,130 @@ func TestParseErr(t *testing.T) {
 	f(t, tik.ErrStringPlaceholderInvSpace, `this too: {"  text  "}`)
 	f(t, tik.ErrStringPlaceholderInvSpace, "this too: {\"\u3000text\"}")
 	f(t, tik.ErrStringPlaceholderInvSpace, "this too: {\"text\u3000\"}")
+	f(t, tik.ErrStringPlaceholderIllegalChars, `unclosed string placeholder: {"abc }`)
 	f(t, tik.ErrStringPlaceholderIllegalChars, `and this: {"\""} text after`)
 	f(t, tik.ErrStringPlaceholderIllegalChars, `{"\"}`)
 	f(t, tik.ErrStringPlaceholderIllegalChars, `{"abc \n def"}`)
+	f(t, tik.ErrNestedPluralization, `nested pluralization: {2 messages in {2 folders}}`)
+	f(t, tik.ErrCardinalPluralEmpty, `empty pluralization: {2 }`)
+	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {2 {April 2}}`)
+	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {2 {3:45PM}}`)
+	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {2 {$1}}`)
+	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {2 {4th}}`)
+	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {2 {they}}`)
+	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {2 {themself}}`)
 }
 
 func TestParseCustomPlaceholders(t *testing.T) {
 	t.Parallel()
 
-	m, err := tik.CustomPlaceholders(func(m map[string]tik.TokenType) {
-		delete(m, "3")
-		m["43"] = tik.TokenTypeNumber
-	})
-	requireNoErr(t, err)
-	parser := tik.NewParser(&tik.Config{Mapping: m})
+	conf := tik.DefaultConfig()
 
-	got, err := parser.Parse("{43}{43}")
+	conf.MagicConstants.Number = "43"
+	parser := tik.NewParser(conf)
+
+	input := "{43}{43}"
+	got, err := parser.Parse(input)
 	requireNoErr(t, err)
-	requireDeepEqual(t, tik.TIK{Tokens: tik.Tokens{
-		tik.Token{Str: "{43}", Index: 0, Type: tik.TokenTypeNumber},
-		tik.Token{Str: "{43}", Index: 4, Type: tik.TokenTypeNumber},
-	}}, got)
+
+	toks := ToTestTokens(input, got.Tokens)
+
+	requireDeepEqual(t, []Token{
+		{Str: "{43}", Type: tik.TokenTypeNumber},
+		{Str: "{43}", Type: tik.TokenTypeNumber},
+	}, toks)
 
 	got, err = parser.Parse("invalid: {3}")
 	requireErrIs(t, tik.ErrUknownPlaceholder, err)
-	requireEqual(t, "unknown placeholder at index 9", err.Error())
+	requireEqual(t, "at index 9: unknown placeholder", err.Error())
 	requireDeepEqual(t, tik.TIK{}, got)
 }
 
-func TestCustomPlaceholdersErrInvalid(t *testing.T) {
+func TestConfigValidateErr(t *testing.T) {
 	t.Parallel()
 
-	m, err := tik.CustomPlaceholders(func(m map[string]tik.TokenType) {
-		delete(m, "3")
-		m[`"43"`] = tik.TokenTypeNumber
+	f := func(t *testing.T, expectErr error, fn func(c *tik.Config)) {
+		t.Helper()
+		conf := tik.DefaultConfig()
+		fn(conf)
+		err := conf.Validate()
+		requireErrIs(t, expectErr, err)
+	}
+
+	f(t, nil, func(*tik.Config) {})
+	f(t, tik.ErrConfMagicConstantInvalid, func(c *tik.Config) {
+		c.MagicConstants.Number = "{3}"
 	})
-	requireErrIs(t, tik.ErrInvalidCustomPlaceholder, err)
-	requireDeepEqual(t, nil, m)
+	f(t, tik.ErrConfMagicConstantInvalid, func(c *tik.Config) {
+		c.MagicConstants.Number = "\"3\""
+	})
+	f(t, tik.ErrConfMagicConstantInvalid, func(c *tik.Config) {
+		c.MagicConstants.Number = ""
+	})
+	f(t, tik.ErrConfMagicConstantInvalid, func(c *tik.Config) {
+		c.MagicConstants.Number = " x"
+	})
+	f(t, tik.ErrConfMagicConstantInvalid, func(c *tik.Config) {
+		c.MagicConstants.Number = "x "
+	})
+	f(t, tik.ErrConfMagicConstantNonUnique, func(c *tik.Config) {
+		c.MagicConstants.Number = "5"
+		c.MagicConstants.CurrencyCodeFull = "5"
+	})
+	f(t, tik.ErrConfMagicConstantInvalid, func(c *tik.Config) {
+		c.MagicConstants.GenderPronouns = nil
+	})
+	f(t, tik.ErrConfMagicConstantInvalid, func(c *tik.Config) {
+		c.MagicConstants.GenderPronouns = []string{}
+	})
+	f(t, tik.ErrConfMagicConstantInvalid, func(c *tik.Config) {
+		c.MagicConstants.GenderPronouns = []string{""}
+	})
+	f(t, tik.ErrConfMagicConstantNonUnique, func(c *tik.Config) {
+		c.MagicConstants.GenderPronouns = []string{"he", "he"}
+	})
+	f(t, tik.ErrConfMagicConstantNonUnique, func(c *tik.Config) {
+		c.MagicConstants.OrdinalPlural.Constant = "3"
+	})
+	f(t, tik.ErrConfMagicConstantInvalid, func(c *tik.Config) {
+		c.MagicConstants.OrdinalPlural.Constant = "{5th}"
+	})
+	f(t, tik.ErrConfMagicConstantInvalid, func(c *tik.Config) {
+		c.MagicConstants.OrdinalPlural.Constant = ""
+	})
+	f(t, tik.ErrConfMissingDefault, func(c *tik.Config) {
+		c.MagicConstants.OrdinalPlural.DefaultICUSuffix = ""
+	})
 }
 
-func TestCustomPlaceholdersErrInvalidCustomPlaceholders(t *testing.T) {
+func TestTokenizeErrMsg(t *testing.T) {
 	t.Parallel()
 
-	m, err := tik.CustomPlaceholders(func(m map[string]tik.TokenType) {
-		delete(m, "3")
-	})
-	requireErrIs(t, tik.ErrInvalidCustomPlaceholders, err)
-	requireDeepEqual(t, nil, m)
-
-	m, err = tik.CustomPlaceholders(func(m map[string]tik.TokenType) {
-		delete(m, "3")
-		m[`"3"`] = tik.TokenTypeNumber
-	})
-	requireErrIs(t, tik.ErrInvalidCustomPlaceholder, err)
-	requireDeepEqual(t, nil, m)
-}
-
-func TestTokenizeErr(t *testing.T) {
-	t.Parallel()
-
-	var tokenizer tik.Tokenizer
+	parser := tik.NewParser(nil) // Use default config.
 
 	f := func(t *testing.T, input string, expectErrMsg string) {
 		t.Helper()
-		got, err := tokenizer.Tokenize(nil, input, nil)
+		tk, err := parser.Parse(input)
 		requireEqual(t, expectErrMsg, err.Error())
-		requireDeepEqual(t, tik.Tokens(nil), got)
+		requireDeepEqual(t, tik.TIK{}, tk)
 	}
 
 	// String literal only.
-	f(t, "hello world {", "unclosed placeholder at index 12")
-	f(t, "{unknown}", "unknown placeholder at index 0")
+	f(t, "hello world {", "at index 12: unclosed placeholder")
+	f(t, "{unknown}", "at index 0: unknown placeholder")
+	f(t, "{2 messages in {2 folders}}", "at index 15: nested pluralization")
 }
 
 func TestTIKPlaceholdersIter(t *testing.T) {
 	t.Parallel()
 
-	var tokenizer tik.Tokenizer
+	p := tik.NewParser(tik.DefaultConfig())
 
-	toks, err := tokenizer.Tokenize(nil, `{3:45PM}{3:45:30PM}{April 2}{Apr 2}
+	tk, err := p.Parse(`{3:45PM}{3:45:30PM}{April 2}{Apr 2}
 		{Apr 2025}{Monday}{April 2, 3:45PM}
-		{2025}{April 2, 3:45:30PM}`, nil)
+		{2025}{April 2, 3:45:30PM}
+		{$1}{$1.20}{USD 1}{USD 1.20}`)
 	requireNoErr(t, err)
-	tk := tik.TIK{Tokens: toks}
-
 	expect := []tik.Token{
 		tk.Tokens[0],
 		tk.Tokens[1],
@@ -236,6 +322,11 @@ func TestTIKPlaceholdersIter(t *testing.T) {
 		// 8 is a string literal.
 		tk.Tokens[9],
 		tk.Tokens[10],
+		// 11 is a string literal.
+		tk.Tokens[12],
+		tk.Tokens[13],
+		tk.Tokens[14],
+		tk.Tokens[15],
 	}
 
 	var actual []tik.Token
@@ -257,24 +348,125 @@ func TestTIKPlaceholdersIter(t *testing.T) {
 	}
 }
 
+func TestTokenType_String(t *testing.T) {
+	f := func(t *testing.T, expect string, value tik.TokenType) {
+		t.Helper()
+		requireDeepEqual(t, expect, value.String())
+	}
+
+	f(t, `unknown`, 0)
+	f(t, `unknown`, 255)
+	f(t, `literal`, tik.TokenTypeStringLiteral)
+	f(t, `string placeholder`, tik.TokenTypeStringPlaceholder)
+	f(t, `number`, tik.TokenTypeNumber)
+	f(t, `pluralization`, tik.TokenTypeCardinalPluralStart)
+	f(t, `pluralization block end`, tik.TokenTypeCardinalPluralEnd)
+	f(t, `ordinal plural`, tik.TokenTypeOrdinalPlural)
+	f(t, `gender pronoun`, tik.TokenTypeGenderPronoun)
+	f(t, `time short`, tik.TokenTypeTimeShort)
+	f(t, `time short seconds`, tik.TokenTypeTimeShortSeconds)
+	f(t, `time full month and day`, tik.TokenTypeTimeFullMonthAndDay)
+	f(t, `time short month and day`, tik.TokenTypeTimeShortMonthAndDay)
+	f(t, `time full month and year`, tik.TokenTypeTimeFullMonthAndYear)
+	f(t, `time weekday`, tik.TokenTypeTimeWeekday)
+	f(t, `time date and short`, tik.TokenTypeTimeDateAndShort)
+	f(t, `time year`, tik.TokenTypeTimeYear)
+	f(t, `time full`, tik.TokenTypeTimeFull)
+	f(t, `currency rounded`, tik.TokenTypeCurrencyRounded)
+	f(t, `currency full`, tik.TokenTypeCurrencyFull)
+	f(t, `currency code rounded`, tik.TokenTypeCurrencyCodeRounded)
+	f(t, `currency code full`, tik.TokenTypeCurrencyCodeFull)
+}
+
+func TestICUTranslator(t *testing.T) {
+	t.Parallel()
+
+	conf := tik.DefaultConfig()
+	translator := tik.NewICUTranslator(conf)
+	p := tik.NewParser(conf)
+
+	f := func(t *testing.T, expect, tikInput string) {
+		t.Helper()
+		tk, err := p.Parse(tikInput)
+		requireNoErr(t, err)
+		actual := translator.TIK2ICU(tk, nil)
+		requireEqual(t, expect, actual)
+	}
+
+	f(t, "hello world", "hello world")
+	f(t, "hello {_0}", `hello {"world"}`)
+	f(t,
+		"You're {_0, selectordinal, other {#th}}",
+		`You're {4th}`)
+	f(t, "hello {_0} and {_1}", `hello {"world"} and {"something else"}`)
+	f(t, "it's {_0}, {_1}", `it's {April 2}, {3:45PM}`)
+	f(t,
+		"{_0, select, other {They}} are on {_1, select, other {their}} way!",
+		`{They} are on {their} way!`)
+	f(t,
+		"You have {_0, plural, other {# messages}}",
+		`You have {2 messages}`)
+	f(t,
+		"You have {_0, plural, other {# messages}} in {_1, plural, other {# folders}}.",
+		`You have {2 messages} in {2 folders}.`)
+}
+
+func TestICUTranslatorModifier(t *testing.T) {
+	t.Parallel()
+
+	conf := tik.DefaultConfig()
+	translator := tik.NewICUTranslator(conf)
+	p := tik.NewParser(conf)
+
+	f := func(t *testing.T, expect, input string, modifiers map[int]tik.ICUModifier) {
+		t.Helper()
+		tk, err := p.Parse(input)
+		requireNoErr(t, err)
+		actual := translator.TIK2ICU(tk, modifiers)
+		requireEqual(t, expect, actual)
+	}
+
+	f(t,
+		"{_0} has {_1}",
+		`{"John"} has {"apples"}`, nil)
+
+	f(t,
+		"{_0} has {_1}",
+		`{"John"} has {"apples"}`, map[int]tik.ICUModifier{
+			0: {}, 1: {}, // All modifiers disabled.
+		})
+	f(t,
+		"{_0_gender, select, other {{_0_plural, plural, other {{_0}}} has {_1}",
+		`{"John"} has {"apples"}`, map[int]tik.ICUModifier{
+			// Apply both gender and pluralization simultaneously
+			// for when "John" could be multiple people like "Coworkers".
+			0: {Gender: true, Plural: true},
+		})
+	f(t,
+		"{_0_gender, select, other {{_0}}} has {_1_plural, plural, other {{_1}}}",
+		`{"John"} has {"apples"}`, map[int]tik.ICUModifier{
+			0: {Gender: true}, 1: {Plural: true},
+		})
+}
+
 func FuzzTokenize(f *testing.F) {
 	f.Add("")
 	f.Add(`hello world`)
 	f.Add(`{3} items`)
-	f.Add(`{he} lost {himself} in {his} thoughts`)
+	f.Add(`{they} lost {themself} in {their} thoughts`)
 	f.Add(`\n`)
 	f.Add(`\{not a placeholder}\{again, not a placeholder}`)
 	f.Add(`\\text after`)
 	f.Add(`\\\\text after`)
-	f.Add("You're {4th} out of {2} contenders")
+	f.Add("You're {4th} out of {2 contenders}")
 	f.Add("{unknown}")
 	f.Add(`{3:45PM}{3:45:30PM}{April 2}{Apr 2}
 		{Apr 2025}{Monday}{April 2, 3:45PM}
 		{2025}{April 2, 3:45:30PM}`)
 
 	f.Fuzz(func(t *testing.T, input string) {
-		var tokenizer tik.Parser
-		tk, err := tokenizer.Parse(input)
+		parser := tik.NewParser(tik.DefaultConfig())
+		tk, err := parser.Parse(input)
 		// If an error occurs, ensure it's one of the expected error types.
 		if err != nil {
 			_ = err.Error()
@@ -287,72 +479,104 @@ func FuzzTokenize(f *testing.F) {
 }
 
 func BenchmarkParseFnPlaceholdersOnly(b *testing.B) {
-	parser := tik.NewParser(nil) // With default config.
+	parser := tik.NewParser(tik.DefaultConfig())
 	for b.Loop() {
 		err := parser.ParseFn(`{3:45PM}{3:45:30PM}{April 2}{Apr 2}
 		{Apr 2025}{Monday}{April 2, 3:45PM}
-		{2025}{April 2, 3:45:30PM}`, func(_ tik.TIK) error { return nil })
-		if err != nil {
+		{2025}{April 2, 3:45:30PM}`, func(_ tik.TIK) {})
+		if err.Err != nil {
 			panic(err)
 		}
 	}
 }
 
 func BenchmarkParseFnFewPlaceholders(b *testing.B) {
-	parser := tik.NewParser(nil) // With default config.
-	var err error
-
-	loremIpsum, err := os.ReadFile("testdata/lorem_ipsum.txt")
-	requireNoErr(b, err)
-	input := string(loremIpsum)
-
-	for b.Loop() {
-		err := parser.ParseFn(input, func(_ tik.TIK) error { return nil })
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-func BenchmarkParseFnNoPlaceholders(b *testing.B) {
-	parser := tik.NewParser(nil) // With default config.
+	parser := tik.NewParser(tik.DefaultConfig())
 
 	loremIpsum, err := os.ReadFile("testdata/lorem_ipsum_fewplaceholders.txt")
 	requireNoErr(b, err)
 	input := string(loremIpsum)
 
 	for b.Loop() {
-		err := parser.ParseFn(input, func(_ tik.TIK) error { return nil })
-		if err != nil {
+		err := parser.ParseFn(input, func(_ tik.TIK) {})
+		if err.Err != nil {
 			panic(err)
 		}
+	}
+}
+
+func BenchmarkParseFnNoPlaceholders(b *testing.B) {
+	parser := tik.NewParser(tik.DefaultConfig())
+
+	loremIpsum, err := os.ReadFile("testdata/lorem_ipsum.txt")
+	requireNoErr(b, err)
+	input := string(loremIpsum)
+
+	for b.Loop() {
+		err := parser.ParseFn(input, func(_ tik.TIK) {})
+		if err.Err != nil {
+			panic(err)
+		}
+	}
+}
+
+func BenchmarkParseFnNoPlaceholdersShort(b *testing.B) {
+	parser := tik.NewParser(tik.DefaultConfig())
+
+	input := string("Short key")
+
+	for b.Loop() {
+		err := parser.ParseFn(input, func(_ tik.TIK) {})
+		if err.Err != nil {
+			panic(err)
+		}
+	}
+}
+
+func BenchmarkTIK2ICUBuf(b *testing.B) {
+	conf := tik.DefaultConfig()
+	parser := tik.NewParser(conf)
+	translator := tik.NewICUTranslator(conf)
+
+	input := string("On {April 2} you had {2 messages at {3:45PM}} in {2 main folders}")
+	tk, err := parser.Parse(input)
+	requireNoErr(b, err)
+
+	for b.Loop() {
+		translator.TIK2ICUBuf(tk, nil, func(buf *bytes.Buffer) {
+			_ = buf // Simulate doing something with the buffer.
+		})
 	}
 }
 
 func requireDeepEqual[T any](tb testing.TB, expect, actual T) {
 	tb.Helper()
 	if !reflect.DeepEqual(expect, actual) {
-		tb.Fatalf("expected %#v; received: %#v", expect, actual)
+		tb.Fatalf("\nexpected: %#v;\nreceived: %#v", expect, actual)
 	}
 }
 
 func requireEqual[T comparable](tb testing.TB, expect, actual T) {
 	tb.Helper()
 	if expect != actual {
-		tb.Fatalf("expected %#v; received: %#v", expect, actual)
+		tb.Fatalf("\nexpected: %#v;\nreceived: %#v", expect, actual)
 	}
 }
 
 func requireErrIs(tb testing.TB, expect, actual error) {
 	tb.Helper()
 	if !errors.Is(actual, expect) {
-		tb.Fatalf("expected %#v; received: %#v", expect, actual)
+		var msg string
+		if actual != nil {
+			msg = actual.Error()
+		}
+		tb.Fatalf("\nexpected: %#v;\nreceived: %#v (%s)", expect, actual, msg)
 	}
 }
 
 func requireNoErr(tb testing.TB, err error) {
 	tb.Helper()
 	if err != nil {
-		tb.Fatalf("expected no error; received: %#v", err)
+		tb.Fatalf("\nexpected: no error;\nreceived: %#v", err)
 	}
 }

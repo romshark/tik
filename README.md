@@ -6,39 +6,39 @@
 
 **Table of Contents**
 
-- [Introduction](#introduction)
-- [Problem](#problem)
-  - [Key-based Translation](#key-based-translation)
-  - [ICU Messages](#icu-messages)
-- [TIK Syntax Rules](#tik-syntax-rules)
-  - [Magic Constants](#magic-constants)
-  - [Cardinal Pluralization](#cardinal-pluralization)
-    - [Cardinal Pluralization Invariants](#cardinal-pluralization-invariants)
-  - [String Placeholders](#string-placeholders)
-    - [String Placeholders with Gender and Pluralization](#string-placeholders-with-gender-and-pluralization)
-    - [String Placeholder Invariants](#string-placeholder-invariants)
-- [ICU Encoding](#icu-encoding)
-- [ICU Encoding – Positional Mapping](#icu-encoding--positional-mapping)
-  - [ICU Encoding - String Placeholders](#icu-encoding---string-placeholders)
-    - [ICU Encoding - String Placeholders With Gender](#icu-encoding---string-placeholders-with-gender)
-    - [ICU Encoding - String Placeholders With Pluralization](#icu-encoding---string-placeholders-with-pluralization)
-  - [ICU Encoding - Gender Agreement](#icu-encoding---gender-agreement)
-  - [ICU Encoding - Cardinal Pluralization](#icu-encoding---cardinal-pluralization)
-  - [ICU Encoding - Ordinal Pluralization](#icu-encoding---ordinal-pluralization)
-  - [ICU Encoding - Time Placeholders](#icu-encoding---time-placeholders)
-  - [ICU Encoding - Currency](#icu-encoding---currency)
-  - [ICU Encoding - Number](#icu-encoding---number)
-- [Configuration Guidelines](#configuration-guidelines)
-  - [Magic Constant Customization](#magic-constant-customization)
-  - [Domains](#domains)
-- [Limitations](#limitations)
-- [Standards and Conventions](#standards-and-conventions)
-- [FAQ](#faq)
-  - [Is this overcomplication really worth it and aren't simple keys enough?](#is-this-overcomplication-really-worth-it-and-arent-simple-keys-enough)
-  - [How about just preloading translation texts by key using IDE plugins?](#how-about-just-preloading-translation-texts-by-key-using-ide-plugins)
-  - [Could Fluent be used instead of ICU?](#could-fluent-be-used-instead-of-icu)
-  - [Why use masculine gender by default instead of the neutral `they`?](#why-use-masculine-gender-by-default-instead-of-the-neutral-they)
-- [Special Thanks](#special-thanks)
+- [TIK - Textual Internationalization Key](#tik---textual-internationalization-key)
+  - [Introduction](#introduction)
+  - [Problem](#problem)
+    - [Key-based Translation](#key-based-translation)
+    - [ICU Messages](#icu-messages)
+  - [TIK Syntax Rules](#tik-syntax-rules)
+    - [Magic Constants](#magic-constants)
+    - [Cardinal Pluralization](#cardinal-pluralization)
+      - [Cardinal Pluralization Invariants](#cardinal-pluralization-invariants)
+    - [String Placeholders](#string-placeholders)
+      - [String Placeholders with Gender and Pluralization](#string-placeholders-with-gender-and-pluralization)
+      - [String Placeholder Invariants](#string-placeholder-invariants)
+  - [ICU Encoding](#icu-encoding)
+  - [ICU Encoding – Positional Mapping](#icu-encoding--positional-mapping)
+    - [ICU Encoding - String Placeholders](#icu-encoding---string-placeholders)
+      - [ICU Encoding - String Placeholders With Gender](#icu-encoding---string-placeholders-with-gender)
+      - [ICU Encoding - String Placeholders With Pluralization](#icu-encoding---string-placeholders-with-pluralization)
+    - [ICU Encoding - Gender Agreement](#icu-encoding---gender-agreement)
+    - [ICU Encoding - Cardinal Pluralization](#icu-encoding---cardinal-pluralization)
+    - [ICU Encoding - Ordinal Pluralization](#icu-encoding---ordinal-pluralization)
+    - [ICU Encoding - Time Placeholders](#icu-encoding---time-placeholders)
+    - [ICU Encoding - Currency](#icu-encoding---currency)
+    - [ICU Encoding - Number](#icu-encoding---number)
+  - [Configuration Guidelines](#configuration-guidelines)
+    - [Magic Constant Customization](#magic-constant-customization)
+    - [Domains](#domains)
+  - [Limitations](#limitations)
+  - [Standards and Conventions](#standards-and-conventions)
+  - [FAQ](#faq)
+    - [Is this overcomplication really worth it and aren't simple keys enough?](#is-this-overcomplication-really-worth-it-and-arent-simple-keys-enough)
+    - [How about just preloading translation texts by key using IDE plugins?](#how-about-just-preloading-translation-texts-by-key-using-ide-plugins)
+    - [Could Fluent be used instead of ICU?](#could-fluent-be-used-instead-of-icu)
+  - [Special Thanks](#special-thanks)
 
 ## Introduction
 
@@ -115,7 +115,7 @@ ICU under the hood.
 
 A TIK must always be written in
 [CLDR plural rule `other`](https://cldr.unicode.org/index/cldr-spec/plural-rules)
-and masculine gender. This allows a TIK to avoid conditional ICU select statements.
+and neutral gender. This allows a TIK to avoid conditional ICU select statements.
 
 ### Magic Constants
 
@@ -123,7 +123,7 @@ Magic constants allow TIKs to be easily readable yet auto-translatable to ICU.
 Below is an example TIK that uses multiple magic constants.
 
 ```
-Today {he} earned {$1.20} for completing {2 tasks} in section '{"job"}' at {3:45PM}.
+Today {they} earned {$1.20} for completing {2 tasks} in section '{"job"}' at {3:45PM}.
 ```
 
 - String Placeholders (see [string placeholders](#string-placeholders))
@@ -133,10 +133,11 @@ Today {he} earned {$1.20} for completing {2 tasks} in section '{"job"}' at {3:45
 - Ordinal Pluralization (see [ordinal pluralization](#icu-encoding---ordinal-pluralization)):
   - `{4th}`: ordinal plural
 - Gender (see [gender agreement](#icu-encoding---gender-agreement))
-  - `{he}`: with variants:
-    - `{his}`: possessive pronoun
-    - `{him}`: object pronoun
-    - `{himself}`: reflexive pronoun
+  - `{they}` (subjective) with variants:
+    - `{them}`: objective
+    - `{their}`: possessive adjective
+    - `{theirs}`: possessive pronoun
+    - `{themself}`: reflexive
 - Time (see [time placeholders](#icu-encoding---time-placeholders)):
   - `{3:45PM}`
   - `{3:45:30PM}`
@@ -175,7 +176,7 @@ You have {2 {"apples"} and {"bananas"}}.
 ```
 
 ```
-You had {2 of {his} tasks assigned at {3:45PM}}
+You had {2 of {their} tasks assigned at {3:45PM}}
 ```
 
 #### Cardinal Pluralization Invariants
@@ -208,7 +209,7 @@ This TIK is illegal: {2 {USD 1}}
 ```
 
 ```
-This TIK is illegal: {2 {his}}
+This TIK is illegal: {2 {their}}
 ```
 
 ### String Placeholders
@@ -273,9 +274,9 @@ The translated ICU message for locale `uk` would be:
 
 ```
 І так розпочалася подорож, {userName_gender, select,
-  female { {userName} вирушила на корабель. }
-  male { {userName} вирушив на корабель. }
-  other { {userName} вирушило на корабель. }
+  female { {_0} вирушила на корабель. }
+  male { {_0} вирушив на корабель. }
+  other { {_0} вирушило на корабель. }
 }
 ```
 
@@ -437,26 +438,30 @@ And as you can see, the plurality of the string value does affect the sentence s
 
 ### ICU Encoding - Gender Agreement
 
-Magic constants such as `{he}` (and all of its variations)
+Magic constants such as `{They}` (and all of its variations)
 produce an ICU `select` expression:
 
 ```
-{He} built it {himself}
+{They} built it {themself}
 ```
 
 ```
-{He, select,
+{_0, select,
   male {He}
-} built it {himself, select,
+  female {She}
+  other {They}
+} built it {_1, select,
   male {himself}
+  female {herself}
+  other {themself}
 }.
 ```
 
 Casing is preserved exactly as written in the TIK:
 
-- `He` -> `He`
-- `he` -> `he`
-- `HE` -> `HE`
+- `They` -> `He` (titled)
+- `they` -> `he` (lower case)
+- `THEY` -> `HE` (upper case)
 
 ### ICU Encoding - Cardinal Pluralization
 
@@ -597,9 +602,9 @@ may reduce the overall readability and coherence of the source text.
 This is an example in German:
 
 ```
-{He} hat das Paket um {3:45PM} bekommen.
+{They} hat das Paket um {3:45PM} bekommen.
 Heute ist das die {4th}-schnellste Lieferung.
-Die Kosten betragen {$1.20}
+Die Kosten betragen {$1.20}.
 ```
 
 Naturally, this code would benefit from overwriting the default magic constants:
@@ -607,13 +612,21 @@ Naturally, this code would benefit from overwriting the default magic constants:
 ```json
 {
   "magic constants": {
-    "he/his/him/himself": "er/ihn/ihm",
+    "they/them/their/theirs/themself": "er/ihn/sein/seiner/sich",
     "{3:45PM}": "{15:45 Uhr}",
     "4th": "4./4te/4ter",
     "$1.20": "1,20€",
     "$1": "1€"
   }
 }
+```
+
+Finally, the german source code would look a lot more readable to german speakers:
+
+```
+{Er} hat das Paket um {15:45 Uhr} bekommen.
+Heute ist das die {4.}-schnellste Lieferung.
+Die Kosten betragen {1,20€}.
 ```
 
 ### Domains
@@ -701,12 +714,8 @@ on GitHub - where no plugin can preload or resolve translation keys.
 
 [Fluent](https://projectfluent.org/) can be considered a worthy
 [counterpart to the ICU MessageFormat](https://github.com/projectfluent/fluent/wiki/Fluent-and-ICU-MessageFormat)
-and nothing speaks against using it as an alternative TIK backend.
-
-### Why use masculine gender by default instead of the neutral `they`?
-
-Valid point! The simple truth is that `he` is shorter than `she` and `they`.
-Luckily, this is [configurable](#configuration).
+and technically nothing speaks against using it as an alternative TIK backend
+yet ICU was selected due to wider adoption.
 
 ## Special Thanks
 

@@ -1,4 +1,3 @@
-// Package tik provides the parser for the Textual Internationalization Key format.
 package tik
 
 import (
@@ -27,11 +26,12 @@ const (
 	TokenTypeNumber // {3}
 
 	// Pluralization.
-	TokenTypeCardinalPlural // {2}
-	TokenTypeOrdinalPlural  // {4th}
+	TokenTypeCardinalPluralStart // `{2 `
+	TokenTypeCardinalPluralEnd   // `}`
+	TokenTypeOrdinalPlural       // {4th}
 
 	// Gender agreement.
-	TokenTypeGenderAgreement // {he}, {his}, {him}, {himself}
+	TokenTypeGenderPronoun // {they}, {them}, {their}, {theirs}, {themself}
 
 	// Time.
 	TokenTypeTimeShort            // {3:45PM}
@@ -51,50 +51,83 @@ const (
 	TokenTypeCurrencyCodeFull    // {USD 1.20}
 )
 
+func (t TokenType) String() string {
+	switch t {
+	case TokenTypeStringLiteral:
+		return `literal`
+	case TokenTypeStringPlaceholder:
+		return `string placeholder`
+	case TokenTypeNumber:
+		return `number`
+	case TokenTypeCardinalPluralStart:
+		return `pluralization`
+	case TokenTypeCardinalPluralEnd:
+		return `pluralization block end`
+	case TokenTypeOrdinalPlural:
+		return `ordinal plural`
+	case TokenTypeGenderPronoun:
+		return `gender pronoun`
+	case TokenTypeTimeShort:
+		return `time short`
+	case TokenTypeTimeShortSeconds:
+		return `time short seconds`
+	case TokenTypeTimeFullMonthAndDay:
+		return `time full month and day`
+	case TokenTypeTimeShortMonthAndDay:
+		return `time short month and day`
+	case TokenTypeTimeFullMonthAndYear:
+		return `time full month and year`
+	case TokenTypeTimeWeekday:
+		return `time weekday`
+	case TokenTypeTimeDateAndShort:
+		return `time date and short`
+	case TokenTypeTimeYear:
+		return `time year`
+	case TokenTypeTimeFull:
+		return `time full`
+	case TokenTypeCurrencyRounded:
+		return `currency rounded`
+	case TokenTypeCurrencyFull:
+		return `currency full`
+	case TokenTypeCurrencyCodeRounded:
+		return `currency code rounded`
+	case TokenTypeCurrencyCodeFull:
+		return `currency code full`
+	}
+	return "unknown"
+}
+
 // Token is a lexical TIK token.
 type Token struct {
-	Str string
-	// Index defines the start index of this token in the original TIK.
-	Index int
-	Type  TokenType
+	// IndexStart defines the start index of this token in the original TIK.
+	IndexStart int
+	// IndexEnd defines the end index of this token in the original TIK.
+	IndexEnd int
+	Type     TokenType
 }
 
-var defaultMapping = map[string]TokenType{
-	"3":   TokenTypeNumber,
-	"2":   TokenTypeCardinalPlural,
-	"4th": TokenTypeOrdinalPlural,
+var replacerTokenStringify = strings.NewReplacer("\\\\", "\\", "\\{", "{", "\\}", "}")
 
-	"he":      TokenTypeGenderAgreement,
-	"his":     TokenTypeGenderAgreement,
-	"him":     TokenTypeGenderAgreement,
-	"himself": TokenTypeGenderAgreement,
-
-	"3:45PM":             TokenTypeTimeShort,
-	"3:45:30PM":          TokenTypeTimeShortSeconds,
-	"April 2":            TokenTypeTimeFullMonthAndDay,
-	"Apr 2":              TokenTypeTimeShortMonthAndDay,
-	"Apr 2025":           TokenTypeTimeFullMonthAndYear,
-	"Monday":             TokenTypeTimeWeekday,
-	"April 2, 3:45PM":    TokenTypeTimeDateAndShort,
-	"2025":               TokenTypeTimeYear,
-	"April 2, 3:45:30PM": TokenTypeTimeFull,
-
-	"$1":       TokenTypeCurrencyRounded,
-	"$1.20":    TokenTypeCurrencyFull,
-	"USD 1":    TokenTypeCurrencyCodeRounded,
-	"USD 1.20": TokenTypeCurrencyCodeFull,
-}
-
-type Config struct {
-	Mapping map[string]TokenType
+func (t Token) String(source string) string {
+	s := source[t.IndexStart:t.IndexEnd]
+	if strings.IndexByte(s, '\\') == -1 {
+		// Fast path, no reverse solidus
+		return s
+	}
+	return replacerTokenStringify.Replace(s)
 }
 
 var (
-	ErrUknownPlaceholder         = errors.New("unknown placeholder")
-	ErrInvalidCustomPlaceholders = errors.New("expected exactly 17 mapped typed")
-	ErrInvalidCustomPlaceholder  = errors.New("invalid custom placeholder")
-	ErrStringPlaceholderEmpty    = errors.New(
-		"string placeholder text body is empty",
+	ErrEmpty                         = errors.New("empty TIK")
+	ErrUnexpClosure                  = errors.New("unexpected directive closure")
+	ErrUknownPlaceholder             = errors.New("unknown placeholder")
+	ErrConfMagicConstantNonUnique    = errors.New("non-unique magic constant")
+	ErrConfMagicConstantInvalid      = errors.New("invalid magic constant")
+	ErrConfMissingDefault            = errors.New("missing default value")
+	ErrStringPlaceholderEmpty        = errors.New("string placeholder text body is empty")
+	ErrCardinalPluralEmpty           = errors.New("empty cardinal pluralization")
+	ErrDirectiveStartsCardinalPlural = errors.New(
+		"directive starts a cardinal pluralization",
 	)
 	ErrStringPlaceholderInvSpace = errors.New(
 		"string placeholder starts or ends with a whitespace character",
@@ -102,191 +135,245 @@ var (
 	ErrStringPlaceholderIllegalChars = errors.New(
 		"string placeholder contains illegal characters",
 	)
-	ErrUnclosedStringPlaceholder = errors.New("unclosed string placeholder")
-	ErrUnclosedPlaceholder       = errors.New("unclosed placeholder")
+	ErrUnclosedPlaceholder = errors.New("unclosed placeholder")
+	ErrNestedPluralization = errors.New("nested pluralization")
 )
 
-func CustomPlaceholders(
-	mutate func(map[string]TokenType),
-) (map[string]TokenType, error) {
-	cp := make(map[string]TokenType, len(defaultMapping))
-	for k, v := range defaultMapping {
-		cp[k] = v
-	}
-
-	mutate(cp)
-
-	byType := make(map[TokenType]struct{})
-	for k, v := range cp {
-		if err := ValidateCustomPlaceholder(k); err != nil {
-			return nil, err
-		}
-		byType[v] = struct{}{}
-	}
-	if len(byType) != 17 {
-		return nil, fmt.Errorf("%w, got: %d",
-			ErrInvalidCustomPlaceholders, len(byType))
-	}
-	return cp, nil
-}
-
-func ValidateCustomPlaceholder(s string) error {
-	if strings.ContainsAny(s, "\"") {
-		return ErrInvalidCustomPlaceholder
-	}
-	return nil
-}
-
-type Tokenizer struct {
-	builder strings.Builder
-}
+type Tokenizer struct{}
 
 // Tokenize appends all tokens from input to buffer and returns the buffer.
 // If c == nil the default configuration applies.
-func (t *Tokenizer) Tokenize(buffer Tokens, input string, c *Config) (Tokens, error) {
-	if input == "" {
-		return nil, nil
-	}
-	if strings.IndexByte(input, '{') == -1 {
-		// Fast path for when the input doesn't contain any placeholders.
-		return append(buffer, Token{Type: TokenTypeStringLiteral, Str: input}), nil
+func (t *Tokenizer) Tokenize(buffer Tokens, s string, c *Config) (Tokens, ErrParser) {
+	if s == "" {
+		return nil, err(0, ErrEmpty)
 	}
 
-	mapping := defaultMapping
-	if c != nil && c.Mapping != nil {
-		mapping = c.Mapping
-	}
-	t.builder.Reset()
-	// literalStart tracks the starting byte index of the current literal segment.
-	literalStart := 0
+	inPluralDirective := false
+	offset := 0
 
-	flushLiteral := func(cur int) {
-		if t.builder.Len() > 0 {
-			buffer = append(buffer, Token{
-				Str:   t.builder.String(),
-				Index: literalStart,
-				Type:  TokenTypeStringLiteral,
-			})
-			t.builder.Reset()
-		}
-		literalStart = cur
+	if i, j := strings.IndexByte(s, '{'), strings.IndexByte(s, '}'); i == -1 && j == -1 {
+		// Fast path for simple inputs without {}.
+		return append(buffer, Token{
+			IndexStart: 0,
+			IndexEnd:   len(s),
+			Type:       TokenTypeStringLiteral,
+		}), ErrParser{}
 	}
 
-	i := 0
-	for i < len(input) {
-		// Jump to next '\' or '{' in one call.
-		nextSpecial := strings.IndexAny(input[i:], `{\`)
-		if nextSpecial == -1 {
-			t.builder.WriteString(input[i:])
-			i = len(input)
-			break
-		}
-		specialIndex := i + nextSpecial
-		// Batch write all non-special literal characters.
-		if specialIndex > i {
-			t.builder.WriteString(input[i:specialIndex])
-		}
-
-		switch input[specialIndex] {
-		case '\\':
-			// Count consecutive backslashes.
-			j := specialIndex
-			for j < len(input) && input[j] == '\\' {
-				j++
+	for {
+		var iDir int
+		for literalOffset := offset; ; {
+			// Read string literal before the next directive.
+			iDir = strings.IndexAny(s[offset:], "{}")
+			if iDir == -1 {
+				// There is no next directive.
+				if literalOffset != len(s) {
+					// End of string literal.
+					buffer = append(buffer, Token{
+						IndexStart: literalOffset,
+						IndexEnd:   len(s),
+						Type:       TokenTypeStringLiteral,
+					})
+				}
+				return buffer, ErrParser{}
 			}
-			count := j - specialIndex
-			i = j
-			// Check if a '{' follows.
-			if i < len(input) && input[i] == '{' {
-				if count%2 == 1 {
-					// Odd count: escape the '{'.
-					t.builder.WriteString(strings.Repeat("\\", count/2))
-					t.builder.WriteByte('{')
-					i++ // Consume the '{'.
-				} else {
-					// Even count: backslashes are literal
-					// and the '{' starts a placeholder.
-					t.builder.WriteString(strings.Repeat("\\", count/2))
-					// Let the '{' be handled in the next iteration.
-				}
-			}
-		case '{':
-			flushLiteral(specialIndex)
-			startPlaceholder := specialIndex
 
-			if startPlaceholder+1 < len(input) && input[startPlaceholder+1] == '"' {
-				if startPlaceholder+2 >= len(input) {
-					return nil, fmt.Errorf("%w at index %d",
-						ErrUnclosedStringPlaceholder, startPlaceholder)
+			iDir += offset
+			if s[iDir] == '}' {
+				// A dangling } must be escaped if it was meant to just be a literal '}'.
+				if !inPluralDirective {
+					if isEscaped(s, iDir-1) {
+						// Escaped, continue reading literal.
+						offset = iDir + 1
+						continue
+					}
+					return nil, err(iDir, ErrUnexpClosure)
 				}
-
-				// This is a string placeholder: {"..."}
-				eo := strings.IndexByte(input[startPlaceholder+2:], '}')
-				if eo == -1 {
-					return nil, fmt.Errorf("%w at index %d",
-						ErrUnclosedStringPlaceholder, startPlaceholder)
+				if literalOffset != iDir {
+					// End of string literal.
+					buffer = append(buffer, Token{
+						IndexStart: literalOffset,
+						IndexEnd:   iDir,
+						Type:       TokenTypeStringLiteral,
+					})
 				}
-				eo += startPlaceholder + 2
-				if eo >= len(input) || input[eo-1] != '"' {
-					return nil, fmt.Errorf(
-						"%w, expected } at index %d",
-						ErrUnclosedStringPlaceholder, startPlaceholder)
+				if t := buffer[len(buffer)-1]; t.Type == TokenTypeCardinalPluralStart {
+					// Cardinal plural blocks must contain at least 1 token.
+					return nil, err(t.IndexStart, ErrCardinalPluralEmpty)
 				}
-
-				str := input[startPlaceholder+2 : eo-1]
-				if err := validateTextPlaceholderStr(eo, str); err != nil {
-					return nil, err
-				}
-
 				buffer = append(buffer, Token{
-					Str:   str,
-					Index: startPlaceholder,
-					Type:  TokenTypeStringPlaceholder,
+					IndexStart: iDir,
+					IndexEnd:   iDir + 1,
+					Type:       TokenTypeCardinalPluralEnd,
 				})
-				i = eo + 1
-				literalStart = i
+				inPluralDirective = false
+
+				// Restart literal parsing cycle.
+				offset = iDir + 1
+				literalOffset = offset
 				continue
 			}
 
-			i = specialIndex + 1 // Skip the '{'.
-			// Use IndexByte to jump to the closing '}'.
-			eo := strings.IndexByte(input[i:], '}')
-			if eo == -1 {
-				return nil, fmt.Errorf("%w at index %d",
-					ErrUnclosedPlaceholder, startPlaceholder)
+			// Directive opener { discovered.
+			// Count the preceeding reverse-solidus.
+			if isEscaped(s, iDir-1) {
+				// Escaped directive opener, continue reading string literal.
+				offset = iDir + 1
+				continue
 			}
-			placeholderEnd := i + eo
-			placeholder := input[i:placeholderEnd]
-			wrapped := input[startPlaceholder : placeholderEnd+1]
-			typ := match(placeholder, mapping)
-			if typ == 0 {
-				return nil, fmt.Errorf("%w at index %d",
-					ErrUknownPlaceholder, startPlaceholder)
+
+			if literalOffset != iDir {
+				buffer = append(buffer, Token{
+					IndexStart: literalOffset,
+					IndexEnd:   iDir,
+					Type:       TokenTypeStringLiteral,
+				})
 			}
-			buffer = append(buffer, Token{
-				Str:   wrapped,
-				Index: startPlaceholder,
-				Type:  typ,
-			})
-			i = placeholderEnd + 1 // Skip the '}'
-			literalStart = i
+			break
 		}
+
+		iDirClose := strings.IndexByte(s[iDir+1:], '}')
+		if iDirClose == -1 {
+			return nil, err(iDir, ErrUnclosedPlaceholder)
+		}
+		iDirClose += iDir
+
+		directive := s[iDir+1 : iDirClose+1]
+		tp, value := match(directive, c)
+		switch tp {
+		case TokenTypeStringPlaceholder:
+			err := validateStringPlaceholder(value)
+			if err.Err != nil {
+				// +2 for the two '"'.
+				err.Index += iDir + 2
+				return nil, err
+			}
+		case TokenTypeCardinalPluralStart:
+			if inPluralDirective {
+				return nil, err(iDir, ErrNestedPluralization)
+			}
+			inPluralDirective = true
+			// +2 for the '{' and the space after.
+			buffer = append(buffer, Token{
+				IndexStart: iDir,
+				IndexEnd:   iDir + len(value) + 2,
+				Type:       TokenTypeCardinalPluralStart,
+			})
+			offset = iDir + len(value) + 2 // Skip only the plural block start.
+			continue
+		case 0:
+			return nil, err(iDir, ErrUknownPlaceholder)
+		}
+
+		if b := buffer; len(b) > 0 && b[len(b)-1].Type == TokenTypeCardinalPluralStart {
+			// Cardinal pluralization block must not begin with another directive.
+			return nil, err(iDir, ErrDirectiveStartsCardinalPlural)
+		}
+		buffer = append(buffer, Token{
+			IndexStart: iDir,
+			IndexEnd:   iDirClose + 2,
+			Type:       tp,
+		})
+		offset = iDirClose + 2
 	}
-	flushLiteral(i)
-	return buffer, nil
 }
 
-func match(s string, mapping map[string]TokenType) TokenType {
-	for k, v := range mapping {
-		if strings.EqualFold(s, k) {
-			return v
+func match(s string, c *Config) (tokenType TokenType, value string) {
+	if s != "" && s[0] == '"' {
+		return TokenTypeStringPlaceholder, s
+	}
+	if strings.EqualFold(s, c.MagicConstants.Number) {
+		return TokenTypeNumber, c.MagicConstants.Number
+	}
+	if strings.EqualFold(s, c.MagicConstants.OrdinalPlural.Constant) {
+		return TokenTypeOrdinalPlural, c.MagicConstants.OrdinalPlural.Constant
+	}
+	if strings.EqualFold(s, c.MagicConstants.TimeShort) {
+		return TokenTypeTimeShort, c.MagicConstants.TimeShort
+	}
+	if strings.EqualFold(s, c.MagicConstants.TimeShortSeconds) {
+		return TokenTypeTimeShortSeconds, c.MagicConstants.TimeShortSeconds
+	}
+	if strings.EqualFold(s, c.MagicConstants.TimeFullMonthAndDay) {
+		return TokenTypeTimeFullMonthAndDay, c.MagicConstants.TimeFullMonthAndDay
+	}
+	if strings.EqualFold(s, c.MagicConstants.TimeShortMonthAndDay) {
+		return TokenTypeTimeShortMonthAndDay, c.MagicConstants.TimeShortMonthAndDay
+	}
+	if strings.EqualFold(s, c.MagicConstants.TimeFullMonthAndYear) {
+		return TokenTypeTimeFullMonthAndYear, c.MagicConstants.TimeFullMonthAndYear
+	}
+	if strings.EqualFold(s, c.MagicConstants.TimeWeekday) {
+		return TokenTypeTimeWeekday, c.MagicConstants.TimeWeekday
+	}
+	if strings.EqualFold(s, c.MagicConstants.TimeDateAndShort) {
+		return TokenTypeTimeDateAndShort, c.MagicConstants.TimeDateAndShort
+	}
+	if strings.EqualFold(s, c.MagicConstants.TimeYear) {
+		return TokenTypeTimeYear, c.MagicConstants.TimeYear
+	}
+	if strings.EqualFold(s, c.MagicConstants.TimeFull) {
+		return TokenTypeTimeFull, c.MagicConstants.TimeFull
+	}
+	if strings.EqualFold(s, c.MagicConstants.CurrencyRounded) {
+		return TokenTypeCurrencyRounded, c.MagicConstants.CurrencyRounded
+	}
+	if strings.EqualFold(s, c.MagicConstants.CurrencyFull) {
+		return TokenTypeCurrencyFull, c.MagicConstants.CurrencyFull
+	}
+	if strings.EqualFold(s, c.MagicConstants.CurrencyCodeRounded) {
+		return TokenTypeCurrencyCodeRounded, c.MagicConstants.CurrencyCodeRounded
+	}
+	if strings.EqualFold(s, c.MagicConstants.CurrencyCodeFull) {
+		return TokenTypeCurrencyCodeFull, c.MagicConstants.CurrencyCodeFull
+	}
+	for _, v := range c.MagicConstants.GenderPronouns {
+		if strings.EqualFold(s, v) {
+			return TokenTypeGenderPronoun, v
 		}
 	}
-	return 0
+	if p := getPrefixEqualFold(s, c.MagicConstants.CardinalPluralStart); p != "" {
+		if l, _ := utf8.DecodeRuneInString(s[len(p):]); !unicode.IsSpace(l) {
+			// A whitespace must follow the cardinal plural block start.
+			return 0, ""
+		}
+		return TokenTypeCardinalPluralStart, p
+	}
+	return 0, ""
+}
+
+func getPrefixEqualFold(s, prefix string) string {
+	var i, j int
+	for i < len(s) && j < len(prefix) {
+		r1, size1 := utf8.DecodeRuneInString(s[i:])
+		r2, size2 := utf8.DecodeRuneInString(prefix[j:])
+
+		if unicode.ToLower(r1) != unicode.ToLower(r2) {
+			return ""
+		}
+
+		i, j = i+size1, j+size2
+	}
+	if j == len(prefix) {
+		return s[:i]
+	}
+	return ""
+}
+
+// isEscaped expects i to point to index -1 relative to the subject byte.
+func isEscaped(s string, i int) bool {
+	pRevSol := 0
+	for ; i >= 0; i, pRevSol = i-1, pRevSol+1 {
+		if s[i] != '\\' {
+			break
+		}
+	}
+	return pRevSol%2 != 0
 }
 
 // TIK is a parsed and validated textual internationalization token.
 type TIK struct {
+	Raw    string
 	Tokens Tokens
 }
 
@@ -295,7 +382,8 @@ func (t TIK) Placeholders() iter.Seq2[int, Token] {
 	return func(yield func(int, Token) bool) {
 		i := 0
 		for _, t := range t.Tokens {
-			if t.Type == TokenTypeStringLiteral {
+			switch t.Type {
+			case TokenTypeStringLiteral, TokenTypeCardinalPluralEnd:
 				continue
 			}
 			if !yield(i, t) {
@@ -315,24 +403,39 @@ type Parser struct {
 
 // NewParser creates a new TIK parser instance.
 func NewParser(conf *Config) *Parser {
+	if conf == nil {
+		conf = DefaultConfig()
+	}
 	return &Parser{
-		t:      Tokenizer{},
 		tokBuf: make(Tokens, 0, 16),
 		conf:   conf,
 	}
 }
 
+type ErrParser struct {
+	Index int
+	Err   error
+}
+
+func (e ErrParser) Error() string {
+	return fmt.Sprintf("at index %d: %v", e.Index, e.Err)
+}
+
+func (e ErrParser) Unwrap() error { return e.Err }
+
 // ParseFn is similar to Parse but avoid copying the token buffer
 // and instead uses the original buffer of the parser in the tik provided to fn.
 //
 // WARNING: Do not alias and use the token slice once fn returns!
-func (p *Parser) ParseFn(input string, fn func(tik TIK) error) (err error) {
+func (p *Parser) ParseFn(input string, fn func(tik TIK)) ErrParser {
 	p.tokBuf = p.tokBuf[:0] // Reset buffer.
+	var err ErrParser
 	p.tokBuf, err = p.t.Tokenize(p.tokBuf, input, p.conf)
-	if err != nil {
+	if err.Err != nil {
 		return err
 	}
-	return fn(TIK{Tokens: p.tokBuf})
+	fn(TIK{Raw: input, Tokens: p.tokBuf})
+	return ErrParser{}
 }
 
 // Parse parses input and returns a validated TIK, otherwise returns an error.
@@ -340,31 +443,47 @@ func (p *Parser) ParseFn(input string, fn func(tik TIK) error) (err error) {
 // the internal parser buffer.
 // If you want to avoid the token buffer copy use ParseFn with caution instead.
 func (p *Parser) Parse(input string) (tik TIK, err error) {
-	err = p.ParseFn(input, func(ref TIK) error {
+	if strings.TrimSpace(input) == "" {
+		return tik, ErrEmpty
+	}
+	errParser := p.ParseFn(input, func(ref TIK) {
 		cp := make(Tokens, len(ref.Tokens))
 		copy(cp, ref.Tokens)
-		tik.Tokens = cp
-		return nil
+		tik.Raw, tik.Tokens = input, cp
 	})
-	return tik, err
+	if errParser.Err != nil {
+		return TIK{}, errParser
+	}
+	return tik, nil
 }
 
-func validateTextPlaceholderStr(index int, s string) error {
+func validateStringPlaceholder(s string) ErrParser {
+	if s[len(s)-1] != '"' || len(s) < 2 {
+		return err(len(s)-1, ErrStringPlaceholderIllegalChars)
+	}
+
+	s = s[1 : len(s)-1]
 	if s == "" {
-		return fmt.Errorf("%w at index %d", ErrStringPlaceholderEmpty, index)
+		return err(0, ErrStringPlaceholderEmpty)
 	}
 
-	runeL, _ := utf8.DecodeRuneInString(s)     // First.
-	runeR, _ := utf8.DecodeLastRuneInString(s) // Last.
+	runeL, _ := utf8.DecodeRuneInString(s)         // First.
+	runeR, rSize := utf8.DecodeLastRuneInString(s) // Last.
 
-	if unicode.IsSpace(runeL) || unicode.IsSpace(runeR) {
-		return ErrStringPlaceholderInvSpace
+	if unicode.IsSpace(runeL) {
+		return err(0, ErrStringPlaceholderInvSpace)
+	}
+	if unicode.IsSpace(runeR) {
+		return err(len(s)-rSize, ErrStringPlaceholderInvSpace)
 	}
 
-	if iRevSol := strings.IndexAny(s, "\\{}\""); iRevSol != -1 {
-		return fmt.Errorf(
-			"%w at index %d", ErrStringPlaceholderIllegalChars, index+iRevSol)
+	if i := strings.IndexAny(s, "\\{}\""); i != -1 {
+		return err(i, ErrStringPlaceholderIllegalChars)
 	}
 
-	return nil
+	return ErrParser{}
+}
+
+func err(index int, err error) ErrParser {
+	return ErrParser{Index: index, Err: err}
 }
