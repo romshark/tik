@@ -77,6 +77,7 @@ Keys offer clear benefits, such as:
 - **Separation of concerns -** Developers reference keys,
   while translators manage the actual text.
 - **Reusability** - the same message can be used across different contexts or interfaces.
+- **Dynamic updates** - translation changes go live immediately without redeployment.
 - **Integration** - keys work seamlessly with most existing localization infrastructure.
 
 However, key-based i18n introduces an abstraction layer between the source code
@@ -791,6 +792,7 @@ offer clear benefits, such as:
 
 - separation of concerns
 - easy reuse across contexts
+- dynamic lookup without redeployment
 - and compatibility with existing localization systems
 
 they also come with certain [limitations](#problem).
