@@ -164,8 +164,8 @@ The context must not be empty:
 #### Context - Example
 
 TIKs are unique message keys within a domain. However, the same original message text can
-have different meanings depending on usage. In such cases,
-context must be added to explicitly separate them.
+have different meanings depending on usage. In such cases, context must be added to
+separate two TIKs with a similar text body.
 
 Example: a 
 
