@@ -290,7 +290,7 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c *Config) (Tokens, ErrPar
 			}
 
 			// Directive opener { discovered.
-			// Count the preceeding reverse-solidus.
+			// Count the preceding reverse-solidus.
 			if isEscaped(s, iDir-1) {
 				// Escaped directive opener, continue reading string literal.
 				offset = iDir + 1
