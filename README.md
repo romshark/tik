@@ -6,39 +6,41 @@
 
 **Table of Contents**
 
-- [TIK - Textual Internationalization Key](#tik---textual-internationalization-key)
-  - [Introduction](#introduction)
-  - [Problem](#problem)
-    - [Key-based Translation](#key-based-translation)
-    - [ICU Messages](#icu-messages)
-  - [TIK Syntax Rules](#tik-syntax-rules)
-    - [Magic Constants](#magic-constants)
-    - [Cardinal Pluralization](#cardinal-pluralization)
-      - [Cardinal Pluralization Invariants](#cardinal-pluralization-invariants)
-    - [String Placeholders](#string-placeholders)
-      - [String Placeholders with Gender and Pluralization](#string-placeholders-with-gender-and-pluralization)
-      - [String Placeholder Invariants](#string-placeholder-invariants)
-  - [ICU Encoding](#icu-encoding)
-  - [ICU Encoding – Positional Mapping](#icu-encoding--positional-mapping)
-    - [ICU Encoding - String Placeholders](#icu-encoding---string-placeholders)
-      - [ICU Encoding - String Placeholders With Gender](#icu-encoding---string-placeholders-with-gender)
-      - [ICU Encoding - String Placeholders With Pluralization](#icu-encoding---string-placeholders-with-pluralization)
-    - [ICU Encoding - Gender Agreement](#icu-encoding---gender-agreement)
-    - [ICU Encoding - Cardinal Pluralization](#icu-encoding---cardinal-pluralization)
-    - [ICU Encoding - Ordinal Pluralization](#icu-encoding---ordinal-pluralization)
-    - [ICU Encoding - Time Placeholders](#icu-encoding---time-placeholders)
-    - [ICU Encoding - Currency](#icu-encoding---currency)
-    - [ICU Encoding - Number](#icu-encoding---number)
-  - [Configuration Guidelines](#configuration-guidelines)
-    - [Magic Constant Customization](#magic-constant-customization)
-    - [Domains](#domains)
-  - [Limitations](#limitations)
-  - [Standards and Conventions](#standards-and-conventions)
-  - [FAQ](#faq)
-    - [Is this overcomplication really worth it and aren't simple keys enough?](#is-this-overcomplication-really-worth-it-and-arent-simple-keys-enough)
-    - [How about just preloading translation texts by key using IDE plugins?](#how-about-just-preloading-translation-texts-by-key-using-ide-plugins)
-    - [Could Fluent be used instead of ICU?](#could-fluent-be-used-instead-of-icu)
-  - [Special Thanks](#special-thanks)
+- [Introduction](#introduction)
+- [Problem](#problem)
+  - [Key-based Translation](#key-based-translation)
+  - [ICU Messages](#icu-messages)
+- [TIK Syntax Rules](#tik-syntax-rules)
+  - [Context](#context)
+    - [Context - Example](#context---example)
+  - [Text](#text)
+  - [Magic Constants](#magic-constants)
+  - [Cardinal Pluralization](#cardinal-pluralization)
+    - [Cardinal Pluralization Invariants](#cardinal-pluralization-invariants)
+  - [String Placeholders](#string-placeholders)
+    - [String Placeholders with Gender and Pluralization](#string-placeholders-with-gender-and-pluralization)
+    - [String Placeholder Invariants](#string-placeholder-invariants)
+- [ICU Encoding](#icu-encoding)
+- [ICU Encoding – Positional Mapping](#icu-encoding--positional-mapping)
+  - [ICU Encoding - String Placeholders](#icu-encoding---string-placeholders)
+    - [ICU Encoding - String Placeholders With Gender](#icu-encoding---string-placeholders-with-gender)
+    - [ICU Encoding - String Placeholders With Pluralization](#icu-encoding---string-placeholders-with-pluralization)
+  - [ICU Encoding - Gender Agreement](#icu-encoding---gender-agreement)
+  - [ICU Encoding - Cardinal Pluralization](#icu-encoding---cardinal-pluralization)
+  - [ICU Encoding - Ordinal Pluralization](#icu-encoding---ordinal-pluralization)
+  - [ICU Encoding - Time Placeholders](#icu-encoding---time-placeholders)
+  - [ICU Encoding - Currency](#icu-encoding---currency)
+  - [ICU Encoding - Number](#icu-encoding---number)
+- [Configuration Guidelines](#configuration-guidelines)
+  - [Magic Constant Customization](#magic-constant-customization)
+  - [Domains](#domains)
+- [Limitations](#limitations)
+- [Standards and Conventions](#standards-and-conventions)
+- [FAQ](#faq)
+  - [Is this overcomplication really worth it and aren't simple keys enough?](#is-this-overcomplication-really-worth-it-and-arent-simple-keys-enough)
+  - [How about just preloading translation texts by key using IDE plugins?](#how-about-just-preloading-translation-texts-by-key-using-ide-plugins)
+  - [Could Fluent be used instead of ICU?](#could-fluent-be-used-instead-of-icu)
+- [Special Thanks](#special-thanks)
 
 ## Introduction
 
@@ -113,7 +115,106 @@ ICU under the hood.
 
 ## TIK Syntax Rules
 
-A TIK must always be written in
+```
+[ignored spaces] [optional context [ignored spaces]] [text body] [ignored spaces]
+```
+
+A TIK consists of an optional context and the required text while the surrounding
+unicode spaces are ignored. Both the context and text body must not be empty.
+
+### Context
+
+The TIK context is an optional namespace used to disambiguate message keys.
+It is not part of the message’s text body and hence must not be included in the
+If a TIK starts with an opening square bracket `[` then everything up to the next
+closing square bracket `]` is treated as the context.
+
+⚠️ Do not confuse context with the message description.
+
+```go
+// description.
+localize.Text(`[context] Text.`)
+```
+
+Curly braces `{` `}`, square brackets `[` `]` and reverse-solidus `\`
+are not allowed inside the context:
+
+```
+[{invalid} context] Text.
+```
+
+```
+[[invalid context]] Text.
+```
+
+```
+[foo\bar] Text.
+```
+
+The context must not be empty:
+
+```
+[ ] This context is invalid.
+```
+
+```
+[] This context is invalid.
+```
+
+#### Context - Example
+
+TIKs are unique message keys within a domain. However, the same original message text can
+have different meanings depending on usage. In such cases,
+context must be added to explicitly separate them.
+
+Example: a 
+
+```html
+<body>
+  <h1>{
+    // "save" as in "save from danger".  <--- HERE
+    localize.Text(`Save your planet`)
+  }</h1>
+  <p>{ localize.Text(`Your planet is in grave danger. Be the hero who saves it!`) }</p>
+  <dialog>
+    <p>You're about to exit the simulation.</p>
+    <form method="dialog">
+      <button>{
+        // "save" as in "save to file".  <--- HERE
+        localize.Text(`Save your planet`)
+      }</button>
+      <button>{
+        // Cancel exiting the simulation.
+        localize.Text(`Cancel`)
+      }</button>
+    </form>
+  </dialog>
+</body>
+```
+
+In the example above, the web page contains two TIKs that will result in 1 ICU message
+being produced: `Save your planet`. In English, the meaning of the word "save" depends
+on context, which allows this message to be reused across different contexts. But other
+languages such as German might require two separate messages:
+
+- `"Rette deinen Planeten"` (as in "save your planet from danger")
+- `"Speichere deinen Planeten"` (as in "save your planet to file")
+
+Since 1 TIK can never refer to 2 different messages a new TIK must be created yet
+sometimes the original text must be preserved. In this case we can apply a context
+to either (or both) messages to disambiguate them:
+
+```
+// "save" as in "save to file".
+localize.Text(`[button.save] Save your planet`)
+```
+
+The resulting TIK defines the context `"button.save"` and
+the text body `"Save your planet"`.
+
+### Text
+
+The text part must always be written in
 [CLDR plural rule `other`](https://cldr.unicode.org/index/cldr-spec/plural-rules)
 and neutral gender. This allows a TIK to avoid conditional ICU select statements.
 
@@ -313,7 +414,7 @@ All placeholders are mapped positionally, meaning that the order of occurrence i
 is the order expected for parameter inputs.
 
 ```
-By {3:45PM}, {"John"} received {2 emails}.
+[some.context] By {3:45PM}, {"John"} received {2 emails}.
 ```
 
 generated ICU:

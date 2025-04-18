@@ -17,6 +17,7 @@ type TokenType uint8
 
 const (
 	_ TokenType = iota
+	TokenTypeContext
 	TokenTypeStringLiteral
 
 	// String.
@@ -53,6 +54,8 @@ const (
 
 func (t TokenType) String() string {
 	switch t {
+	case TokenTypeContext:
+		return `context`
 	case TokenTypeStringLiteral:
 		return `literal`
 	case TokenTypeStringPlaceholder:
@@ -118,13 +121,13 @@ func (t Token) String(source string) string {
 }
 
 var (
-	ErrEmpty                         = errors.New("empty TIK")
+	ErrTextEmpty                     = errors.New("empty text body")
 	ErrUnexpClosure                  = errors.New("unexpected directive closure")
 	ErrUknownPlaceholder             = errors.New("unknown placeholder")
 	ErrConfMagicConstantNonUnique    = errors.New("non-unique magic constant")
 	ErrConfMagicConstantInvalid      = errors.New("invalid magic constant")
 	ErrConfMissingDefault            = errors.New("missing default value")
-	ErrStringPlaceholderEmpty        = errors.New("string placeholder text body is empty")
+	ErrStringPlaceholderEmpty        = errors.New("empty string placeholder text body")
 	ErrCardinalPluralEmpty           = errors.New("empty cardinal pluralization")
 	ErrDirectiveStartsCardinalPlural = errors.New(
 		"directive starts a cardinal pluralization",
@@ -137,6 +140,9 @@ var (
 	)
 	ErrUnclosedPlaceholder = errors.New("unclosed placeholder")
 	ErrNestedPluralization = errors.New("nested pluralization")
+	ErrContextUnclosed     = errors.New("unclosed context")
+	ErrContextEmpty        = errors.New("empty context")
+	ErrContextInvalid      = errors.New("invalid context")
 )
 
 type Tokenizer struct{}
@@ -144,20 +150,79 @@ type Tokenizer struct{}
 // Tokenize appends all tokens from input to buffer and returns the buffer.
 // If c == nil the default configuration applies.
 func (t *Tokenizer) Tokenize(buffer Tokens, s string, c *Config) (Tokens, ErrParser) {
-	if s == "" {
-		return nil, err(0, ErrEmpty)
-	}
-
 	inPluralDirective := false
 	offset := 0
 
-	if i, j := strings.IndexByte(s, '{'), strings.IndexByte(s, '}'); i == -1 && j == -1 {
-		// Fast path for simple inputs without {}.
-		return append(buffer, Token{
-			IndexStart: 0,
-			IndexEnd:   len(s),
-			Type:       TokenTypeStringLiteral,
-		}), ErrParser{}
+	// Skip prefix spaces.
+	for offset < len(s) {
+		l, size := utf8.DecodeRuneInString(s[offset:])
+		if !unicode.IsSpace(l) {
+			break
+		}
+		offset += size
+	}
+
+	if offset >= len(s) {
+		return nil, err(0, ErrTextEmpty)
+	}
+	if s[offset] == '[' {
+		start := offset
+		offset++
+		// TIK has context.
+		contextEnd := strings.IndexByte(s[offset:], ']')
+		if contextEnd == -1 {
+			return buffer, ErrParser{Err: ErrContextUnclosed}
+		}
+
+		context := s[offset : offset+contextEnd]
+		if strings.TrimSpace(context) == "" {
+			return buffer, ErrParser{Err: ErrContextEmpty}
+		}
+		if strings.ContainsAny(context, "{}[]\\") {
+			// Contains either of: { } [ ] \
+			return buffer, ErrParser{Err: ErrContextInvalid}
+		}
+		offset += contextEnd + 1
+		buffer = append(buffer, Token{
+			IndexStart: start,
+			IndexEnd:   offset,
+			Type:       TokenTypeContext,
+		})
+
+		// Skip spaces before the start of the text.
+		for offset < len(s) {
+			l, size := utf8.DecodeRuneInString(s[offset:])
+			if !unicode.IsSpace(l) {
+				break
+			}
+			offset += size
+		}
+
+		if offset >= len(s) {
+			return buffer, ErrParser{Index: offset, Err: ErrTextEmpty}
+		}
+	}
+
+	{
+		i := strings.IndexByte(s[offset:], '{')
+		j := strings.IndexByte(s[offset:], '}')
+		if i == -1 && j == -1 {
+			// Fast path for simple inputs without {}.
+			indexEnd := len(s)
+			// Ignore suffix spaces.
+			for indexEnd >= 0 {
+				l, size := utf8.DecodeLastRuneInString(s[offset:indexEnd])
+				if !unicode.IsSpace(l) {
+					break
+				}
+				indexEnd -= size
+			}
+			return append(buffer, Token{
+				IndexStart: offset,
+				IndexEnd:   indexEnd,
+				Type:       TokenTypeStringLiteral,
+			}), ErrParser{}
+		}
 	}
 
 	for {
@@ -169,12 +234,22 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c *Config) (Tokens, ErrPar
 				// There is no next directive.
 				if literalOffset != len(s) {
 					// End of string literal.
+					indexEnd := len(s)
+					// Ignore suffix spaces.
+					for indexEnd >= 0 {
+						l, size := utf8.DecodeLastRuneInString(s[:indexEnd])
+						if !unicode.IsSpace(l) {
+							break
+						}
+						indexEnd -= size
+					}
 					buffer = append(buffer, Token{
 						IndexStart: literalOffset,
-						IndexEnd:   len(s),
+						IndexEnd:   indexEnd,
 						Type:       TokenTypeStringLiteral,
 					})
 				}
+				// End of TIK.
 				return buffer, ErrParser{}
 			}
 
@@ -443,9 +518,6 @@ func (p *Parser) ParseFn(input string, fn func(tik TIK)) ErrParser {
 // the internal parser buffer.
 // If you want to avoid the token buffer copy use ParseFn with caution instead.
 func (p *Parser) Parse(input string) (tik TIK, err error) {
-	if strings.TrimSpace(input) == "" {
-		return tik, ErrEmpty
-	}
 	errParser := p.ParseFn(input, func(ref TIK) {
 		cp := make(Tokens, len(ref.Tokens))
 		copy(cp, ref.Tokens)

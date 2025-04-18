@@ -45,9 +45,40 @@ func TestParse(t *testing.T) {
 	f(t, "hello world",
 		Token{"hello world", tik.TokenTypeStringLiteral},
 	)
+	f(t, "  hello world  ",
+		Token{"hello world", tik.TokenTypeStringLiteral},
+	)
+
+	// Context.
+	f(t, "[c] hello world",
+		Token{"[c]", tik.TokenTypeContext},
+		Token{"hello world", tik.TokenTypeStringLiteral},
+	)
+	f(t, "\r\n\t [c]\t\r\n hello world\r\n\t ",
+		Token{"[c]", tik.TokenTypeContext},
+		Token{"hello world", tik.TokenTypeStringLiteral},
+	)
+	f(t, "[c][b]okay",
+		Token{"[c]", tik.TokenTypeContext},
+		Token{"[b]okay", tik.TokenTypeStringLiteral},
+	)
 
 	// Number placeholder
 	f(t, "{3} items",
+		Token{"{3}", tik.TokenTypeNumber},
+		Token{" items", tik.TokenTypeStringLiteral},
+	)
+	f(t, "  {3} items  ",
+		Token{"{3}", tik.TokenTypeNumber},
+		Token{" items", tik.TokenTypeStringLiteral},
+	)
+	f(t, "[context]{3} items",
+		Token{"[context]", tik.TokenTypeContext},
+		Token{"{3}", tik.TokenTypeNumber},
+		Token{" items", tik.TokenTypeStringLiteral},
+	)
+	f(t, "  [context]  {3} items  ",
+		Token{"[context]", tik.TokenTypeContext},
 		Token{"{3}", tik.TokenTypeNumber},
 		Token{" items", tik.TokenTypeStringLiteral},
 	)
@@ -168,9 +199,26 @@ func TestParseErr(t *testing.T) {
 		requireDeepEqual(t, tik.TIK{}, tk)
 	}
 
-	f(t, tik.ErrEmpty, ``)
-	f(t, tik.ErrEmpty, `   `)
-	f(t, tik.ErrEmpty, "\t\r\n ")
+	f(t, tik.ErrTextEmpty, ``)
+	f(t, tik.ErrTextEmpty, `   `)
+	f(t, tik.ErrTextEmpty, `[context]`)
+	f(t, tik.ErrTextEmpty, `[context]   `)
+	f(t, tik.ErrTextEmpty, "\t\r\n ")
+	f(t, tik.ErrContextEmpty, `[] Text`)
+	f(t, tik.ErrContextEmpty, "[]")
+	f(t, tik.ErrContextEmpty, `[  ] Text`)
+	f(t, tik.ErrContextEmpty, "[\r\n\t ] Text")
+	f(t, tik.ErrContextInvalid, `[not escaped\] Text`)
+	f(t, tik.ErrContextInvalid, `[{invalid}] Text`)
+	f(t, tik.ErrContextInvalid, `[{] Text`)
+	f(t, tik.ErrContextInvalid, `[}] Text`)
+	f(t, tik.ErrContextInvalid, `[[]] Text`)
+	f(t, tik.ErrContextInvalid, `[[nope]] Text`)
+	f(t, tik.ErrContextInvalid, `[a[b]c] Text`)
+	f(t, tik.ErrContextInvalid, `[a\[b\]c] Text`)
+	f(t, tik.ErrContextUnclosed, "[")
+	f(t, tik.ErrContextUnclosed, "[abc")
+	f(t, tik.ErrContextUnclosed, "[\t\r\n ")
 	f(t, tik.ErrUknownPlaceholder, `no space after cardinal plural: {2abc}`)
 	f(t, tik.ErrUknownPlaceholder, `unknown placeholder: {2026}`)
 	f(t, tik.ErrUknownPlaceholder, `unknown placeholder: {April 21}`)
@@ -356,6 +404,7 @@ func TestTokenType_String(t *testing.T) {
 
 	f(t, `unknown`, 0)
 	f(t, `unknown`, 255)
+	f(t, `context`, tik.TokenTypeContext)
 	f(t, `literal`, tik.TokenTypeStringLiteral)
 	f(t, `string placeholder`, tik.TokenTypeStringPlaceholder)
 	f(t, `number`, tik.TokenTypeNumber)
