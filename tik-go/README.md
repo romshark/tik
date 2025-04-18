@@ -4,9 +4,8 @@
 <a href="https://goreportcard.com/report/github.com/romshark/tik/tik-go">
     <img src="https://goreportcard.com/badge/github.com/romshark/tik/tik-go" alt="GoReportCard">
 </a>
-<a href='https://coveralls.io/github/romshark/tik/tik-go?branch=main'>
-    <img src='https://coveralls.io/repos/github/romshark/tik/tik-go/badge.svg?branch=main&service=github' alt='Coverage Status' />
-</a>
+<a href='https://coveralls.io/github/romshark/tik?branch=main'><img src='https://coveralls.io/repos/github/romshark/tik/badge.svg?branch=main' alt='Coverage Status'/></a>
+
 
 # tik-go
 
