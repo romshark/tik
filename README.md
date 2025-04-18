@@ -414,7 +414,7 @@ All placeholders are mapped positionally, meaning that the order of occurrence i
 is the order expected for parameter inputs.
 
 ```
-[some.context] By {3:45PM}, {"John"} received {2 emails}.
+[report] By {3:45PM}, {"John"} received {2 emails}.
 ```
 
 generated ICU:
@@ -438,7 +438,7 @@ By { 0_, time, short }, { 1_gender, select,
 Usage example in Go:
 
 ```go
-local.Text(`[some.context] By {3:45PM}, {"John"} received {2 emails}.`,
+local.Text(`[report] By {3:45PM}, {"John"} received {2 emails}.`,
   time.Now(), "Max", len(emailsReceived))
 ```
 
