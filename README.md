@@ -438,7 +438,7 @@ By { 0_, time, short }, { 1_gender, select,
 Usage example in Go:
 
 ```go
-local.Text(`By {3:45PM}, {"John"} received {2 emails}.`,
+local.Text(`[some.context] By {3:45PM}, {"John"} received {2 emails}.`,
   time.Now(), "Max", len(emailsReceived))
 ```
 
