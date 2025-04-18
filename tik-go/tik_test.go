@@ -353,28 +353,29 @@ func TestTIKPlaceholdersIter(t *testing.T) {
 
 	p := tik.NewParser(tik.DefaultConfig())
 
-	tk, err := p.Parse(`{3:45PM}{3:45:30PM}{April 2}{Apr 2}
+	tk, err := p.Parse(`[context]{3:45PM}{3:45:30PM}{April 2}{Apr 2}
 		{Apr 2025}{Monday}{April 2, 3:45PM}
 		{2025}{April 2, 3:45:30PM}
 		{$1}{$1.20}{USD 1}{USD 1.20}`)
 	requireNoErr(t, err)
 	expect := []tik.Token{
-		tk.Tokens[0],
+		// 0 is a context.
 		tk.Tokens[1],
 		tk.Tokens[2],
 		tk.Tokens[3],
-		// 4 is a string literal.
-		tk.Tokens[5],
+		tk.Tokens[4],
+		// 5 is a string literal.
 		tk.Tokens[6],
 		tk.Tokens[7],
-		// 8 is a string literal.
-		tk.Tokens[9],
+		tk.Tokens[8],
+		// 9 is a string literal.
 		tk.Tokens[10],
-		// 11 is a string literal.
-		tk.Tokens[12],
+		tk.Tokens[11],
+		// 12 is a string literal.
 		tk.Tokens[13],
 		tk.Tokens[14],
 		tk.Tokens[15],
+		tk.Tokens[16],
 	}
 
 	var actual []tik.Token
@@ -443,7 +444,9 @@ func TestICUTranslator(t *testing.T) {
 	}
 
 	f(t, "hello world", "hello world")
+	f(t, "hello world", "[context] hello world")
 	f(t, "hello {_0}", `hello {"world"}`)
+	f(t, "hello {_0}", `[more context] hello {"world"}`)
 	f(t,
 		"You're {_0, selectordinal, other {#th}}",
 		`You're {4th}`)

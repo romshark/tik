@@ -458,7 +458,7 @@ func (t TIK) Placeholders() iter.Seq2[int, Token] {
 		i := 0
 		for _, t := range t.Tokens {
 			switch t.Type {
-			case TokenTypeStringLiteral, TokenTypeCardinalPluralEnd:
+			case TokenTypeContext, TokenTypeStringLiteral, TokenTypeCardinalPluralEnd:
 				continue
 			}
 			if !yield(i, t) {
