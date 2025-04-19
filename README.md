@@ -821,8 +821,10 @@ by a human.
 
 ### How about just preloading translation texts by key using IDE plugins?
 
-While theoretically viable, this approach is inherently limited to IDEs that support
-such a feature. Additionally, those IDEs/extensions must be compatible with your
+This doesn't address pipeline automation issues but is a theoretically
+viable solution to opaque abstract keys in source code. However,  this approach is
+inherently limited to IDEs that support such a feature.
+Additionally, those IDEs/extensions must be compatible with your
 specific translation file format and message encoding (e.g., ICU, Fluent, ARB).
 It also breaks down entirely when browsing code outside the IDE - for example,
 on GitHub - where no plugin can preload or resolve translation keys.
