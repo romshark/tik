@@ -266,7 +266,7 @@ constants used in Go’s standard library `time` package.
 
 ### Cardinal Pluralization
 
-A pluralization statement `{2 ...}` begins with `{2 ` and end with `}`.
+A pluralization statement `{2 ...}` begins with `{2 ` and ends with `}`.
 The `2` is the placeholder for the actual number value.
 The contents `...` may contain any text that is not explicitly forbidden
 (see [invariants](#cardinal-pluralization-invariants)).
