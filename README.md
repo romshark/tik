@@ -60,7 +60,7 @@ to give developers immediate feedback on i18n issues before they hit production.
 It reduces costs by minimizing reliance on human translators and eases pressure on them
 by offloading routine tasks, allowing experts to focus more on quality assurance.
 
-![semi-auto workflow](https://github.com/romshark/tik/blob/main/semiauto-workflow.svg)
+![TIK i18n workflow](https://github.com/romshark/tik/blob/main/tik-i18n-workflow.svg)
 
 TIK is designed to be agnostic to both programming languages and natural languages
 used in application source code.
