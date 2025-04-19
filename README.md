@@ -807,20 +807,14 @@ As with any technology, TIK introduces both advantages and trade-offs.
 
 ### Is this overcomplication really worth it and aren't simple keys enough?
 
-The answer depends on perspective. While simple keys like `dashboard.newsfeed.summary`
-offer clear benefits, such as:
-
-- separation of concerns
-- easy reuse across contexts
-- dynamic lookup without redeployment
-- and compatibility with existing localization systems
-
+The answer depends on perspective. While abstract keys like `dashboard.newsfeed.summary`
+offer [clear benefits](#key-based-translation)
 they also come with certain [limitations](#problem).
 It is likely that, for the foreseeable future, code will continue to be written and
 maintained primarily by humans. At the same time, large language models are demonstrating
 increasing proficiency in translation tasks. The concept behind TIK is to define clear,
 human-readable messages directly in the source code, delegating the complexity of
-generating accurate ICU messages for various languages to language models.
+generating accurate ICU messages for various languages to large language models.
 
 To give you some context, only the last sentence of this answer was actually written
 by a human.
