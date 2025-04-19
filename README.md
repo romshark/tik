@@ -1,6 +1,6 @@
 **Author:** Roman Scharkov <roman.scharkov@gmail.com>;
 **Version:** 0.4;
-**Last updated:** 2025-04-18;
+**Last updated:** 2025-04-19;
 
 # TIK - Textual Internationalization Key
 
@@ -59,6 +59,8 @@ TIK enables more efficient workflows by integrating TIK processors with CI and L
 to give developers immediate feedback on i18n issues before they hit production.
 It reduces costs by minimizing reliance on human translators and eases pressure on them
 by offloading routine tasks, allowing experts to focus more on quality assurance.
+
+![semi-auto workflow](https://github.com/romshark/tik/blob/main/semiauto-workflow.svg)
 
 TIK is designed to be agnostic to both programming languages and natural languages
 used in application source code.
