@@ -12,6 +12,7 @@
   - [ICU Messages](#icu-messages)
 - [TIK Syntax Rules](#tik-syntax-rules)
   - [Context](#context)
+    - [Context Invariants](#context-invariants)
     - [Context - Example](#context---example)
   - [Text](#text)
   - [Magic Constants](#magic-constants)
@@ -45,31 +46,46 @@
 ## Introduction
 
 "TIK" is an abbreviation for "Textual Internationalization Key".
-TIKs make translation keys in source code more readable, provide better context for
-translators, and enable programmatic generation of
-[ICU messages](https://unicode-org.github.io/icu/userguide/format_parse/messages/).
+A TIK is simultaneously the source of truth for translation and a unique message
+identifier within a domain.
+
+TIKs make translation keys human-readable by closely reflecting the actual text shown
+to the end users in the source code. This improves context for translators,
+enables programmatic generation of
+[ICU messages](https://unicode-org.github.io/icu/userguide/format_parse/messages/),
+and supports better automation and CI/CD integration.
+
+TIK enables more efficient workflows by integrating TIK processors with CI and LLMs
+to give developers immediate feedback on i18n issues before they hit production.
+It reduces costs by minimizing reliance on human translators and eases pressure on them
+by offloading routine tasks, allowing experts to focus more on quality assurance.
+
+TIK is designed to be agnostic to both programming languages and natural languages
+used in application source code.
 
 ## Problem
 
-Internationalization is hard - and most developers avoid it.
-Supporting multiple languages and regions often requires significant effort,
-costly tooling, complex workflows and discipline,
-which many teams are unwilling or unable to take on.
+Internationalization (i18n) and localization (l10n) are hard — and most developers
+avoid them. Supporting multiple languages and regions demands significant effort,
+expensive tooling, complex error-prone workflows with slow feedback loops,
+and discipline that many teams are unable to take on.
 
-Translators often lack context, leading to errors. Messages are fragmented for reuse,
-which breaks grammar in many languages, etc.
+- Translators often work with vague context, leading to broken translations.
+- Messages get over-abstracted for reuse breaking grammar and structure in many languages.
+- Automation is limited by missing metadata and pipelines developers lack control over.
+- The feedback loop is slow, brittle, and disconnected from CI/CD.
 
-All this often conveys lack of professionalism to the end user and reduces their trust
-in the product.
+The result is missing or poor i18n and l10n that signals lack of polish, undermines
+user trust, alienates global audiences and subsequently blocks adoption and growth.
 
 ### Key-based Translation
 
 Traditional internationalization relies heavily on key-based systems, where developers
-assign abstract identifiers (e.g. `"dashboard.report.summary"`) to strings
-stored in external files.
+assign abstract message identifiers (e.g. `"dashboard.report.summary"`) to translated
+strings stored in external files.
 
 ```go
-local.Text("dashboard.report.summary", numberOfMessages, dateTime)
+i18n.ByKey("dashboard.report.summary", numberOfMessages, dateTime)
 ```
 
 Keys offer clear benefits, such as:
@@ -89,10 +105,10 @@ can be difficult, especially at scale. Poorly chosen keys often lead to confusio
 redundancy, or fragile reuse patterns.
 
 TIKs, by contrast, embed the meaning directly in the code using a naturally readable
-and self-explanatory format:
+and self-explanatory format that serves as source of truth for the i18n pipeline:
 
 ```go
-local.Text(`You had {2 messages} at {3:45PM}.`, numberOfMessages, dateTime)
+i18n.Text(`You had {2 messages} at {3:45PM}.`, numberOfMessages, dateTime)
 ```
 
 ### ICU Messages
@@ -104,7 +120,7 @@ directly inside the application source code.
 Consider the following example in Go:
 
 ```go
-Localize(`You had {numberOfMessages, plural,
+i18n.Text(`You had {numberOfMessages, plural,
     =0 {no messages}
     one {# message}
     other {# messages}
@@ -134,8 +150,10 @@ closing square bracket `]` is treated as the context.
 
 ```go
 // description.
-localize.Text(`[context] Text.`)
+i18n.Text(`[context] Text.`)
 ```
+
+#### Context Invariants
 
 Curly braces `{` `}`, square brackets `[` `]` and reverse-solidus `\`
 are not allowed inside the context:
@@ -149,7 +167,7 @@ are not allowed inside the context:
 ```
 
 ```
-[foo\bar] Text.
+[invalid\context] Text.
 ```
 
 The context must not be empty:
@@ -174,19 +192,19 @@ Example: a
 <body>
   <h1>{
     // "save" as in "save from danger".  <--- HERE
-    localize.Text(`Save your planet`)
+    i18n.Text(`Save your planet`)
   }</h1>
-  <p>{ localize.Text(`Your planet is in grave danger. Be the hero who saves it!`) }</p>
+  <p>{ i18n.Text(`Your planet is in grave danger. Be the hero who saves it!`) }</p>
   <dialog>
     <p>You're about to exit the simulation.</p>
     <form method="dialog">
       <button>{
         // "save" as in "save to file".  <--- HERE
-        localize.Text(`Save your planet`)
+        i18n.Text(`Save your planet`)
       }</button>
       <button>{
         // Cancel exiting the simulation.
-        localize.Text(`Cancel`)
+        i18n.Text(`Cancel`)
       }</button>
     </form>
   </dialog>
@@ -207,7 +225,7 @@ to either (or both) messages to disambiguate them:
 
 ```
 // "save" as in "save to file".
-localize.Text(`[button.save] Save your planet`)
+i18n.Text(`[button.save] Save your planet`)
 ```
 
 The resulting TIK defines the context `"button.save"` and
@@ -344,9 +362,9 @@ which isn't specified in the TIK but can be provided programmatically in the sou
 as in the following example in Go:
 
 ```go
-local.Text(
+i18n.Text(
     `And so the journey began, {"John"} had embarked onto the ship.`, // TIK
-    localize.String{ Value: "Ada", Gender: localize.GenderFemale },
+    i18n.String{ Value: "Ada", Gender: i18n.GenderFemale },
 )
 ```
 
@@ -439,7 +457,7 @@ By { 0_, time, short }, { 1_gender, select,
 Usage example in Go:
 
 ```go
-local.Text(`[report] By {3:45PM}, {"John"} received {2 emails}.`,
+i18n.Text(`[report] By {3:45PM}, {"John"} received {2 emails}.`,
   time.Now(), "Max", len(emailsReceived))
 ```
 
@@ -463,13 +481,13 @@ You are on page: {0_}!
 Usage example in Go:
 
 ```go
-local.Text(`You are on page: {"Home"}!`,
+i18n.Text(`You are on page: {"Home"}!`,
   "Home & Garden")
 ```
 
 ```go
-local.Text(`You are on page: {"Home"}!`,
-  localize.String{Value: "Home & Garden"})
+i18n.Text(`You are on page: {"Home"}!`,
+  i18n.String{Value: "Home & Garden"})
 ```
 
 #### ICU Encoding - String Placeholders With Gender
@@ -493,8 +511,8 @@ generated ICU:
 Usage example in Go:
 
 ```go
-local.Text(`{"John"} modified the file.`,
-  localize.String{Value: "Martha", Gender: localize.GenderFemale})
+i18n.Text(`{"John"} modified the file.`,
+  i18n.String{Value: "Martha", Gender: i18n.GenderFemale})
 ```
 
 #### ICU Encoding - String Placeholders With Pluralization
@@ -518,8 +536,8 @@ generated ICU:
 Usage example in Go:
 
 ```go
-local.Text(`{"students"} submitted the form.`,
-  localize.String{Value: "teachers", Number: len(teachersWhoSubmitted)})
+i18n.Text(`{"students"} submitted the form.`,
+  i18n.String{Value: "teachers", Number: len(teachersWhoSubmitted)})
 ```
 
 Even though for English this example seems nonsensical, for translation into other
