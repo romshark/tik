@@ -354,7 +354,7 @@ And so the journey began, {"John"} had embarked onto the ship.
 generated ICU:
 
 ```
-And so the journey began, {userName} had embarked onto the ship.
+And so the journey began, {var0} had embarked onto the ship.
 ```
 
 #### String Placeholders with Gender and Pluralization
@@ -377,8 +377,8 @@ source code and applies grammar rules as needed.
 generated ICU:
 
 ```
-And so the journey began, {userName_gender, select,
-  other { {userName} had embarked onto the ship.}
+And so the journey began, {var0_gender, select,
+  other { {var0} had embarked onto the ship.}
 }
 ```
 
@@ -395,10 +395,10 @@ And so the journey began, {userName_gender, select,
 The translated ICU message for locale `uk` would be:
 
 ```
-І так розпочалася подорож, {userName_gender, select,
-  female { {_0} вирушила на корабель. }
-  male { {_0} вирушив на корабель. }
-  other { {_0} вирушило на корабель. }
+І так розпочалася подорож, {var0_gender, select,
+  female { {var0} вирушила на корабель. }
+  male { {var0} вирушив на корабель. }
+  other { {var0} вирушило на корабель. }
 }
 ```
 
@@ -438,18 +438,20 @@ is the order expected for parameter inputs.
 [report] By {3:45PM}, {"John"} received {2 emails}.
 ```
 
+All placeholders use the `var` prefix with a following positional index.
+
 generated ICU:
 ```
-By { 0_, time, short }, { 1_gender, select,
-  female { {1_value} received {2_, plural,
+By { var0, time, short }, { var1_gender, select,
+  female { {var1} received {var2, plural,
     one {# email}
     other {# emails}
   }. }
-  male { {1_value} received {2_, plural,
+  male { {var1} received {var2, plural,
     one {# email}
     other {# emails}
   }. }
-  other { {1_value} received {2_, plural,
+  other { {var1} received {var2, plural,
     one {# email}
     other {# emails}
   }. }
@@ -477,7 +479,7 @@ You are on page: {"Home"}!
 generated ICU:
 
 ```
-You are on page: {0_}!
+You are on page: {var0}!
 ```
 
 Usage example in Go:
@@ -505,8 +507,8 @@ TIK:
 generated ICU:
 
 ```
-{ 0_gender, select,
-  other { {0_value} }
+{ var0_gender, select,
+  other { {var0} }
 } modified the file.
 ```
 
@@ -519,7 +521,7 @@ i18n.Text(`{"John"} modified the file.`,
 
 #### ICU Encoding - String Placeholders With Pluralization
 
-A string placeholder with pluralization information produce an ICU `select` expression:
+A string placeholder with pluralization information produces an ICU `select` expression:
 
 TIK:
 
@@ -530,8 +532,8 @@ TIK:
 generated ICU:
 
 ```
-{ 0_number, plural,
-  other { {0_value} }
+{ var0, plural,
+  other { {var0} }
 } submitted the form.
 ```
 
@@ -548,11 +550,11 @@ languages this information may often be neccessary.
 The translated ICU message in Ukrainian would be:
 
 ```
-{ 0_number, plural,
-  one { {0_value} подав форму. }
-  few { {0_value} подали форму. }
-  many { {0_value} подали форму. }
-  other { {0_value} подали форму. }
+{ var0, plural,
+  one { {var0} подав форму. }
+  few { {var0} подали форму. }
+  many { {var0} подали форму. }
+  other { {var0} подали форму. }
 }
 ```
 
@@ -568,11 +570,11 @@ produce an ICU `select` expression:
 ```
 
 ```
-{_0, select,
+{var0, select,
   male {He}
   female {She}
   other {They}
-} built it {_1, select,
+} built it {var1, select,
   male {himself}
   female {herself}
   other {themself}

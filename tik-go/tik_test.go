@@ -445,21 +445,22 @@ func TestICUTranslator(t *testing.T) {
 
 	f(t, "hello world", "hello world")
 	f(t, "hello world", "[context] hello world")
-	f(t, "hello {_0}", `hello {"world"}`)
-	f(t, "hello {_0}", `[more context] hello {"world"}`)
+	f(t, "hello {var0}", `hello {"world"}`)
+	f(t, "hello {var0}", `[more context] hello {"world"}`)
 	f(t,
-		"You're {_0, selectordinal, other {#th}}",
+		"You're {var0, selectordinal, other {#th}}",
 		`You're {4th}`)
-	f(t, "hello {_0} and {_1}", `hello {"world"} and {"something else"}`)
-	f(t, "it's {_0}, {_1}", `it's {April 2}, {3:45PM}`)
+	f(t, "hello {var0} and {var1}", `hello {"world"} and {"something else"}`)
+	f(t, "it's {var0}, {var1}", `it's {April 2}, {3:45PM}`)
 	f(t,
-		"{_0, select, other {They}} are on {_1, select, other {their}} way!",
+		"{var0, select, other {They}} are on {var1, select, other {their}} way!",
 		`{They} are on {their} way!`)
 	f(t,
-		"You have {_0, plural, other {# messages}}",
+		"You have {var0, plural, other {# messages}}",
 		`You have {2 messages}`)
 	f(t,
-		"You have {_0, plural, other {# messages}} in {_1, plural, other {# folders}}.",
+		"You have {var0, plural, other {# messages}} "+
+			"in {var1, plural, other {# folders}}.",
 		`You have {2 messages} in {2 folders}.`)
 }
 
@@ -479,23 +480,23 @@ func TestICUTranslatorModifier(t *testing.T) {
 	}
 
 	f(t,
-		"{_0} has {_1}",
+		"{var0} has {var1}",
 		`{"John"} has {"apples"}`, nil)
 
 	f(t,
-		"{_0} has {_1}",
+		"{var0} has {var1}",
 		`{"John"} has {"apples"}`, map[int]tik.ICUModifier{
 			0: {}, 1: {}, // All modifiers disabled.
 		})
 	f(t,
-		"{_0_gender, select, other {{_0_plural, plural, other {{_0}}} has {_1}",
+		"{var0_gender, select, other {{var0_plural, plural, other {{var0}}} has {var1}",
 		`{"John"} has {"apples"}`, map[int]tik.ICUModifier{
 			// Apply both gender and pluralization simultaneously
 			// for when "John" could be multiple people like "Coworkers".
 			0: {Gender: true, Plural: true},
 		})
 	f(t,
-		"{_0_gender, select, other {{_0}}} has {_1_plural, plural, other {{_1}}}",
+		"{var0_gender, select, other {{var0}}} has {var1_plural, plural, other {{var1}}}",
 		`{"John"} has {"apples"}`, map[int]tik.ICUModifier{
 			0: {Gender: true}, 1: {Plural: true},
 		})

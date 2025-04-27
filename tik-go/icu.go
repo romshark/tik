@@ -71,7 +71,7 @@ func (i *ICUTranslator) writeModifiers(
 }
 
 func (i *ICUTranslator) writePositionalPlaceholder(index int, suffix string) {
-	i.b.WriteByte('_')
+	i.b.WriteString("var")
 	i.b.WriteString(strconv.Itoa(index))
 	i.b.WriteString(suffix)
 }
