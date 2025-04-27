@@ -1,6 +1,6 @@
 **Author:** Roman Scharkov <roman.scharkov@gmail.com>;
-**Version:** 0.4;
-**Last updated:** 2025-04-19;
+**Version:** 0.4.1;
+**Last updated:** 2025-04-27;
 
 # TIK - Textual Internationalization Key
 
