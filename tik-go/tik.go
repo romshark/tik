@@ -34,16 +34,33 @@ const (
 	// Gender agreement.
 	TokenTypeGenderPronoun // {they}, {them}, {their}, {theirs}, {themself}
 
-	// Time.
-	TokenTypeTimeShort            // {3:45PM}
-	TokenTypeTimeShortSeconds     // {3:45:30PM}
-	TokenTypeTimeFullMonthAndDay  // {April 2}
-	TokenTypeTimeShortMonthAndDay // {Apr 2}
-	TokenTypeTimeFullMonthAndYear // {Apr 2025}
-	TokenTypeTimeWeekday          // {Monday}
-	TokenTypeTimeDateAndShort     // {April 2, 3:45PM}
-	TokenTypeTimeYear             // {2025}
-	TokenTypeTimeFull             // {April 2, 3:45:30PM}
+	// DATE
+
+	// TokenTypeDateFull equals "EEEE, MMMM d, y"
+	TokenTypeDateFull // {Friday, July 16, 1999}
+
+	// TokenTypeDateLong equals "MMMM d, y"
+	TokenTypeDateLong // {July 16, 1999}
+
+	// TokenTypeDateMedium equals "MMM d, y"
+	TokenTypeDateMedium // {Jul 16, 1999}
+
+	// TokenTypeDateShort equals "M/d/yy"
+	TokenTypeDateShort // {7/16/99}
+
+	// TIME
+
+	// TokenTypeTimeShort equals "hour, minute."
+	TokenTypeTimeShort // {10:30 pm}
+
+	// TokenTypeTimeMedium equals "hour, minute, second."
+	TokenTypeTimeMedium // {10:30:45 pm}
+
+	// TokenTypeTimeLong equals "hour, minute, second, and zone(z)"
+	TokenTypeTimeLong // {10:30:45 pm PDT}
+
+	// TokenTypeTimeFull equals "hour(h/H), minute(mm), second(ss), and zone(zzzz)."
+	TokenTypeTimeFull // {10:30:45 pm Pacific Daylight Time}
 
 	// Currency.
 	TokenTypeCurrencyRounded     // {$1}
@@ -72,22 +89,20 @@ func (t TokenType) String() string {
 		return `gender pronoun`
 	case TokenTypeTimeShort:
 		return `time short`
-	case TokenTypeTimeShortSeconds:
-		return `time short seconds`
-	case TokenTypeTimeFullMonthAndDay:
-		return `time full month and day`
-	case TokenTypeTimeShortMonthAndDay:
-		return `time short month and day`
-	case TokenTypeTimeFullMonthAndYear:
-		return `time full month and year`
-	case TokenTypeTimeWeekday:
-		return `time weekday`
-	case TokenTypeTimeDateAndShort:
-		return `time date and short`
-	case TokenTypeTimeYear:
-		return `time year`
+	case TokenTypeTimeMedium:
+		return `time medium`
+	case TokenTypeTimeLong:
+		return `time long`
 	case TokenTypeTimeFull:
 		return `time full`
+	case TokenTypeDateShort:
+		return `date short`
+	case TokenTypeDateMedium:
+		return `date medium`
+	case TokenTypeDateLong:
+		return `date long`
+	case TokenTypeDateFull:
+		return `date full`
 	case TokenTypeCurrencyRounded:
 		return `currency rounded`
 	case TokenTypeCurrencyFull:
@@ -354,52 +369,36 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c *Config) (Tokens, ErrPar
 }
 
 func match(s string, c *Config) (tokenType TokenType, value string) {
-	if s != "" && s[0] == '"' {
+	switch {
+	case s != "" && s[0] == '"':
 		return TokenTypeStringPlaceholder, s
-	}
-	if strings.EqualFold(s, c.MagicConstants.Number) {
+	case strings.EqualFold(s, c.MagicConstants.Number):
 		return TokenTypeNumber, c.MagicConstants.Number
-	}
-	if strings.EqualFold(s, c.MagicConstants.OrdinalPlural.Constant) {
+	case strings.EqualFold(s, c.MagicConstants.OrdinalPlural.Constant):
 		return TokenTypeOrdinalPlural, c.MagicConstants.OrdinalPlural.Constant
-	}
-	if strings.EqualFold(s, c.MagicConstants.TimeShort) {
-		return TokenTypeTimeShort, c.MagicConstants.TimeShort
-	}
-	if strings.EqualFold(s, c.MagicConstants.TimeShortSeconds) {
-		return TokenTypeTimeShortSeconds, c.MagicConstants.TimeShortSeconds
-	}
-	if strings.EqualFold(s, c.MagicConstants.TimeFullMonthAndDay) {
-		return TokenTypeTimeFullMonthAndDay, c.MagicConstants.TimeFullMonthAndDay
-	}
-	if strings.EqualFold(s, c.MagicConstants.TimeShortMonthAndDay) {
-		return TokenTypeTimeShortMonthAndDay, c.MagicConstants.TimeShortMonthAndDay
-	}
-	if strings.EqualFold(s, c.MagicConstants.TimeFullMonthAndYear) {
-		return TokenTypeTimeFullMonthAndYear, c.MagicConstants.TimeFullMonthAndYear
-	}
-	if strings.EqualFold(s, c.MagicConstants.TimeWeekday) {
-		return TokenTypeTimeWeekday, c.MagicConstants.TimeWeekday
-	}
-	if strings.EqualFold(s, c.MagicConstants.TimeDateAndShort) {
-		return TokenTypeTimeDateAndShort, c.MagicConstants.TimeDateAndShort
-	}
-	if strings.EqualFold(s, c.MagicConstants.TimeYear) {
-		return TokenTypeTimeYear, c.MagicConstants.TimeYear
-	}
-	if strings.EqualFold(s, c.MagicConstants.TimeFull) {
+	case strings.EqualFold(s, c.MagicConstants.TimeFull):
 		return TokenTypeTimeFull, c.MagicConstants.TimeFull
-	}
-	if strings.EqualFold(s, c.MagicConstants.CurrencyRounded) {
+	case strings.EqualFold(s, c.MagicConstants.TimeLong):
+		return TokenTypeTimeLong, c.MagicConstants.TimeLong
+	case strings.EqualFold(s, c.MagicConstants.TimeMedium):
+		return TokenTypeTimeMedium, c.MagicConstants.TimeMedium
+	case strings.EqualFold(s, c.MagicConstants.TimeShort):
+		return TokenTypeTimeShort, c.MagicConstants.TimeShort
+	case strings.EqualFold(s, c.MagicConstants.DateFull):
+		return TokenTypeDateFull, c.MagicConstants.DateFull
+	case strings.EqualFold(s, c.MagicConstants.DateLong):
+		return TokenTypeDateLong, c.MagicConstants.DateLong
+	case strings.EqualFold(s, c.MagicConstants.DateMedium):
+		return TokenTypeDateMedium, c.MagicConstants.DateMedium
+	case strings.EqualFold(s, c.MagicConstants.DateShort):
+		return TokenTypeDateShort, c.MagicConstants.DateShort
+	case strings.EqualFold(s, c.MagicConstants.CurrencyRounded):
 		return TokenTypeCurrencyRounded, c.MagicConstants.CurrencyRounded
-	}
-	if strings.EqualFold(s, c.MagicConstants.CurrencyFull) {
+	case strings.EqualFold(s, c.MagicConstants.CurrencyFull):
 		return TokenTypeCurrencyFull, c.MagicConstants.CurrencyFull
-	}
-	if strings.EqualFold(s, c.MagicConstants.CurrencyCodeRounded) {
+	case strings.EqualFold(s, c.MagicConstants.CurrencyCodeRounded):
 		return TokenTypeCurrencyCodeRounded, c.MagicConstants.CurrencyCodeRounded
-	}
-	if strings.EqualFold(s, c.MagicConstants.CurrencyCodeFull) {
+	case strings.EqualFold(s, c.MagicConstants.CurrencyCodeFull):
 		return TokenTypeCurrencyCodeFull, c.MagicConstants.CurrencyCodeFull
 	}
 	for _, v := range c.MagicConstants.GenderPronouns {

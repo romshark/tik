@@ -118,16 +118,15 @@ func TestParse(t *testing.T) {
 		Token{"'", tik.TokenTypeStringLiteral},
 		Token{"}", tik.TokenTypeCardinalPluralEnd},
 	)
-	f(t, `{2 messages from {"folder"} at {3:45PM} on {Apr 2}{2025}}`,
+	f(t, `{2 messages from {"folder"}} at {10:30:45 pm} on {7/16/99}`,
 		Token{"{2 ", tik.TokenTypeCardinalPluralStart},
 		Token{"messages from ", tik.TokenTypeStringLiteral},
 		Token{`{"folder"}`, tik.TokenTypeStringPlaceholder},
-		Token{" at ", tik.TokenTypeStringLiteral},
-		Token{"{3:45PM}", tik.TokenTypeTimeShort},
-		Token{" on ", tik.TokenTypeStringLiteral},
-		Token{"{Apr 2}", tik.TokenTypeTimeShortMonthAndDay},
-		Token{"{2025}", tik.TokenTypeTimeYear},
 		Token{"}", tik.TokenTypeCardinalPluralEnd},
+		Token{" at ", tik.TokenTypeStringLiteral},
+		Token{"{10:30:45 pm}", tik.TokenTypeTimeMedium},
+		Token{" on ", tik.TokenTypeStringLiteral},
+		Token{"{7/16/99}", tik.TokenTypeDateShort},
 	)
 	f(t, `{2 new files in}{2 folders}`,
 		Token{"{2 ", tik.TokenTypeCardinalPluralStart},
@@ -138,21 +137,20 @@ func TestParse(t *testing.T) {
 		Token{"}", tik.TokenTypeCardinalPluralEnd},
 	)
 
-	// Time.
-	f(t, `{3:45PM}{3:45:30PM}{April 2}{Apr 2}
-		{Apr 2025}{Monday}{April 2, 3:45PM}
-		{2025}{April 2, 3:45:30PM}`,
-		Token{"{3:45PM}", tik.TokenTypeTimeShort},
-		Token{"{3:45:30PM}", tik.TokenTypeTimeShortSeconds},
-		Token{"{April 2}", tik.TokenTypeTimeFullMonthAndDay},
-		Token{"{Apr 2}", tik.TokenTypeTimeShortMonthAndDay},
+	// Date/Time.
+	f(t, `{Friday, July 16, 1999}{July 16, 1999}{Jul 16, 1999}{7/16/99}
+		{10:30 pm}{10:30:45 pm}{10:30:45 pm PDT}
+		{10:30:45 pm Pacific Daylight Time}`,
+		Token{"{Friday, July 16, 1999}", tik.TokenTypeDateFull},
+		Token{"{July 16, 1999}", tik.TokenTypeDateLong},
+		Token{"{Jul 16, 1999}", tik.TokenTypeDateMedium},
+		Token{"{7/16/99}", tik.TokenTypeDateShort},
 		Token{"\n\t\t", tik.TokenTypeStringLiteral},
-		Token{"{Apr 2025}", tik.TokenTypeTimeFullMonthAndYear},
-		Token{"{Monday}", tik.TokenTypeTimeWeekday},
-		Token{"{April 2, 3:45PM}", tik.TokenTypeTimeDateAndShort},
+		Token{"{10:30 pm}", tik.TokenTypeTimeShort},
+		Token{"{10:30:45 pm}", tik.TokenTypeTimeMedium},
+		Token{"{10:30:45 pm PDT}", tik.TokenTypeTimeLong},
 		Token{"\n\t\t", tik.TokenTypeStringLiteral},
-		Token{"{2025}", tik.TokenTypeTimeYear},
-		Token{"{April 2, 3:45:30PM}", tik.TokenTypeTimeFull},
+		Token{"{10:30:45 pm Pacific Daylight Time}", tik.TokenTypeTimeFull},
 	)
 
 	// Escaped braces.
@@ -170,20 +168,19 @@ func TestParse(t *testing.T) {
 	)
 
 	// Sequence of escaped reverse solidus.
-	f(t, `before \\\\{Monday} after`,
+	f(t, `before \\\\{10:30:45 pm} after`,
 		Token{`before \\`, tik.TokenTypeStringLiteral},
-		Token{`{Monday}`, tik.TokenTypeTimeWeekday},
+		Token{`{10:30:45 pm}`, tik.TokenTypeTimeMedium},
 		Token{` after`, tik.TokenTypeStringLiteral},
 	)
 
 	// Case insensitivity.
-	f(t, `{They}{THEMSELF}{3:45pm}{3:45:30pM}{april 2}{mOnDaY}`,
+	f(t, `{They}{THEMSELF}{7/16/99}{friday, july 16, 1999}{friDAY, julY 16, 1999}`,
 		Token{"{They}", tik.TokenTypeGenderPronoun},
 		Token{"{THEMSELF}", tik.TokenTypeGenderPronoun},
-		Token{"{3:45pm}", tik.TokenTypeTimeShort},
-		Token{"{3:45:30pM}", tik.TokenTypeTimeShortSeconds},
-		Token{"{april 2}", tik.TokenTypeTimeFullMonthAndDay},
-		Token{"{mOnDaY}", tik.TokenTypeTimeWeekday},
+		Token{"{7/16/99}", tik.TokenTypeDateShort},
+		Token{"{friday, july 16, 1999}", tik.TokenTypeDateFull},
+		Token{"{friDAY, julY 16, 1999}", tik.TokenTypeDateFull},
 	)
 }
 
@@ -240,8 +237,9 @@ func TestParseErr(t *testing.T) {
 	f(t, tik.ErrStringPlaceholderIllegalChars, `{"abc \n def"}`)
 	f(t, tik.ErrNestedPluralization, `nested pluralization: {2 messages in {2 folders}}`)
 	f(t, tik.ErrCardinalPluralEmpty, `empty pluralization: {2 }`)
-	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {2 {April 2}}`)
-	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {2 {3:45PM}}`)
+	f(t, tik.ErrDirectiveStartsCardinalPlural,
+		`illegal pluralization: {2 {friday, july 16, 1999}}`)
+	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {2 {10:30:45 pm}}`)
 	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {2 {$1}}`)
 	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {2 {4th}}`)
 	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {2 {they}}`)
@@ -353,29 +351,51 @@ func TestTIKPlaceholdersIter(t *testing.T) {
 
 	p := tik.NewParser(tik.DefaultConfig())
 
-	tk, err := p.Parse(`[context]{3:45PM}{3:45:30PM}{April 2}{Apr 2}
-		{Apr 2025}{Monday}{April 2, 3:45PM}
-		{2025}{April 2, 3:45:30PM}
-		{$1}{$1.20}{USD 1}{USD 1.20}`)
+	tk, err := p.Parse(`[context]
+		{Friday, July 16, 1999}
+		{July 16, 1999}
+		{Jul 16, 1999}
+		{7/16/99}
+		{10:30 pm}
+		{10:30:45 pm}
+		{10:30:45 pm PDT}
+		{10:30:45 pm Pacific Daylight Time}
+		{$1}
+		{$1.20}
+		{USD 1}
+		{USD 1.20}
+		{2 messages}{4th}`)
 	requireNoErr(t, err)
 	expect := []tik.Token{
 		// 0 is a context.
 		tk.Tokens[1],
-		tk.Tokens[2],
+		// 2 is a string literal.
 		tk.Tokens[3],
-		tk.Tokens[4],
-		// 5 is a string literal.
-		tk.Tokens[6],
+		// 4 is a string literal.
+		tk.Tokens[5],
+		// 6 is a string literal.
 		tk.Tokens[7],
-		tk.Tokens[8],
-		// 9 is a string literal.
-		tk.Tokens[10],
+		// 8 is a string literal.
+		tk.Tokens[9],
+		// 10 is a string literal.
 		tk.Tokens[11],
 		// 12 is a string literal.
 		tk.Tokens[13],
-		tk.Tokens[14],
+		// 14 is a string literal.
 		tk.Tokens[15],
-		tk.Tokens[16],
+		// 16 is a string literal.
+		tk.Tokens[17],
+		// 18 is a string literal.
+		tk.Tokens[19],
+		// 20 is a string literal.
+		tk.Tokens[21],
+		// 22 is a string literal.
+		tk.Tokens[23],
+		// 24 is a string literal.
+		tk.Tokens[25],
+		// 26 is a string literal.
+		// 27 is a cardinal plural end.
+		tk.Tokens[28],
 	}
 
 	var actual []tik.Token
@@ -413,15 +433,14 @@ func TestTokenType_String(t *testing.T) {
 	f(t, `pluralization block end`, tik.TokenTypeCardinalPluralEnd)
 	f(t, `ordinal plural`, tik.TokenTypeOrdinalPlural)
 	f(t, `gender pronoun`, tik.TokenTypeGenderPronoun)
-	f(t, `time short`, tik.TokenTypeTimeShort)
-	f(t, `time short seconds`, tik.TokenTypeTimeShortSeconds)
-	f(t, `time full month and day`, tik.TokenTypeTimeFullMonthAndDay)
-	f(t, `time short month and day`, tik.TokenTypeTimeShortMonthAndDay)
-	f(t, `time full month and year`, tik.TokenTypeTimeFullMonthAndYear)
-	f(t, `time weekday`, tik.TokenTypeTimeWeekday)
-	f(t, `time date and short`, tik.TokenTypeTimeDateAndShort)
-	f(t, `time year`, tik.TokenTypeTimeYear)
+	f(t, `date full`, tik.TokenTypeDateFull)
+	f(t, `date long`, tik.TokenTypeDateLong)
+	f(t, `date medium`, tik.TokenTypeDateMedium)
+	f(t, `date short`, tik.TokenTypeDateShort)
 	f(t, `time full`, tik.TokenTypeTimeFull)
+	f(t, `time long`, tik.TokenTypeTimeLong)
+	f(t, `time medium`, tik.TokenTypeTimeMedium)
+	f(t, `time short`, tik.TokenTypeTimeShort)
 	f(t, `currency rounded`, tik.TokenTypeCurrencyRounded)
 	f(t, `currency full`, tik.TokenTypeCurrencyFull)
 	f(t, `currency code rounded`, tik.TokenTypeCurrencyCodeRounded)
@@ -448,10 +467,38 @@ func TestICUTranslator(t *testing.T) {
 	f(t, "hello {var0}", `hello {"world"}`)
 	f(t, "hello {var0}", `[more context] hello {"world"}`)
 	f(t,
+		`today is {var0, date, full}`,
+		"today is {Friday, July 16, 1999}")
+	f(t,
+		`today is {var0, date, long}`,
+		"today is {July 16, 1999}")
+	f(t,
+		`today is {var0, date, medium}`,
+		"today is {Jul 16, 1999}")
+	f(t,
+		`today is {var0, date, short}`,
+		"today is {7/16/99}")
+	f(t,
+		`current time is {var0, time, full}`,
+		"current time is {10:30:45 pm Pacific Daylight Time}")
+	f(t,
+		`current time is {var0, time, long}`,
+		"current time is {10:30:45 pm PDT}")
+	f(t,
+		`current time is {var0, time, medium}`,
+		"current time is {10:30:45 pm}")
+	f(t,
+		`current time is {var0, time, short}`,
+		"current time is {10:30 pm}")
+	f(t,
 		"You're {var0, selectordinal, other {#th}}",
 		`You're {4th}`)
-	f(t, "hello {var0} and {var1}", `hello {"world"} and {"something else"}`)
-	f(t, "it's {var0}, {var1}", `it's {April 2}, {3:45PM}`)
+	f(t,
+		"hello {var0} and {var1}",
+		`hello {"world"} and {"something else"}`)
+	f(t,
+		"it's {var0, date, long}, {var1, time, short}",
+		`it's {July 16, 1999}, {10:30 pm}`)
 	f(t,
 		"{var0, select, other {They}} are on {var1, select, other {their}} way!",
 		`{They} are on {their} way!`)
@@ -513,9 +560,16 @@ func FuzzTokenize(f *testing.F) {
 	f.Add(`\\\\text after`)
 	f.Add("You're {4th} out of {2 contenders}")
 	f.Add("{unknown}")
-	f.Add(`{3:45PM}{3:45:30PM}{April 2}{Apr 2}
-		{Apr 2025}{Monday}{April 2, 3:45PM}
-		{2025}{April 2, 3:45:30PM}`)
+	f.Add(`
+		{Friday, July 16, 1999}
+		{July 16, 1999}
+		{Jul 16, 1999}
+		{7/16/99}
+		{10:30 pm}
+		{10:30:45 pm}
+		{10:30:45 pm PDT}
+		{10:30:45 pm Pacific Daylight Time}
+	`)
 
 	f.Fuzz(func(t *testing.T, input string) {
 		parser := tik.NewParser(tik.DefaultConfig())
@@ -534,9 +588,9 @@ func FuzzTokenize(f *testing.F) {
 func BenchmarkParseFnPlaceholdersOnly(b *testing.B) {
 	parser := tik.NewParser(tik.DefaultConfig())
 	for b.Loop() {
-		err := parser.ParseFn(`{3:45PM}{3:45:30PM}{April 2}{Apr 2}
-		{Apr 2025}{Monday}{April 2, 3:45PM}
-		{2025}{April 2, 3:45:30PM}`, func(_ tik.TIK) {})
+		err := parser.ParseFn(`{Friday, July 16, 1999}{July 16, 1999}{Jul 16, 1999}`+
+			`{7/16/99}{10:30 pm}{10:30:45 pm}{10:30:45 pm PDT}`+
+			`{10:30:45 pm Pacific Daylight Time}`, func(_ tik.TIK) {})
 		if err.Err != nil {
 			panic(err)
 		}
@@ -591,7 +645,8 @@ func BenchmarkTIK2ICUBuf(b *testing.B) {
 	parser := tik.NewParser(conf)
 	translator := tik.NewICUTranslator(conf)
 
-	input := string("On {April 2} you had {2 messages at {3:45PM}} in {2 main folders}")
+	input := string("On {July 16, 1999} you had " +
+		"{2 messages at {10:30:45 pm PDT}} in {2 main folders}")
 	tk, err := parser.Parse(input)
 	requireNoErr(b, err)
 

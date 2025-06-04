@@ -97,15 +97,6 @@ func (i *ICUTranslator) TIK2ICUBuf(
 			i.write(token.String(tik.Raw))
 		case TokenTypeStringPlaceholder,
 			TokenTypeNumber,
-			TokenTypeTimeShort,
-			TokenTypeTimeShortSeconds,
-			TokenTypeTimeFullMonthAndDay,
-			TokenTypeTimeShortMonthAndDay,
-			TokenTypeTimeFullMonthAndYear,
-			TokenTypeTimeWeekday,
-			TokenTypeTimeDateAndShort,
-			TokenTypeTimeYear,
-			TokenTypeTimeFull,
 			TokenTypeCurrencyRounded,
 			TokenTypeCurrencyFull,
 			TokenTypeCurrencyCodeRounded,
@@ -117,6 +108,47 @@ func (i *ICUTranslator) TIK2ICUBuf(
 			i.writeModifiers(pos, modifiers, true, true, func() {
 				i.write("{") // Start placeholder.
 				i.writePositionalPlaceholder(pos, "")
+				i.write("}")
+			})
+
+		case TokenTypeTimeFull,
+			TokenTypeTimeLong,
+			TokenTypeTimeMedium,
+			TokenTypeTimeShort,
+			TokenTypeDateFull,
+			TokenTypeDateLong,
+			TokenTypeDateMedium,
+			TokenTypeDateShort:
+			pos := positionalIndex
+			positionalIndex++
+			var varType, style string
+			switch token.Type {
+			case TokenTypeTimeFull:
+				varType, style = "time", "full"
+			case TokenTypeTimeLong:
+				varType, style = "time", "long"
+			case TokenTypeTimeMedium:
+				varType, style = "time", "medium"
+			case TokenTypeTimeShort:
+				varType, style = "time", "short"
+			case TokenTypeDateFull:
+				varType, style = "date", "full"
+			case TokenTypeDateLong:
+				varType, style = "date", "long"
+			case TokenTypeDateMedium:
+				varType, style = "date", "medium"
+			case TokenTypeDateShort:
+				varType, style = "date", "short"
+			default:
+				panic("unexpected token type")
+			}
+			i.writeModifiers(pos, modifiers, true, true, func() {
+				i.write("{") // Start placeholder.
+				i.writePositionalPlaceholder(pos, "")
+				i.write(", ")
+				i.write(varType)
+				i.write(", ")
+				i.write(style)
 				i.write("}")
 			})
 

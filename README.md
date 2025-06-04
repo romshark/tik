@@ -1,47 +1,48 @@
 **Author:** Roman Scharkov <roman.scharkov@gmail.com>;
-**Version:** 0.4.1;
-**Last updated:** 2025-04-27;
+**Version:** 0.5.0;
+**Last updated:** 2025-06-04;
 
 # TIK - Textual Internationalization Key
 
 **Table of Contents**
 
-- [Introduction](#introduction)
-- [Problem](#problem)
-  - [Key-based Translation](#key-based-translation)
-  - [ICU Messages](#icu-messages)
-- [TIK Syntax Rules](#tik-syntax-rules)
-  - [Context](#context)
-    - [Context Invariants](#context-invariants)
-    - [Context - Example](#context---example)
-  - [Text](#text)
-  - [Magic Constants](#magic-constants)
-  - [Cardinal Pluralization](#cardinal-pluralization)
-    - [Cardinal Pluralization Invariants](#cardinal-pluralization-invariants)
-  - [String Placeholders](#string-placeholders)
-    - [String Placeholders with Gender and Pluralization](#string-placeholders-with-gender-and-pluralization)
-    - [String Placeholder Invariants](#string-placeholder-invariants)
-- [ICU Encoding](#icu-encoding)
-- [ICU Encoding – Positional Mapping](#icu-encoding--positional-mapping)
-  - [ICU Encoding - String Placeholders](#icu-encoding---string-placeholders)
-    - [ICU Encoding - String Placeholders With Gender](#icu-encoding---string-placeholders-with-gender)
-    - [ICU Encoding - String Placeholders With Pluralization](#icu-encoding---string-placeholders-with-pluralization)
-  - [ICU Encoding - Gender Agreement](#icu-encoding---gender-agreement)
-  - [ICU Encoding - Cardinal Pluralization](#icu-encoding---cardinal-pluralization)
-  - [ICU Encoding - Ordinal Pluralization](#icu-encoding---ordinal-pluralization)
-  - [ICU Encoding - Time Placeholders](#icu-encoding---time-placeholders)
-  - [ICU Encoding - Currency](#icu-encoding---currency)
-  - [ICU Encoding - Number](#icu-encoding---number)
-- [Configuration Guidelines](#configuration-guidelines)
-  - [Magic Constant Customization](#magic-constant-customization)
-  - [Domains](#domains)
-- [Limitations](#limitations)
-- [Standards and Conventions](#standards-and-conventions)
-- [FAQ](#faq)
-  - [Is this overcomplication really worth it and aren't simple keys enough?](#is-this-overcomplication-really-worth-it-and-arent-simple-keys-enough)
-  - [How about just preloading translation texts by key using IDE plugins?](#how-about-just-preloading-translation-texts-by-key-using-ide-plugins)
-  - [Could Fluent be used instead of ICU?](#could-fluent-be-used-instead-of-icu)
-- [Special Thanks](#special-thanks)
+- [TIK - Textual Internationalization Key](#tik---textual-internationalization-key)
+  - [Introduction](#introduction)
+  - [Problem](#problem)
+    - [Key-based Translation](#key-based-translation)
+    - [ICU Messages](#icu-messages)
+  - [TIK Syntax Rules](#tik-syntax-rules)
+    - [Context](#context)
+      - [Context Invariants](#context-invariants)
+      - [Context - Example](#context---example)
+    - [Text](#text)
+    - [Magic Constants](#magic-constants)
+    - [Cardinal Pluralization](#cardinal-pluralization)
+      - [Cardinal Pluralization Invariants](#cardinal-pluralization-invariants)
+    - [String Placeholders](#string-placeholders)
+      - [String Placeholders with Gender and Pluralization](#string-placeholders-with-gender-and-pluralization)
+      - [String Placeholder Invariants](#string-placeholder-invariants)
+  - [ICU Encoding](#icu-encoding)
+  - [ICU Encoding – Positional Mapping](#icu-encoding--positional-mapping)
+    - [ICU Encoding - String Placeholders](#icu-encoding---string-placeholders)
+      - [ICU Encoding - String Placeholders With Gender](#icu-encoding---string-placeholders-with-gender)
+      - [ICU Encoding - String Placeholders With Pluralization](#icu-encoding---string-placeholders-with-pluralization)
+    - [ICU Encoding - Gender Agreement](#icu-encoding---gender-agreement)
+    - [ICU Encoding - Cardinal Pluralization](#icu-encoding---cardinal-pluralization)
+    - [ICU Encoding - Ordinal Pluralization](#icu-encoding---ordinal-pluralization)
+    - [ICU Encoding - Date/Time Placeholders](#icu-encoding---datetime-placeholders)
+    - [ICU Encoding - Currency](#icu-encoding---currency)
+    - [ICU Encoding - Number](#icu-encoding---number)
+  - [Configuration Guidelines](#configuration-guidelines)
+    - [Magic Constant Customization](#magic-constant-customization)
+    - [Domains](#domains)
+  - [Limitations](#limitations)
+  - [Standards and Conventions](#standards-and-conventions)
+  - [FAQ](#faq)
+    - [Is this overcomplication really worth it and aren't simple keys enough?](#is-this-overcomplication-really-worth-it-and-arent-simple-keys-enough)
+    - [How about just preloading translation texts by key using IDE plugins?](#how-about-just-preloading-translation-texts-by-key-using-ide-plugins)
+    - [Could Fluent be used instead of ICU?](#could-fluent-be-used-instead-of-icu)
+  - [Special Thanks](#special-thanks)
 
 ## Introduction
 
@@ -664,24 +665,58 @@ The constant `{4th}` also accepts numbers combined with gender.
 | `int(104)`  | `104-та`    | `104-ий`    | `104-те`    | `104.`          |
 | `int(1000)` | `1 000-та`  | `1 000-ий`  | `1 000-не`  | `1,000.`        |
 
-### ICU Encoding - Time Placeholders
+### ICU Encoding - Date/Time Placeholders
 
-Time placeholders are automatically localized to the appropriate format
-for the given locale and expect both date and time information (e.g. in Go `time.Time`).
+Date and time placeholders are automatically localized to the appropriate CLDR format
+for the given locale.
 
-In the examples below, the time `"2025-07-14T19:44:11Z"` is the value represented.
 
-| Constant               | ICU        | en-US               | de-DE              | uk-UA              | Description       |
-| :--------------------- | :--------- | :------------------ | :----------------- | :----------------- | :---------------- |
-| `{3:45PM}`             | `jm`       | 7:44PM              | 19:44              | 19:44              | Short time        |
-| `{3:45:30PM}`          | `jms`      | 7:44:11PM           | 19:44:11           | 19:44:11           | Time with seconds |
-| `{April 2}`            | `MMMMd`    | July 15             | 15. Juli           | 15 липня           | Full month + day  |
-| `{Apr 2}`              | `MMMd`     | Jul 15              | 15. Juli           | 15 лип.            | Abbr. month + day |
-| `{Apr 2025}`           | `MMMy`     | Jul 2025            | Jul. 2025          | лип. 2025          | Full month + year |
-| `{Monday}`             | `EEEE`     | Tuesday             | Dienstag           | Вiвторок           | Weekday only      |
-| `{April 2, 3:45PM}`    | `MMMMdjm`  | July 15, 7:44 PM    | 15. Juli, 19:44    | 15 липня, 19:44    | Date + short time |
-| `{2025}`               | `y`        | 2025                | 2025               | 2025               | Year only         |
-| `{April 2, 3:45:30PM}` | `MMMMdjms` | July 15, 7:44:11 PM | 15. Juli, 19:44:11 | 15 липня, 19:44:11 | Full datetime     |
+| Constant                              | ICU type, style |
+| :------------------------------------ | :-------------- |
+| `{Friday, July 16, 1999}`             | date, full      |
+| `{July 16, 1999}`                     | date, long      |
+| `{Jul 16, 1999}`                      | date, medium    |
+| `{7/16/99}`                           | date, short     |
+| `{10:30:45 pm Pacific Daylight Time}` | time, full      |
+| `{10:30:45 pm PDT}`                   | time, long      |
+| `{10:30:45 pm}`                       | time, medium    |
+| `{10:30 pm}`                          | time, short     |
+
+In the following examples,
+the value `Thu, 21 Oct 1999 22:03:02 PDT` (RFC1123) is represented.
+
+- `{Friday, July 16, 1999}` (ICU date full)
+  - **en-US:** `Thursday, October 21, 1999`
+  - **de-DE:** `Donnerstag, 21. Oktober 1999`
+  - **uk-UA:** `четвер, 21 жовтня 1999 р.`
+- `{July 16, 1999}` (ICU date long)
+  - **en-US:** `October 21, 1999`
+  - **de-DE:** `21. Oktober 1999`
+  - **uk-UA:** `21 жовтня 1999 р.`
+- `{July 16, 1999}` (ICU date medium)
+  - **en-US:** `Oct 21, 1999`
+  - **de-DE:** `21.10.1999`
+  - **uk-UA:** `21 жовт. 1999 р.`
+- `{7/16/99}` (ICU date short)
+  - **en-US:** `10/21/99`
+  - **de-DE:** `21.10.99`
+  - **uk-UA:** `21.10.99`
+- `{10:30:45 pm Pacific Daylight Time}` (ICU time full)
+  - **en-US:** `10:03:02 pm Pacific Daylight Time`
+  - **de-DE:** `22:03:02 Nordamerikanische Westküsten-Sommerzeit`
+  - **uk-UA:** `22:03:02 за північноамериканським тихоокеанським літнім часом`
+- `{10:30:45 pm PDT}` (ICU time long)
+  - **en-US:** `10:03:02 pm PDT`
+  - **de-DE:** `22:03:02 PDT`
+  - **uk-UA:** `22:03:02 PDT`
+- `{10:30:45 pm}` (ICU time medium)
+  - **en-US:** `10:03:02 pm`
+  - **de-DE:** `22:03:02`
+  - **uk-UA:** `22:03:02`
+- `{10:30 pm}` (ICU time short)
+  - **en-US:** `10:03 pm`
+  - **de-DE:** `22:03`
+  - **uk-UA:** `22:03`
 
 ### ICU Encoding - Currency
 
@@ -804,6 +839,7 @@ As with any technology, TIK introduces both advantages and trade-offs.
 - Currency codes follow [ISO 4217](https://www.iso.org/iso-4217-currency-codes.html)
 - Timestamps follow [RFC3339](https://www.rfc-editor.org/rfc/rfc3339.html)
 - JSON examples follow [RFC8259](https://datatracker.ietf.org/doc/html/rfc8259)
+- Date/Time [RFC1123](https://datatracker.ietf.org/doc/html/rfc1123)
 
 ## FAQ
 

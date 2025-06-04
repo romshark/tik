@@ -23,20 +23,19 @@ type MagicConstants struct {
 	CardinalPluralStart string                     // {2 ...}
 	OrdinalPlural       MagicConstantOrdinalPlural // {4th}
 
-	GenderPronouns       []string // {they}, {them}, {their}, {theirs}, {themself}
-	TimeShort            string   // {3:45PM}
-	TimeShortSeconds     string   // {3:45:30PM}
-	TimeFullMonthAndDay  string   // {April 2}
-	TimeShortMonthAndDay string   // {Apr 2}
-	TimeFullMonthAndYear string   // {Apr 2025}
-	TimeWeekday          string   // {Monday}
-	TimeDateAndShort     string   // {April 2, 3:45PM}
-	TimeYear             string   // {2025}
-	TimeFull             string   // {April 2, 3:45:30PM}
-	CurrencyRounded      string   // {$1}
-	CurrencyFull         string   // {$1.20}
-	CurrencyCodeRounded  string   // {USD 1}
-	CurrencyCodeFull     string   // {USD 1.20}
+	GenderPronouns      []string // {they}, {them}, {their}, {theirs}, {themself}
+	DateFull            string   // {Friday, July 16, 1999}
+	DateLong            string   // {July 16, 1999}
+	DateMedium          string   // {Jul 16, 1999}
+	DateShort           string   // {7/16/99}
+	TimeShort           string   // {10:30 pm}
+	TimeMedium          string   // {10:30:45 pm}
+	TimeLong            string   // {10:30:45 pm PDT}
+	TimeFull            string   // {10:30:45 pm Pacific Daylight Time}
+	CurrencyRounded     string   // {$1}
+	CurrencyFull        string   // {$1.20}
+	CurrencyCodeRounded string   // {USD 1}
+	CurrencyCodeFull    string   // {USD 1.20}
 }
 
 var defaultConfig = &Config{
@@ -47,20 +46,19 @@ var defaultConfig = &Config{
 			Constant:         "4th",
 			DefaultICUSuffix: "th",
 		},
-		GenderPronouns:       []string{"they", "them", "their", "theirs", "themself"},
-		TimeShort:            "3:45PM",
-		TimeShortSeconds:     "3:45:30PM",
-		TimeFullMonthAndDay:  "April 2",
-		TimeShortMonthAndDay: "Apr 2",
-		TimeFullMonthAndYear: "Apr 2025",
-		TimeWeekday:          "Monday",
-		TimeDateAndShort:     "April 2, 3:45PM",
-		TimeYear:             "2025",
-		TimeFull:             "April 2, 3:45:30PM",
-		CurrencyRounded:      "$1",
-		CurrencyFull:         "$1.20",
-		CurrencyCodeRounded:  "USD 1",
-		CurrencyCodeFull:     "USD 1.20",
+		GenderPronouns:      []string{"they", "them", "their", "theirs", "themself"},
+		DateFull:            "Friday, July 16, 1999",
+		DateLong:            "July 16, 1999",
+		DateMedium:          "Jul 16, 1999",
+		DateShort:           "7/16/99",
+		TimeShort:           "10:30 pm",
+		TimeMedium:          "10:30:45 pm",
+		TimeLong:            "10:30:45 pm PDT",
+		TimeFull:            "10:30:45 pm Pacific Daylight Time",
+		CurrencyRounded:     "$1",
+		CurrencyFull:        "$1.20",
+		CurrencyCodeRounded: "USD 1",
+		CurrencyCodeFull:    "USD 1.20",
 	},
 }
 
@@ -98,14 +96,13 @@ func validateCustomMagicConstants(m MagicConstants) error {
 		m.Number,
 		m.CardinalPluralStart,
 		m.OrdinalPlural.Constant,
+		m.DateFull,
+		m.DateLong,
+		m.DateMedium,
+		m.DateShort,
 		m.TimeShort,
-		m.TimeShortSeconds,
-		m.TimeFullMonthAndDay,
-		m.TimeShortMonthAndDay,
-		m.TimeFullMonthAndYear,
-		m.TimeWeekday,
-		m.TimeDateAndShort,
-		m.TimeYear,
+		m.TimeMedium,
+		m.TimeLong,
 		m.TimeFull,
 		m.CurrencyRounded,
 		m.CurrencyFull,
