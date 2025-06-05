@@ -95,13 +95,21 @@ func (i *ICUTranslator) TIK2ICUBuf(
 		switch token.Type {
 		case TokenTypeStringLiteral:
 			i.write(token.String(tik.Raw))
-		case TokenTypeStringPlaceholder, TokenTypeNumber:
+		case TokenTypeStringPlaceholder:
 			pos := positionalIndex
 			positionalIndex++
 			i.writeModifiers(pos, modifiers, true, true, func() {
 				i.write("{")
 				i.writePositionalPlaceholder(pos, "")
 				i.write("}")
+			})
+		case TokenTypeNumber:
+			pos := positionalIndex
+			positionalIndex++
+			i.writeModifiers(pos, modifiers, true, true, func() {
+				i.write("{")
+				i.writePositionalPlaceholder(pos, "")
+				i.write(", number, integer}")
 			})
 		case TokenTypeCurrency:
 			pos := positionalIndex

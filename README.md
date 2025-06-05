@@ -1,5 +1,5 @@
 **Author:** Roman Scharkov <roman.scharkov@gmail.com>;
-**Version:** 0.6.0;
+**Version:** 0.6.1;
 **Last updated:** 2025-06-05;
 
 # TIK - Textual Internationalization Key
@@ -715,9 +715,9 @@ the value `Thu, 21 Oct 1999 22:03:02 PDT` (RFC1123) is represented.
 
 ### ICU Encoding - Currency
 
-The currency constant `{$1}` is translated to the `{var0, number, ::currency/auto}`
-ICU argument which is automatically localized to the appropriate format
-for the given locale and expects both amount and currency information
+The currency constant `{$1}` is translated to the ICU argument
+`{var0, number, ::currency/auto}` which is automatically localized to the appropriate
+format for the given locale and expects both amount and currency information
 (e.g. in Go `currency.Amount`).
 
 In the examples below, `USD $39,250.45` is the value represented:
@@ -730,15 +730,18 @@ In the examples below, `USD $39,250.45` is the value represented:
 
 ### ICU Encoding - Number
 
-The magic constant `{3}` localizes the integer value to the appropriate format
+The magic constant `{3}` is translated to the ICU argument `{var0, number, integer}`
+ICU argument which localizes the (signed) integer value to the appropriate format
 for the given locale:
 
-| Value          | en-US     | de-DE     | uk-UA     |
-| :------------- | :-------- | :-------- | --------- |
-| `int(1)`       | 1         | 1         | 1         |
-| `int(2)`       | 2         | 2         | 2         |
-| `int(1000)`    | 1,000     | 1.000     | 1 000     |
-| `int(1234567)` | 1,234,567 | 1.234.567 | 1 234 567 |
+| Value           | en-US      | de-DE      | uk-UA      |
+| :-------------- | :--------- | :--------- | ---------- |
+| `int(1)`        | 1          | 1          | 1          |
+| `int(-1)`       | -1         | -1         | -1         |
+| `int(2)`        | 2          | 2          | 2          |
+| `int(1000)`     | 1,000      | 1.000      | 1 000      |
+| `int(1234567)`  | 1,234,567  | 1.234.567  | 1 234 567  |
+| `int(-1234567)` | -1,234,567 | -1.234.567 | -1 234 567 |
 
 ## Configuration Guidelines
 

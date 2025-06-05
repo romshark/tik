@@ -456,6 +456,9 @@ func TestICUTranslator(t *testing.T) {
 	f(t, "hello {var0}", `hello {"world"}`)
 	f(t, "hello {var0}", `[more context] hello {"world"}`)
 	f(t,
+		"today's lucky number is {var0, number, integer}",
+		`today's lucky number is {3}`)
+	f(t,
 		"your account balance: {var0, number, ::currency/auto}",
 		`your account balance: {$1}`)
 	f(t,
