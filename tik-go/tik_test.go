@@ -219,6 +219,7 @@ func TestParseErr(t *testing.T) {
 	f(t, tik.ErrUknownPlaceholder, `no space after cardinal plural: {2abc}`)
 	f(t, tik.ErrUknownPlaceholder, `unknown placeholder: {2026}`)
 	f(t, tik.ErrUknownPlaceholder, `unknown placeholder: {April 21}`)
+	f(t, tik.ErrUknownPlaceholder, `unknown placeholder: {8/16/99}`)
 	f(t, tik.ErrUnclosedPlaceholder, `unexpected EOF: {`)
 	f(t, tik.ErrUnclosedPlaceholder, `unexpected EOF: {"`)
 	f(t, tik.ErrUnclosedPlaceholder, `unexpected EOF: {"_`)
