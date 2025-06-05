@@ -111,7 +111,7 @@ TIKs, by contrast, embed the meaning directly in the code using a naturally read
 and self-explanatory format that serves as source of truth for the i18n pipeline:
 
 ```go
-i18n.Text(`You had {2 messages} at {3:45PM}.`, numberOfMessages, dateTime)
+i18n.Text(`You had {2 messages} at {10:30 pm}.`, numberOfMessages, dateTime)
 ```
 
 ### ICU Messages
@@ -246,7 +246,7 @@ Magic constants allow TIKs to be easily readable yet auto-translatable to ICU.
 Below is an example TIK that uses multiple magic constants.
 
 ```
-Today {they} earned {$1.20} for completing {2 tasks} in section '{"job"}' at {3:45PM}.
+Today {they} earned {$1.20} for completing {2 tasks} in section '{"job"}' at {10:30 pm}.
 ```
 
 - String Placeholders (see [string placeholders](#string-placeholders))
@@ -261,16 +261,15 @@ Today {they} earned {$1.20} for completing {2 tasks} in section '{"job"}' at {3:
     - `{their}`: possessive adjective
     - `{theirs}`: possessive pronoun
     - `{themself}`: reflexive
-- Time (see [time placeholders](#icu-encoding---time-placeholders)):
-  - `{3:45PM}`
-  - `{3:45:30PM}`
-  - `{April 2}`
-  - `{Apr 2}`
-  - `{Apr 2025}`
-  - `{Monday}`
-  - `{April 2, 3:45PM}`
-  - `{2025}`
-  - `{April 2, 3:45:30PM}`
+- Date & Time (see [time placeholders](#icu-encoding---time-placeholders)):
+  - `{Friday, July 16, 1999}`
+  - `{July 16, 1999}`
+  - `{Jul 16, 1999}`
+  - `{7/16/99}`
+  - `{10:30 pm}`
+  - `{10:30:45 pm}`
+  - `{10:30:45 pm PDT}`
+  - `{10:30:45 pm Pacific Daylight Time}`
 - Currency (see [currency](#icu-encoding---currency))
   - `{$1}`
   - `{$1.20}`
@@ -299,7 +298,7 @@ You have {2 {"apples"} and {"bananas"}}.
 ```
 
 ```
-You had {2 of {their} tasks assigned at {3:45PM}}
+You had {2 of {their} tasks assigned at {10:30 pm}}
 ```
 
 #### Cardinal Pluralization Invariants
@@ -436,7 +435,7 @@ All placeholders are mapped positionally, meaning that the order of occurrence i
 is the order expected for parameter inputs.
 
 ```
-[report] By {3:45PM}, {"John"} received {2 emails}.
+[report] By {10:30 pm}, {"John"} received {2 emails}.
 ```
 
 All placeholders use the `var` prefix with a following positional index.
@@ -462,7 +461,7 @@ By { var0, time, short }, { var1_gender, select,
 Usage example in Go:
 
 ```go
-i18n.Text(`[report] By {3:45PM}, {"John"} received {2 emails}.`,
+i18n.Text(`[report] By {10:30 pm}, {"John"} received {2 emails}.`,
   time.Now(), "Max", len(emailsReceived))
 ```
 
@@ -761,7 +760,7 @@ may reduce the overall readability and coherence of the source text.
 This is an example in German:
 
 ```
-{They} hat das Paket um {3:45PM} bekommen.
+{They} hat das Paket um {10:30 pm} bekommen.
 Heute ist das die {4th}-schnellste Lieferung.
 Die Kosten betragen {$1.20}.
 ```
@@ -772,7 +771,7 @@ Naturally, this code would benefit from overwriting the default magic constants:
 {
   "magic constants": {
     "they/them/their/theirs/themself": "er/ihn/sein/seiner/sich",
-    "{3:45PM}": "{15:45 Uhr}",
+    "{10:30 pm}": "{15:45 Uhr}",
     "4th": "4./4te/4ter",
     "$1.20": "1,20€",
     "$1": "1€"
