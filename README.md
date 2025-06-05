@@ -1,48 +1,47 @@
 **Author:** Roman Scharkov <roman.scharkov@gmail.com>;
-**Version:** 0.5.0;
-**Last updated:** 2025-06-04;
+**Version:** 0.6.0;
+**Last updated:** 2025-06-05;
 
 # TIK - Textual Internationalization Key
 
 **Table of Contents**
 
-- [TIK - Textual Internationalization Key](#tik---textual-internationalization-key)
-  - [Introduction](#introduction)
-  - [Problem](#problem)
-    - [Key-based Translation](#key-based-translation)
-    - [ICU Messages](#icu-messages)
-  - [TIK Syntax Rules](#tik-syntax-rules)
-    - [Context](#context)
-      - [Context Invariants](#context-invariants)
-      - [Context - Example](#context---example)
-    - [Text](#text)
-    - [Magic Constants](#magic-constants)
-    - [Cardinal Pluralization](#cardinal-pluralization)
-      - [Cardinal Pluralization Invariants](#cardinal-pluralization-invariants)
-    - [String Placeholders](#string-placeholders)
-      - [String Placeholders with Gender and Pluralization](#string-placeholders-with-gender-and-pluralization)
-      - [String Placeholder Invariants](#string-placeholder-invariants)
-  - [ICU Encoding](#icu-encoding)
-  - [ICU Encoding – Positional Mapping](#icu-encoding--positional-mapping)
-    - [ICU Encoding - String Placeholders](#icu-encoding---string-placeholders)
-      - [ICU Encoding - String Placeholders With Gender](#icu-encoding---string-placeholders-with-gender)
-      - [ICU Encoding - String Placeholders With Pluralization](#icu-encoding---string-placeholders-with-pluralization)
-    - [ICU Encoding - Gender Agreement](#icu-encoding---gender-agreement)
-    - [ICU Encoding - Cardinal Pluralization](#icu-encoding---cardinal-pluralization)
-    - [ICU Encoding - Ordinal Pluralization](#icu-encoding---ordinal-pluralization)
-    - [ICU Encoding - Date/Time Placeholders](#icu-encoding---datetime-placeholders)
-    - [ICU Encoding - Currency](#icu-encoding---currency)
-    - [ICU Encoding - Number](#icu-encoding---number)
-  - [Configuration Guidelines](#configuration-guidelines)
-    - [Magic Constant Customization](#magic-constant-customization)
-    - [Domains](#domains)
-  - [Limitations](#limitations)
-  - [Standards and Conventions](#standards-and-conventions)
-  - [FAQ](#faq)
-    - [Is this overcomplication really worth it and aren't simple keys enough?](#is-this-overcomplication-really-worth-it-and-arent-simple-keys-enough)
-    - [How about just preloading translation texts by key using IDE plugins?](#how-about-just-preloading-translation-texts-by-key-using-ide-plugins)
-    - [Could Fluent be used instead of ICU?](#could-fluent-be-used-instead-of-icu)
-  - [Special Thanks](#special-thanks)
+- [Introduction](#introduction)
+- [Problem](#problem)
+  - [Key-based Translation](#key-based-translation)
+  - [ICU Messages](#icu-messages)
+- [TIK Syntax Rules](#tik-syntax-rules)
+  - [Context](#context)
+    - [Context Invariants](#context-invariants)
+    - [Context - Example](#context---example)
+  - [Text](#text)
+  - [Magic Constants](#magic-constants)
+  - [Cardinal Pluralization](#cardinal-pluralization)
+    - [Cardinal Pluralization Invariants](#cardinal-pluralization-invariants)
+  - [String Placeholders](#string-placeholders)
+    - [String Placeholders with Gender and Pluralization](#string-placeholders-with-gender-and-pluralization)
+    - [String Placeholder Invariants](#string-placeholder-invariants)
+- [ICU Encoding](#icu-encoding)
+- [ICU Encoding – Positional Mapping](#icu-encoding--positional-mapping)
+  - [ICU Encoding - String Placeholders](#icu-encoding---string-placeholders)
+    - [ICU Encoding - String Placeholders With Gender](#icu-encoding---string-placeholders-with-gender)
+    - [ICU Encoding - String Placeholders With Pluralization](#icu-encoding---string-placeholders-with-pluralization)
+  - [ICU Encoding - Gender Agreement](#icu-encoding---gender-agreement)
+  - [ICU Encoding - Cardinal Pluralization](#icu-encoding---cardinal-pluralization)
+  - [ICU Encoding - Ordinal Pluralization](#icu-encoding---ordinal-pluralization)
+  - [ICU Encoding - Date/Time Placeholders](#icu-encoding---datetime-placeholders)
+  - [ICU Encoding - Currency](#icu-encoding---currency)
+  - [ICU Encoding - Number](#icu-encoding---number)
+- [Configuration Guidelines](#configuration-guidelines)
+  - [Magic Constant Customization](#magic-constant-customization)
+  - [Domains](#domains)
+- [Limitations](#limitations)
+- [Standards and Conventions](#standards-and-conventions)
+- [FAQ](#faq)
+  - [Is this overcomplication really worth it and aren't simple keys enough?](#is-this-overcomplication-really-worth-it-and-arent-simple-keys-enough)
+  - [How about just preloading translation texts by key using IDE plugins?](#how-about-just-preloading-translation-texts-by-key-using-ide-plugins)
+  - [Could Fluent be used instead of ICU?](#could-fluent-be-used-instead-of-icu)
+- [Special Thanks](#special-thanks)
 
 ## Introduction
 
@@ -246,7 +245,7 @@ Magic constants allow TIKs to be easily readable yet auto-translatable to ICU.
 Below is an example TIK that uses multiple magic constants.
 
 ```
-Today {they} earned {$1.20} for completing {2 tasks} in section '{"job"}' at {10:30 pm}.
+Today {they} earned {$1} for completing {2 tasks} in section '{"job"}' at {10:30 pm}.
 ```
 
 - String Placeholders (see [string placeholders](#string-placeholders))
@@ -272,9 +271,6 @@ Today {they} earned {$1.20} for completing {2 tasks} in section '{"job"}' at {10
   - `{10:30:45 pm Pacific Daylight Time}`
 - Currency (see [currency](#icu-encoding---currency))
   - `{$1}`
-  - `{$1.20}`
-  - `{USD 1}`
-  - `{USD 1.20}`
 - Number: (see [number](#icu-encoding---number))
   - `{3}`
 
@@ -327,7 +323,7 @@ This TIK is illegal: {2 {3}}
 ```
 
 ```
-This TIK is illegal: {2 {USD 1}}
+This TIK is illegal: {2 {$1}}
 ```
 
 ```
@@ -719,18 +715,18 @@ the value `Thu, 21 Oct 1999 22:03:02 PDT` (RFC1123) is represented.
 
 ### ICU Encoding - Currency
 
-Currency placeholders are automatically localized to the appropriate format
-for the given locale and expect both amount and currency information
+The currency constant `{$1}` is translated to the `{var0, number, ::currency/auto}`
+ICU argument which is automatically localized to the appropriate format
+for the given locale and expects both amount and currency information
 (e.g. in Go `currency.Amount`).
 
-In the examples below, `$39,250.45 USD` (`en-US`) is the value represented.
+In the examples below, `USD $39,250.45` is the value represented:
 
-| Constant     | en-US         | de-DE         | uk-UA              | Description       |
-| :----------- | :------------ | :------------ | :----------------- | :---------------- |
-| `{$1}`       | 39.250$       | 39.250 $      | 39 250 дол. США    | Rounded           |
-| `{$1.20}`    | $39,250.45    | 39.250,45 $   | 39 250,45 дол. США | Full              |
-| `{USD 1}`    | USD 39,250    | 39.250 USD    | 39 250 USD         | Rounded with code |
-| `{USD 1.20}` | USD 39,250.45 | 39.250,45 USD | 39 250,45 USD      | Full with code    |
+- **en-US:** `$39,250.45`
+- **de-DE:** `39.250,45 $`
+- **uk-UA:** `39 250,45 USD`
+- **ru-RU:** `39 250,45 $`
+- **fr-FR:** `39 250,45 $US`
 
 ### ICU Encoding - Number
 
@@ -762,7 +758,7 @@ This is an example in German:
 ```
 {They} hat das Paket um {10:30 pm} bekommen.
 Heute ist das die {4th}-schnellste Lieferung.
-Die Kosten betragen {$1.20}.
+Die Kosten betragen {$1}.
 ```
 
 Naturally, this code would benefit from overwriting the default magic constants:
@@ -773,7 +769,6 @@ Naturally, this code would benefit from overwriting the default magic constants:
     "they/them/their/theirs/themself": "er/ihn/sein/seiner/sich",
     "{10:30 pm}": "{15:45 Uhr}",
     "4th": "4./4te/4ter",
-    "$1.20": "1,20€",
     "$1": "1€"
   }
 }

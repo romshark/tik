@@ -63,10 +63,7 @@ const (
 	TokenTypeTimeFull // {10:30:45 pm Pacific Daylight Time}
 
 	// Currency.
-	TokenTypeCurrencyRounded     // {$1}
-	TokenTypeCurrencyFull        // {$1.20}
-	TokenTypeCurrencyCodeRounded // {USD 1}
-	TokenTypeCurrencyCodeFull    // {USD 1.20}
+	TokenTypeCurrency // {$1}
 )
 
 func (t TokenType) String() string {
@@ -103,14 +100,8 @@ func (t TokenType) String() string {
 		return `date long`
 	case TokenTypeDateFull:
 		return `date full`
-	case TokenTypeCurrencyRounded:
-		return `currency rounded`
-	case TokenTypeCurrencyFull:
-		return `currency full`
-	case TokenTypeCurrencyCodeRounded:
-		return `currency code rounded`
-	case TokenTypeCurrencyCodeFull:
-		return `currency code full`
+	case TokenTypeCurrency:
+		return `currency`
 	}
 	return "unknown"
 }
@@ -393,13 +384,7 @@ func match(s string, c *Config) (tokenType TokenType, value string) {
 	case strings.EqualFold(s, c.MagicConstants.DateShort):
 		return TokenTypeDateShort, c.MagicConstants.DateShort
 	case strings.EqualFold(s, c.MagicConstants.CurrencyRounded):
-		return TokenTypeCurrencyRounded, c.MagicConstants.CurrencyRounded
-	case strings.EqualFold(s, c.MagicConstants.CurrencyFull):
-		return TokenTypeCurrencyFull, c.MagicConstants.CurrencyFull
-	case strings.EqualFold(s, c.MagicConstants.CurrencyCodeRounded):
-		return TokenTypeCurrencyCodeRounded, c.MagicConstants.CurrencyCodeRounded
-	case strings.EqualFold(s, c.MagicConstants.CurrencyCodeFull):
-		return TokenTypeCurrencyCodeFull, c.MagicConstants.CurrencyCodeFull
+		return TokenTypeCurrency, c.MagicConstants.CurrencyRounded
 	}
 	for _, v := range c.MagicConstants.GenderPronouns {
 		if strings.EqualFold(s, v) {

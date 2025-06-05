@@ -362,9 +362,6 @@ func TestTIKPlaceholdersIter(t *testing.T) {
 		{10:30:45 pm PDT}
 		{10:30:45 pm Pacific Daylight Time}
 		{$1}
-		{$1.20}
-		{USD 1}
-		{USD 1.20}
 		{2 messages}{4th}`)
 	requireNoErr(t, err)
 	expect := []tik.Token{
@@ -389,14 +386,8 @@ func TestTIKPlaceholdersIter(t *testing.T) {
 		// 18 is a string literal.
 		tk.Tokens[19],
 		// 20 is a string literal.
-		tk.Tokens[21],
-		// 22 is a string literal.
-		tk.Tokens[23],
-		// 24 is a string literal.
-		tk.Tokens[25],
-		// 26 is a string literal.
-		// 27 is a cardinal plural end.
-		tk.Tokens[28],
+		// 21 is a cardinal plural end.
+		tk.Tokens[22],
 	}
 
 	var actual []tik.Token
@@ -442,10 +433,7 @@ func TestTokenType_String(t *testing.T) {
 	f(t, `time long`, tik.TokenTypeTimeLong)
 	f(t, `time medium`, tik.TokenTypeTimeMedium)
 	f(t, `time short`, tik.TokenTypeTimeShort)
-	f(t, `currency rounded`, tik.TokenTypeCurrencyRounded)
-	f(t, `currency full`, tik.TokenTypeCurrencyFull)
-	f(t, `currency code rounded`, tik.TokenTypeCurrencyCodeRounded)
-	f(t, `currency code full`, tik.TokenTypeCurrencyCodeFull)
+	f(t, `currency`, tik.TokenTypeCurrency)
 }
 
 func TestICUTranslator(t *testing.T) {
@@ -467,6 +455,9 @@ func TestICUTranslator(t *testing.T) {
 	f(t, "hello world", "[context] hello world")
 	f(t, "hello {var0}", `hello {"world"}`)
 	f(t, "hello {var0}", `[more context] hello {"world"}`)
+	f(t,
+		"your account balance: {var0, number, ::currency/auto}",
+		`your account balance: {$1}`)
 	f(t,
 		`today is {var0, date, full}`,
 		"today is {Friday, July 16, 1999}")
@@ -562,6 +553,8 @@ func FuzzTokenize(f *testing.F) {
 	f.Add("You're {4th} out of {2 contenders}")
 	f.Add("{unknown}")
 	f.Add(`
+		{3}
+		{$1}
 		{Friday, July 16, 1999}
 		{July 16, 1999}
 		{Jul 16, 1999}
