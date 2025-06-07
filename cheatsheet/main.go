@@ -42,6 +42,23 @@ func main() {
 			},
 		},
 		{
+			ID:          "integer",
+			Header:      `<code>{3}</code> Integer`,
+			Description: `Represents an integer number value.`,
+			ExampleTIK:  `Your number is {3}.`,
+			ICU:         `Your number is {var0, number, integer}.`,
+			Examples: []Example{
+				{
+					Data: `{"var0": 42}`,
+					Text: `Your number is 42.`,
+				},
+				{
+					Data: `{"var0": 0}`,
+					Text: `Your number is 0.`,
+				},
+			},
+		},
+		{
 			ID:     "cardinal-pluralization",
 			Header: `<code>{"2 ..."}</code> Cardinal Pluralization`,
 			Description: `Pluralizes <code>...</code> to the correct <a
@@ -98,6 +115,155 @@ func main() {
 				{
 					Data: `{"var0": "neutral"}`,
 					Text: `They received the message`,
+				},
+			},
+		},
+		{
+			ID:          "date-short",
+			Header:      `<code>{7/16/99}</code> Date Short`,
+			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR short date</a>.`,
+			ExampleTIK:  `Today is {7/16/99}`,
+			ICU:         `Today is {var0, date, short}`,
+			Examples: []Example{
+				{
+					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Text: `Today is 1/26/25`,
+				},
+				{
+					Data: `{"var0": "1998-09-02T20:20:50Z"}`,
+					Text: `Today is 9/2/98`,
+				},
+			},
+		},
+		{
+			ID:          "date-medium",
+			Header:      `<code>{Jul 16, 1999}</code> Date Medium`,
+			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR medium date</a>.`,
+			ExampleTIK:  `Today is {Jul 16, 1999}`,
+			ICU:         `Today is {var0, date, medium}`,
+			Examples: []Example{
+				{
+					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Text: `Today is Jan 26, 2025`,
+				},
+				{
+					Data: `{"var0": "1998-09-02T20:20:50Z"}`,
+					Text: `Today is Sep 2, 1998`,
+				},
+			},
+		},
+		{
+			ID:          "date-long",
+			Header:      `<code>{July 16, 1999}</code> Date Long`,
+			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR long date</a>.`,
+			ExampleTIK:  `Today is {July 16, 1999}`,
+			ICU:         `Today is {var0, date, long}`,
+			Examples: []Example{
+				{
+					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Text: `Today is January 26, 2025`,
+				},
+				{
+					Data: `{"var0": "1998-09-02T20:20:50Z"}`,
+					Text: `Today is September 2, 1998`,
+				},
+			},
+		},
+		{
+			ID:          "date-full",
+			Header:      `<code>{Friday, July 16, 1999}</code> Date Full`,
+			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR full date</a>.`,
+			ExampleTIK:  `Today is {Friday, July 16, 1999}`,
+			ICU:         `Today is {var0, date, full}`,
+			Examples: []Example{
+				{
+					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Text: `Today is Sunday, January 26, 2025`,
+				},
+				{
+					Data: `{"var0": "1998-09-02T20:20:50Z"}`,
+					Text: `Today is Wednesday, September 2, 1998`,
+				},
+			},
+		},
+		{
+			ID:          "time-short",
+			Header:      `<code>{10:30 pm}</code> Time Short`,
+			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR short time</a>.`,
+			ExampleTIK:  `It's {10:30 pm}`,
+			ICU:         `It's {var0, time, short}`,
+			Examples: []Example{
+				{
+					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Text: `It's 4:20 pm`,
+				},
+				{
+					Data: `{"var0": "1998-09-02T20:20:50-07:00"}`,
+					Text: `It's 8:20 pm`,
+				},
+			},
+		},
+		{
+			ID:          "time-medium",
+			Header:      `<code>{10:30:45 pm}</code> Time Medium`,
+			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR medium time</a>.`,
+			ExampleTIK:  `It's {10:30:45 pm}`,
+			ICU:         `It's {var0, time, medium}`,
+			Examples: []Example{
+				{
+					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Text: `It's 4:20:50 pm`,
+				},
+				{
+					Data: `{"var0": "1998-09-02T20:20:50-07:00"}`,
+					Text: `It's 8:20:50 pm`,
+				},
+			},
+		},
+		{
+			ID:          "time-long",
+			Header:      `<code>{10:30:45 pm PDT}</code> Time Long`,
+			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR long time</a>.`,
+			ExampleTIK:  `It's {10:30:45 pm PDT}`,
+			ICU:         `It's {var0, time, long}`,
+			Examples: []Example{
+				{
+					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Text: `It's 4:20:50 pm UTC`,
+				},
+				{
+					Data: `{"var0": "1998-09-02T20:20:50-07:00"}`,
+					Text: `It's 8:20:50 pm PDT`,
+				},
+			},
+		},
+		{
+			ID:          "time-full",
+			Header:      `<code>{10:30:45 pm Pacific Daylight Time}</code> Time Full`,
+			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR full time</a>.`,
+			ExampleTIK:  `It's {10:30:45 pm Pacific Daylight Time}`,
+			ICU:         `It's {var0, time, full}`,
+			Examples: []Example{
+				{
+					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Text: `It's 4:20:50 pm UTC`,
+				},
+				{
+					Data: `{"var0": "1998-09-02T20:20:50-07:00"}`,
+					Text: `It's 8:20:50 pm Pacific Daylight Time`,
+				},
+			},
+		},
+		{
+			ID:          "currency",
+			Header:      `<code>{$1}</code> Currency`,
+			Description: `Represents an amount of money.`,
+			ExampleTIK:  `The price is {$1}`,
+			ICU:         `The price is {var0, number, ::currency/auto}`,
+			Examples: []Example{
+				{
+					Data: `{"var0": {"currency":"USD", amount: 12.99}}`,
+					Text: `The price is $12.99`,
 				},
 			},
 		},
