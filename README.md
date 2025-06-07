@@ -262,7 +262,7 @@ Today {they} earned {$1} for completing {2 tasks} in section '{"job"}' at {10:30
     - `{their}`: possessive adjective
     - `{theirs}`: possessive pronoun
     - `{themself}`: reflexive
-- Date & Time (see [time placeholders](#icu-encoding---time-placeholders)):
+- Date & Time (see [time placeholders](#icu-encoding---datetime-placeholders)):
   - `{Friday, July 16, 1999}`
   - `{July 16, 1999}`
   - `{Jul 16, 1999}`
