@@ -1,0 +1,271 @@
+package main
+
+type Section struct {
+	ID, Header, Description string
+	Aliases []string
+	ExampleTIK, ICU string
+	Examples []Example
+}
+
+type Example struct {
+	Data string
+	Text string
+}
+
+templ templatePage(title string, sections []Section) {
+    <!DOCTYPE html>
+	<html>
+	<head>
+		<title>{ title }</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="description" content="A textual internationalization key (TIK) cheatsheet." />
+		<meta name="keywords" content="i18n, TIK, cheatsheet" />
+		<meta name="author" content="Roman Scharkov (roman.scharkov@gmail.com)" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<style>
+			body {
+				font-family: sans-serif;
+				max-width: 900px;
+				margin: auto;
+				margin-top: 1rem;
+				padding: 1rem;
+				box-sizing: border-box;
+			}
+
+			hr {
+				color: #333;
+			}
+
+			h1 {
+				font-size: 1.5rem;
+			}
+
+			code {
+				background-color: #efefef;
+				color: black;
+				border-radius: .3rem;
+				padding: .3rem;
+				line-height: 2rem;
+				white-space: pre;
+			}
+
+			section {
+				border: 1px solid #efefef;
+				border-radius: 1rem;
+				margin-top: 1rem;
+				margin-bottom: .5rem;
+				overflow: hidden;
+			}
+
+			section h2 {
+				margin: 0;
+				font-size: large;
+			}
+
+			section p {
+				margin: 0;
+			}
+
+			.section-header {
+				border-bottom: 1px #333;
+				padding: .5rem;
+				background-color: #fbfbfb;
+				display: flex;
+				flex-direction: row;
+				gap: 1rem;
+				align-items: center;
+			}
+
+			.section-body {
+				padding: .5rem;
+				overflow: auto;
+			}
+
+			.section-header p {
+				color: #888;
+			}
+
+			ul li {
+				margin: 0;
+			}
+
+			ul.examples {
+				margin: 0;
+				padding-left: 1.5rem;
+			}
+
+			.example {
+				display: flex;
+				align-items: center;
+				gap: .5rem;
+			}
+
+			.arrow {
+				font-size: 1.1rem;
+				line-height: 1;
+			}
+
+			.labeled {
+				display: inline-flex;
+				align-items: baseline;
+				padding-bottom: .3rem;
+				padding-top: .3rem;
+				font-size: 0;
+				font-family: monospace;
+				vertical-align: baseline;
+				align-items: stretch;
+			}
+
+			.labeled label {
+				display: block;
+				font-size: small;
+				font-weight: bold;
+				padding: .3rem;
+				padding-left: .5rem;
+				padding-right: .5rem;
+				border-top-left-radius: .5rem;
+				border-bottom-left-radius: .5rem;
+				margin: 0;
+			}
+
+			.labeled span {
+				display: block;
+				font-size: small;
+				background-color: #efefef;
+				padding: .3rem;
+				padding-left: .5rem;
+				padding-right: .5rem;
+				margin: 0;
+				border-top-right-radius: .5rem;
+				border-bottom-right-radius: .5rem;
+			}
+
+			.labeled.data label {
+				background-color: rgb(255, 234, 117);
+				color: black;
+			}
+
+			.labeled.text label {
+				background-color: lightgreen;
+				color: black;
+			}
+
+			.labeled.alias label {
+				background-color: #92f2ff;
+				color: black;
+			}
+
+			@media (prefers-color-scheme: dark) {
+				body {
+					background-color: #121212;
+					color: #e0e0e0;
+				}
+
+				section {
+					border-color: #333;
+				}
+
+				.section-header {
+					background-color: #161616;
+				}
+
+				code {
+					background-color: #212121;
+					color: #f1f1f1;
+				}
+
+				.labeled span {
+					background-color: #212121;
+					color: #e0e0e0;
+				}
+
+				.labeled.data label {
+					background-color: #ab9400;
+					color: black;
+				}
+
+				.labeled.text label {
+					background-color: #377f39;
+					color: black;
+				}
+
+				.labeled.alias label {
+					background-color: #0096ab;
+					color: black;
+				}
+
+				a {
+					color: #90caf9;
+				}
+			}
+		</style>
+	</head>
+
+	<body>
+		<h1>TIK Cheatsheet</h1>
+		This cheatsheet will help you write
+		<a target="_blank" href=" https://github.com/romshark/tik">
+			textual internationalization keys (TIKs)
+		</a> in the default setting for locale <code>en</code>.
+
+		for _, section := range sections {
+			@templateSection(section)
+		}
+
+		<ul>
+			<li>TIK's <a target="_blank" href="https://github.com/romshark/tik?tab=readme-ov-file#magic-constants">magic
+					constants</a> (and
+				any of their variants) are case insensitive.</li>
+			<li><a target="_blank" href="https://unicode-org.github.io/icu/userguide/format_parse/messages/">ICU Message
+					Format</a></li>
+		</ul>
+	</body>
+
+	</html>
+}
+
+templ templateSection(section Section) {
+	<section aria-labelledby={ section.ID }>
+		<div class="section-header">
+			<h2 id={ section.ID }> @templ.Raw(section.Header) </h2>
+			<p> @templ.Raw(section.Description) </p>
+		</div>
+		<div class="section-body">
+			<div>
+				for _, alias := range section.Aliases {
+					<div class="labeled alias">
+						<label>alias</label>
+						<span>{ alias }</span>
+					</div>
+				}
+			</div>
+			<table>
+				<tr>
+					<td>Example</td>
+					<td><code>{ section.ExampleTIK }</code></td>
+				</tr>
+				<tr>
+					<td>ICU</td>
+					<td><code>{ section.ICU }</code></td>
+				</tr>
+			</table>
+			<ul class="examples">
+				for _, example := range section.Examples {
+					<li>
+						<div class="example">
+							<div class="labeled data">
+								<label>data</label>
+								<span>{ example.Data }</span>
+							</div>
+							<div class="arrow">→</div>
+							<div class="labeled text">
+								<label>text</label>
+								<span>{ example.Text }</span>
+							</div>
+						</div>
+					</li>
+				}
+			</ul>
+		</div>
+	</section>
+}
