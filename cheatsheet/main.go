@@ -262,7 +262,7 @@ func main() {
 			ICU:         `The price is {var0, number, ::currency/auto}`,
 			Examples: []Example{
 				{
-					Data: `{"var0": {"currency":"USD", amount: 12.99}}`,
+					Data: `{"var0": {"currency": "USD", "amount": 12.99}}`,
 					Text: `The price is $12.99`,
 				},
 			},
