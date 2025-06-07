@@ -85,6 +85,11 @@ templ templatePage(title string, sections []Section) {
 				color: #888;
 			}
 
+			.aliases {
+				display: flex;
+				gap: .5rem;
+			}
+
 			ul li {
 				margin: 0;
 			}
@@ -231,7 +236,7 @@ templ templateSection(section Section) {
 			<p> @templ.Raw(section.Description) </p>
 		</div>
 		<div class="section-body">
-			<div>
+			<div class="aliases">
 				for _, alias := range section.Aliases {
 					<div class="labeled alias">
 						<label>alias</label>
