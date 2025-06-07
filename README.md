@@ -65,6 +65,8 @@ by offloading routine tasks, allowing experts to focus more on quality assurance
 TIK is designed to be agnostic to both programming languages and natural languages
 used in application source code.
 
+TIP: Check out the official [TIK cheatsheet](https://romshark.github.io/tik-cheatsheet/).
+
 ## Problem
 
 Internationalization (i18n) and localization (l10n) are hard — and most developers
