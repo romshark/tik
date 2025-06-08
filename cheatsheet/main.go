@@ -43,18 +43,35 @@ func main() {
 		},
 		{
 			ID:          "integer",
-			Header:      `<code>{3}</code> Integer`,
+			Header:      `<code>{7}</code> Integer`,
 			Description: `Represents an integer number value.`,
-			ExampleTIK:  `Your number is {3}.`,
-			ICU:         `Your number is {var0, number, integer}.`,
+			ExampleTIK:  `Your number is {3}`,
+			ICU:         `Your number is {var0, number, integer}`,
 			Examples: []Example{
 				{
 					Data: `{"var0": 42}`,
-					Text: `Your number is 42.`,
+					Text: `Your number is 42`,
 				},
 				{
 					Data: `{"var0": 0}`,
-					Text: `Your number is 0.`,
+					Text: `Your number is 0`,
+				},
+			},
+		},
+		{
+			ID:          "number",
+			Header:      `<code>{3.14}</code> Number`,
+			Description: `Represents a decimal number value.`,
+			ExampleTIK:  `It's off by {3.14} degrees.`,
+			ICU:         `It's {var0, number} degrees.`,
+			Examples: []Example{
+				{
+					Data: `{"var0": 42}`,
+					Text: `It's off by 42 degrees.`,
+				},
+				{
+					Data: `{"var0": 0.628}`,
+					Text: `It's off by 0.628 degrees.`,
 				},
 			},
 		},
