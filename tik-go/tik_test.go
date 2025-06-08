@@ -477,10 +477,10 @@ func TestICUTranslator(t *testing.T) {
 	f(t, "hello {var0}", `hello {"world"}`)
 	f(t, "hello {var0}", `[more context] hello {"world"}`)
 	f(t,
-		"today's lucky number is {var0, number, integer}",
+		"today''s lucky number is {var0, number, integer}",
 		`today's lucky number is {7}`)
 	f(t,
-		"it's {var0, number} degrees",
+		"it''s {var0, number} degrees",
 		`it's {3.14} degrees`)
 	f(t,
 		"your account balance: {var0, number, ::currency/auto}",
@@ -510,13 +510,13 @@ func TestICUTranslator(t *testing.T) {
 		`current time is {var0, time, short}`,
 		"current time is {10:30 pm}")
 	f(t,
-		"You're {var0, selectordinal, other {#th}}",
+		"You''re {var0, selectordinal, other {#th}}",
 		`You're {4th}`)
 	f(t,
 		"hello {var0} and {var1}",
 		`hello {"world"} and {"something else"}`)
 	f(t,
-		"it's {var0, date, long}, {var1, time, short}",
+		"it''s {var0, date, long}, {var1, time, short}",
 		`it's {July 16, 1999}, {10:30 pm}`)
 	f(t,
 		"{var0, select, other {They}} are on {var1, select, other {their}} way!",

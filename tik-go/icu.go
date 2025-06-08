@@ -3,6 +3,7 @@ package tik
 import (
 	"bytes"
 	"strconv"
+	"strings"
 )
 
 // ICUTranslator is a reusable TIK to ICU message translator.
@@ -78,6 +79,8 @@ func (i *ICUTranslator) writePositionalPlaceholder(index int, suffix string) {
 
 func (i *ICUTranslator) write(s string) { _, _ = i.b.WriteString(s) }
 
+var replacerEscapeQuote = strings.NewReplacer("'", "''")
+
 // TIK2ICUBuf similar TIK2ICU but gives temporary access to the internal buffer
 // to avoid string allocation if only a temporary byte slice is needed.
 // This function can be used instead TIK2ICU to achieve efficiency when possible
@@ -94,7 +97,9 @@ func (i *ICUTranslator) TIK2ICUBuf(
 	for _, token := range tik.Tokens {
 		switch token.Type {
 		case TokenTypeStringLiteral:
-			i.write(token.String(tik.Raw))
+			s := token.String(tik.Raw)
+			s = replacerEscapeQuote.Replace(s)
+			i.write(s)
 		case TokenTypeStringPlaceholder:
 			pos := positionalIndex
 			positionalIndex++
