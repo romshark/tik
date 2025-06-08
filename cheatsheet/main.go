@@ -45,7 +45,7 @@ func main() {
 			ID:          "integer",
 			Header:      `<code>{7}</code> Integer`,
 			Description: `Represents an integer number value.`,
-			ExampleTIK:  `Your number is {3}`,
+			ExampleTIK:  `Your number is {7}`,
 			ICU:         `Your number is {var0, number, integer}`,
 			Examples: []Example{
 				{
