@@ -19,7 +19,8 @@ func (c *Config) Validate() error {
 
 // MagicConstants defines the magic constants used in the configured environment.
 type MagicConstants struct {
-	Number              string                     // {3}
+	Integer             string                     // {7}
+	Number              string                     // {3.14}
 	CardinalPluralStart string                     // {2 ...}
 	OrdinalPlural       MagicConstantOrdinalPlural // {4th}
 
@@ -40,7 +41,8 @@ type MagicConstants struct {
 
 var defaultConfig = &Config{
 	MagicConstants: MagicConstants{
-		Number:              "3",
+		Integer:             "7",
+		Number:              "3.14",
 		CardinalPluralStart: "2",
 		OrdinalPlural: MagicConstantOrdinalPlural{
 			Constant:         "4th",
@@ -93,6 +95,7 @@ func validateCustomMagicConstants(m MagicConstants) error {
 		return nil
 	}
 	for _, v := range [...]string{
+		m.Integer,
 		m.Number,
 		m.CardinalPluralStart,
 		m.OrdinalPlural.Constant,

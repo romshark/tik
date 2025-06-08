@@ -63,24 +63,44 @@ func TestParse(t *testing.T) {
 		Token{"[b]okay", tik.TokenTypeStringLiteral},
 	)
 
-	// Number placeholder
-	f(t, "{3} items",
-		Token{"{3}", tik.TokenTypeNumber},
-		Token{" items", tik.TokenTypeStringLiteral},
+	// Integer placeholders
+	f(t, "integer: {7}",
+		Token{"integer: ", tik.TokenTypeStringLiteral},
+		Token{"{7}", tik.TokenTypeInteger},
 	)
-	f(t, "  {3} items  ",
-		Token{"{3}", tik.TokenTypeNumber},
-		Token{" items", tik.TokenTypeStringLiteral},
+	f(t, "  {7} suffix  ",
+		Token{"{7}", tik.TokenTypeInteger},
+		Token{" suffix", tik.TokenTypeStringLiteral},
 	)
-	f(t, "[context]{3} items",
+	f(t, "[context]{7} suffix",
 		Token{"[context]", tik.TokenTypeContext},
-		Token{"{3}", tik.TokenTypeNumber},
-		Token{" items", tik.TokenTypeStringLiteral},
+		Token{"{7}", tik.TokenTypeInteger},
+		Token{" suffix", tik.TokenTypeStringLiteral},
 	)
-	f(t, "  [context]  {3} items  ",
+	f(t, "  [context]  {7} suffix  ",
 		Token{"[context]", tik.TokenTypeContext},
-		Token{"{3}", tik.TokenTypeNumber},
-		Token{" items", tik.TokenTypeStringLiteral},
+		Token{"{7}", tik.TokenTypeInteger},
+		Token{" suffix", tik.TokenTypeStringLiteral},
+	)
+
+	// Number placeholders
+	f(t, "{3.14} suffix",
+		Token{"{3.14}", tik.TokenTypeNumber},
+		Token{" suffix", tik.TokenTypeStringLiteral},
+	)
+	f(t, "  {3.14} suffix  ",
+		Token{"{3.14}", tik.TokenTypeNumber},
+		Token{" suffix", tik.TokenTypeStringLiteral},
+	)
+	f(t, "[context]{3.14} suffix",
+		Token{"[context]", tik.TokenTypeContext},
+		Token{"{3.14}", tik.TokenTypeNumber},
+		Token{" suffix", tik.TokenTypeStringLiteral},
+	)
+	f(t, "  [context]  {3.14} suffix  ",
+		Token{"[context]", tik.TokenTypeContext},
+		Token{"{3.14}", tik.TokenTypeNumber},
+		Token{" suffix", tik.TokenTypeStringLiteral},
 	)
 
 	// String placeholders
@@ -252,7 +272,7 @@ func TestParseCustomPlaceholders(t *testing.T) {
 
 	conf := tik.DefaultConfig()
 
-	conf.MagicConstants.Number = "43"
+	conf.MagicConstants.Integer = "43"
 	parser := tik.NewParser(conf)
 
 	input := "{43}{43}"
@@ -262,11 +282,11 @@ func TestParseCustomPlaceholders(t *testing.T) {
 	toks := ToTestTokens(input, got.Tokens)
 
 	requireDeepEqual(t, []Token{
-		{Str: "{43}", Type: tik.TokenTypeNumber},
-		{Str: "{43}", Type: tik.TokenTypeNumber},
+		{Str: "{43}", Type: tik.TokenTypeInteger},
+		{Str: "{43}", Type: tik.TokenTypeInteger},
 	}, toks)
 
-	got, err = parser.Parse("invalid: {3}")
+	got, err = parser.Parse("invalid: {7}")
 	requireErrIs(t, tik.ErrUknownPlaceholder, err)
 	requireEqual(t, "at index 9: unknown placeholder", err.Error())
 	requireDeepEqual(t, tik.TIK{}, got)
@@ -285,7 +305,7 @@ func TestConfigValidateErr(t *testing.T) {
 
 	f(t, nil, func(*tik.Config) {})
 	f(t, tik.ErrConfMagicConstantInvalid, func(c *tik.Config) {
-		c.MagicConstants.Number = "{3}"
+		c.MagicConstants.Number = "{7}"
 	})
 	f(t, tik.ErrConfMagicConstantInvalid, func(c *tik.Config) {
 		c.MagicConstants.Number = "\"3\""
@@ -316,7 +336,7 @@ func TestConfigValidateErr(t *testing.T) {
 		c.MagicConstants.GenderPronouns = []string{"he", "he"}
 	})
 	f(t, tik.ErrConfMagicConstantNonUnique, func(c *tik.Config) {
-		c.MagicConstants.OrdinalPlural.Constant = "3"
+		c.MagicConstants.OrdinalPlural.Constant = "7"
 	})
 	f(t, tik.ErrConfMagicConstantInvalid, func(c *tik.Config) {
 		c.MagicConstants.OrdinalPlural.Constant = "{5th}"
@@ -420,6 +440,7 @@ func TestTokenType_String(t *testing.T) {
 	f(t, `context`, tik.TokenTypeContext)
 	f(t, `literal`, tik.TokenTypeStringLiteral)
 	f(t, `string placeholder`, tik.TokenTypeStringPlaceholder)
+	f(t, `integer`, tik.TokenTypeInteger)
 	f(t, `number`, tik.TokenTypeNumber)
 	f(t, `pluralization`, tik.TokenTypeCardinalPluralStart)
 	f(t, `pluralization block end`, tik.TokenTypeCardinalPluralEnd)
@@ -457,7 +478,10 @@ func TestICUTranslator(t *testing.T) {
 	f(t, "hello {var0}", `[more context] hello {"world"}`)
 	f(t,
 		"today's lucky number is {var0, number, integer}",
-		`today's lucky number is {3}`)
+		`today's lucky number is {7}`)
+	f(t,
+		"it's {var0, number} degrees",
+		`it's {3.14} degrees`)
 	f(t,
 		"your account balance: {var0, number, ::currency/auto}",
 		`your account balance: {$1}`)
@@ -547,7 +571,7 @@ func TestICUTranslatorModifier(t *testing.T) {
 func FuzzTokenize(f *testing.F) {
 	f.Add("")
 	f.Add(`hello world`)
-	f.Add(`{3} items`)
+	f.Add(`integer: {7}`)
 	f.Add(`{they} lost {themself} in {their} thoughts`)
 	f.Add(`\n`)
 	f.Add(`\{not a placeholder}\{again, not a placeholder}`)
@@ -556,7 +580,7 @@ func FuzzTokenize(f *testing.F) {
 	f.Add("You're {4th} out of {2 contenders}")
 	f.Add("{unknown}")
 	f.Add(`
-		{3}
+		{7}
 		{$1}
 		{Friday, July 16, 1999}
 		{July 16, 1999}

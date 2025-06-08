@@ -1,6 +1,6 @@
 **Author:** Roman Scharkov <roman.scharkov@gmail.com>;
-**Version:** 0.6.1;
-**Last updated:** 2025-06-05;
+**Version:** 0.7.0;
+**Last updated:** 2025-06-08;
 
 # TIK - Textual Internationalization Key
 
@@ -26,12 +26,13 @@
   - [ICU Encoding - String Placeholders](#icu-encoding---string-placeholders)
     - [ICU Encoding - String Placeholders With Gender](#icu-encoding---string-placeholders-with-gender)
     - [ICU Encoding - String Placeholders With Pluralization](#icu-encoding---string-placeholders-with-pluralization)
+  - [ICU Encoding - Integer](#icu-encoding---integer)
+  - [ICU Encoding - Number](#icu-encoding---number)
   - [ICU Encoding - Gender Agreement](#icu-encoding---gender-agreement)
   - [ICU Encoding - Cardinal Pluralization](#icu-encoding---cardinal-pluralization)
   - [ICU Encoding - Ordinal Pluralization](#icu-encoding---ordinal-pluralization)
   - [ICU Encoding - Date/Time Placeholders](#icu-encoding---datetime-placeholders)
   - [ICU Encoding - Currency](#icu-encoding---currency)
-  - [ICU Encoding - Number](#icu-encoding---number)
 - [Configuration Guidelines](#configuration-guidelines)
   - [Magic Constant Customization](#magic-constant-customization)
   - [Domains](#domains)
@@ -252,6 +253,10 @@ Today {they} earned {$1} for completing {2 tasks} in section '{"job"}' at {10:30
 
 - String Placeholders (see [string placeholders](#string-placeholders))
   - `{"..."}`
+- Integer (see [integer](#icu-encoding---integer))
+  - `{7}`
+- Number (see [number](#icu-encoding---number))
+  - `{3.14}`
 - Cardinal Pluralization (see [cardinal pluralization](#icu-encoding---cardinal-pluralization)):
   - `{2 ...}`: cardinal plural
 - Ordinal Pluralization (see [ordinal pluralization](#icu-encoding---ordinal-pluralization)):
@@ -273,8 +278,6 @@ Today {they} earned {$1} for completing {2 tasks} in section '{"job"}' at {10:30
   - `{10:30:45 pm Pacific Daylight Time}`
 - Currency (see [currency](#icu-encoding---currency))
   - `{$1}`
-- Number: (see [number](#icu-encoding---number))
-  - `{3}`
 
 The constants (and any of their variants) are case insensitive.
 
@@ -321,7 +324,11 @@ This TIK is illegal: {2 first level {2 second level}}
 3. Plural statement contents cannot start with a magic constant:
 
 ```
-This TIK is illegal: {2 {3}}
+This TIK is illegal: {2 {7}}
+```
+
+```
+This TIK is illegal: {2 {3.14}}
 ```
 
 ```
@@ -558,6 +565,36 @@ The translated ICU message in Ukrainian would be:
 
 And as you can see, the plurality of the string value does affect the sentence structure.
 
+### ICU Encoding - Integer
+
+The magic constant `{7}` is translated to the ICU argument `{var0, number, integer}`
+ICU argument which localizes the (signed) integer value to the appropriate format
+for the given locale:
+
+| Value           | en-US      | de-DE      | uk-UA      |
+| :-------------- | :--------- | :--------- | ---------- |
+| `int(1)`        | 1          | 1          | 1          |
+| `int(-1)`       | -1         | -1         | -1         |
+| `int(2)`        | 2          | 2          | 2          |
+| `int(1000)`     | 1,000      | 1.000      | 1 000      |
+| `int(1234567)`  | 1,234,567  | 1.234.567  | 1 234 567  |
+| `int(-1234567)` | -1,234,567 | -1.234.567 | -1 234 567 |
+
+### ICU Encoding - Number
+
+The magic constant `{3.14}` is translated to the ICU argument `{var0, number}`  
+ICU argument which localizes the floating-point value to the appropriate format
+for the given locale:
+
+| Value                | en-US         | de-DE         | uk-UA         |
+| :------------------- | :------------ | :------------ | ------------- |
+| `float(1.0)`         | 1             | 1             | 1             |
+| `float(3.14)`        | 3.14          | 3,14          | 3,14          |
+| `float(2.5)`         | 2.5           | 2,5           | 2,5           |
+| `float(1000.75)`     | 1,000.75      | 1.000,75      | 1 000,75      |
+| `float(1234567.89)`  | 1,234,567.89  | 1.234.567,89  | 1 234 567,89  |
+| `float(-1234567.89)` | -1,234,567.89 | -1.234.567,89 | -1 234 567,89 |
+
 ### ICU Encoding - Gender Agreement
 
 Magic constants such as `{They}` (and all of its variations)
@@ -729,21 +766,6 @@ In the examples below, `USD $39,250.45` is the value represented:
 - **uk-UA:** `39 250,45 USD`
 - **ru-RU:** `39 250,45 $`
 - **fr-FR:** `39 250,45 $US`
-
-### ICU Encoding - Number
-
-The magic constant `{3}` is translated to the ICU argument `{var0, number, integer}`
-ICU argument which localizes the (signed) integer value to the appropriate format
-for the given locale:
-
-| Value           | en-US      | de-DE      | uk-UA      |
-| :-------------- | :--------- | :--------- | ---------- |
-| `int(1)`        | 1          | 1          | 1          |
-| `int(-1)`       | -1         | -1         | -1         |
-| `int(2)`        | 2          | 2          | 2          |
-| `int(1000)`     | 1,000      | 1.000      | 1 000      |
-| `int(1234567)`  | 1,234,567  | 1.234.567  | 1 234 567  |
-| `int(-1234567)` | -1,234,567 | -1.234.567 | -1 234 567 |
 
 ## Configuration Guidelines
 

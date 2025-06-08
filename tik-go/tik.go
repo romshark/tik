@@ -24,7 +24,8 @@ const (
 	TokenTypeStringPlaceholder // {"..."}
 
 	// Numbers.
-	TokenTypeNumber // {3}
+	TokenTypeInteger // {7}
+	TokenTypeNumber  // {3.14}
 
 	// Pluralization.
 	TokenTypeCardinalPluralStart // `{2 `
@@ -74,6 +75,8 @@ func (t TokenType) String() string {
 		return `literal`
 	case TokenTypeStringPlaceholder:
 		return `string placeholder`
+	case TokenTypeInteger:
+		return `integer`
 	case TokenTypeNumber:
 		return `number`
 	case TokenTypeCardinalPluralStart:
@@ -363,6 +366,8 @@ func match(s string, c *Config) (tokenType TokenType, value string) {
 	switch {
 	case s != "" && s[0] == '"':
 		return TokenTypeStringPlaceholder, s
+	case strings.EqualFold(s, c.MagicConstants.Integer):
+		return TokenTypeInteger, c.MagicConstants.Integer
 	case strings.EqualFold(s, c.MagicConstants.Number):
 		return TokenTypeNumber, c.MagicConstants.Number
 	case strings.EqualFold(s, c.MagicConstants.OrdinalPlural.Constant):
