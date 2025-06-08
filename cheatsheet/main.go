@@ -85,8 +85,8 @@ func main() {
 			ICU:        `You have {var0, plural, one{# unread message} other{# unread messages}} in {var1, plural, one{# group} other{# groups}}}`,
 			Examples: []Example{
 				{
-					Data: `{"var0": 4, "var1": 1}`,
-					Text: `You have 4 unread messages in 1 group`,
+					Data: `{"var0": 4, "var1": 3}`,
+					Text: `You have 4 unread messages in 3 groups`,
 				},
 				{
 					Data: `{"var0": 1, "var1": 1}`,
