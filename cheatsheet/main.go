@@ -62,7 +62,7 @@ func main() {
 				},
 				{
 					Data: `locale="uk" var0="Martha" var0_gender="female"`,
-					Text: `Martha отримала повідомлення`,
+					Text: `Martha отримала повідомлення.`,
 				},
 			},
 		},
