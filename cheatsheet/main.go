@@ -42,6 +42,31 @@ func main() {
 			},
 		},
 		{
+			ID:          "name",
+			Header:      `{name}`,
+			Description: `Represents an arbitrary text value with gender information.`,
+			ExampleTIK:  `{name} received a message.`,
+			ICU:         `{var0_gender, select, other{{var0}}} received a message.`,
+			Examples: []Example{
+				{
+					Data: `{"locale": "en", "var0": "John", "var0_gender": "male"}`,
+					Text: `John received a message.`,
+				},
+				{
+					Data: `{"locale": "en", "var0": "Martha", "var0_gender": "female"}`,
+					Text: `Martha received a message.`,
+				},
+				{
+					Data: `{"locale": "uk", "var0": "John", "var0_gender": "male"}`,
+					Text: `John отримав повідомлення.`,
+				},
+				{
+					Data: `{"locale": "uk", "var0": "Martha", "var0_gender": "female"}`,
+					Text: `Martha отримала повідомлення`,
+				},
+			},
+		},
+		{
 			ID:          "integer",
 			Header:      `{integer}`,
 			Description: `Represents an integer number value.`,
