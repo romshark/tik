@@ -535,8 +535,8 @@ func BenchmarkTIK2ICUBuf(b *testing.B) {
 	parser := tik.NewParser(tik.DefaultConfig)
 	translator := tik.NewICUTranslator(tik.DefaultConfig)
 
-	input := string("On {July 16, 1999} you had " +
-		"{# messages at {10:30:45 pm PDT}} in {# main folders}")
+	input := string("On {date-long} you had " +
+		"{# messages at {time-long}} in {# main folders}")
 	tk, err := parser.Parse(input)
 	requireNoErr(b, err)
 
