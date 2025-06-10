@@ -228,7 +228,7 @@ the text body `"Save your planet"`.
 
 The text body must always be written in
 [CLDR plural rule `other`](https://cldr.unicode.org/index/cldr-spec/plural-rules).
-This allows a TIK to avoid conditional ICU select statements.
+This allows a TIK to avoid branched statements like ICU plural arguments.
 
 ### Placeholders
 
