@@ -32,11 +32,11 @@ func main() {
 			ICU:         `Avoid comparing {var0} to {var1}`,
 			Examples: []Example{
 				{
-					Data: `{"var0": "cats 🐈", "var1": "dogs 🐕"}`,
+					Data: `var0="cats 🐈" var1="dogs 🐕"`,
 					Text: `Avoid comparing cats 🐈 to dogs 🐕`,
 				},
 				{
-					Data: `{"var0": "bananas", "var1": "anything really"}`,
+					Data: `var0="bananas" var1="anything really"`,
 					Text: `Avoid comparing bananas to anything really`,
 				},
 			},
@@ -49,19 +49,19 @@ func main() {
 			ICU:         `{var0_gender, select, other{{var0}}} received a message.`,
 			Examples: []Example{
 				{
-					Data: `{"locale": "en", "var0": "John", "var0_gender": "male"}`,
+					Data: `locale="en" var0="John" var0_gender="male"`,
 					Text: `John received a message.`,
 				},
 				{
-					Data: `{"locale": "en", "var0": "Martha", "var0_gender": "female"}`,
+					Data: `locale="en" var0="Martha" var0_gender="female"`,
 					Text: `Martha received a message.`,
 				},
 				{
-					Data: `{"locale": "uk", "var0": "John", "var0_gender": "male"}`,
+					Data: `locale="uk" var0="John" var0_gender="male"`,
 					Text: `John отримав повідомлення.`,
 				},
 				{
-					Data: `{"locale": "uk", "var0": "Martha", "var0_gender": "female"}`,
+					Data: `locale="uk" var0="Martha" var0_gender="female"`,
 					Text: `Martha отримала повідомлення`,
 				},
 			},
@@ -74,11 +74,11 @@ func main() {
 			ICU:         `Your number is {var0, number, integer}`,
 			Examples: []Example{
 				{
-					Data: `{"var0": 42}`,
+					Data: `var0=42`,
 					Text: `Your number is 42`,
 				},
 				{
-					Data: `{"var0": 0}`,
+					Data: `var0=0`,
 					Text: `Your number is 0`,
 				},
 			},
@@ -91,11 +91,11 @@ func main() {
 			ICU:         `It's off by {var0, number} degrees.`,
 			Examples: []Example{
 				{
-					Data: `{"var0": 42}`,
+					Data: `var0=42`,
 					Text: `It's off by 42 degrees.`,
 				},
 				{
-					Data: `{"var0": 0.628}`,
+					Data: `var0=0.628`,
 					Text: `It's off by 0.628 degrees.`,
 				},
 			},
@@ -111,11 +111,11 @@ func main() {
 			ICU:        `You have {var0, plural, one{# unread message} other{# unread messages}} in {var1, plural, one{# group} other{# groups}}}`,
 			Examples: []Example{
 				{
-					Data: `{"var0": 4, "var1": 3}`,
+					Data: `var0=4 var1=3`,
 					Text: `You have 4 unread messages in 3 groups`,
 				},
 				{
-					Data: `{"var0": 1, "var1": 1}`,
+					Data: `var0=1 var1=1`,
 					Text: `You have 1 unread message in 1 group`,
 				},
 			},
@@ -131,15 +131,15 @@ func main() {
 			ICU:        `You are {var0, selectordinal, one{#st} two{#nd} few{#rd} other{#th}} in the queue.`,
 			Examples: []Example{
 				{
-					Data: `{"var0": 1}`,
+					Data: `var0=1`,
 					Text: `You are 1st in the queue.`,
 				},
 				{
-					Data: `{"var0": 2}`,
+					Data: `var0=2`,
 					Text: `You are 2nd in the queue.`,
 				},
 				{
-					Data: `{"var0": 9}`,
+					Data: `var0=9`,
 					Text: `You are 9th in the queue.`,
 				},
 			},
@@ -152,11 +152,11 @@ func main() {
 			ICU:         `Today is {var0, date, short}`,
 			Examples: []Example{
 				{
-					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Data: `var0="2025-01-26T16:20:50Z"`,
 					Text: `Today is 1/26/25`,
 				},
 				{
-					Data: `{"var0": "1998-09-02T20:20:50Z"}`,
+					Data: `var0="1998-09-02T20:20:50Z"`,
 					Text: `Today is 9/2/98`,
 				},
 			},
@@ -169,11 +169,11 @@ func main() {
 			ICU:         `Today is {var0, date, medium}`,
 			Examples: []Example{
 				{
-					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Data: `var0="2025-01-26T16:20:50Z"`,
 					Text: `Today is Jan 26, 2025`,
 				},
 				{
-					Data: `{"var0": "1998-09-02T20:20:50Z"}`,
+					Data: `var0="1998-09-02T20:20:50Z"`,
 					Text: `Today is Sep 2, 1998`,
 				},
 			},
@@ -186,11 +186,11 @@ func main() {
 			ICU:         `Today is {var0, date, long}`,
 			Examples: []Example{
 				{
-					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Data: `var0="2025-01-26T16:20:50Z"`,
 					Text: `Today is January 26, 2025`,
 				},
 				{
-					Data: `{"var0": "1998-09-02T20:20:50Z"}`,
+					Data: `var0="1998-09-02T20:20:50Z"`,
 					Text: `Today is September 2, 1998`,
 				},
 			},
@@ -203,11 +203,11 @@ func main() {
 			ICU:         `Today is {var0, date, full}`,
 			Examples: []Example{
 				{
-					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Data: `var0="2025-01-26T16:20:50Z"`,
 					Text: `Today is Sunday, January 26, 2025`,
 				},
 				{
-					Data: `{"var0": "1998-09-02T20:20:50Z"}`,
+					Data: `var0="1998-09-02T20:20:50Z"`,
 					Text: `Today is Wednesday, September 2, 1998`,
 				},
 			},
@@ -220,11 +220,11 @@ func main() {
 			ICU:         `It's {var0, time, short}`,
 			Examples: []Example{
 				{
-					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Data: `var0="2025-01-26T16:20:50Z"`,
 					Text: `It's 4:20 pm`,
 				},
 				{
-					Data: `{"var0": "1998-09-02T20:20:50-07:00"}`,
+					Data: `var0="1998-09-02T20:20:50-07:00"`,
 					Text: `It's 8:20 pm`,
 				},
 			},
@@ -237,11 +237,11 @@ func main() {
 			ICU:         `It's {var0, time, medium}`,
 			Examples: []Example{
 				{
-					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Data: `var0="2025-01-26T16:20:50Z"`,
 					Text: `It's 4:20:50 pm`,
 				},
 				{
-					Data: `{"var0": "1998-09-02T20:20:50-07:00"}`,
+					Data: `var0="1998-09-02T20:20:50-07:00"`,
 					Text: `It's 8:20:50 pm`,
 				},
 			},
@@ -254,11 +254,11 @@ func main() {
 			ICU:         `It's {var0, time, long}`,
 			Examples: []Example{
 				{
-					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Data: `var0="2025-01-26T16:20:50Z"`,
 					Text: `It's 4:20:50 pm UTC`,
 				},
 				{
-					Data: `{"var0": "1998-09-02T20:20:50-07:00"}`,
+					Data: `var0="1998-09-02T20:20:50-07:00"`,
 					Text: `It's 8:20:50 pm PDT`,
 				},
 			},
@@ -271,11 +271,11 @@ func main() {
 			ICU:         `It's {var0, time, full}`,
 			Examples: []Example{
 				{
-					Data: `{"var0": "2025-01-26T16:20:50Z"}`,
+					Data: `var0="2025-01-26T16:20:50Z"`,
 					Text: `It's 4:20:50 pm UTC`,
 				},
 				{
-					Data: `{"var0": "1998-09-02T20:20:50-07:00"}`,
+					Data: `var0="1998-09-02T20:20:50-07:00"`,
 					Text: `It's 8:20:50 pm Pacific Daylight Time`,
 				},
 			},
@@ -288,7 +288,7 @@ func main() {
 			ICU:         `The price is {var0, number, ::currency/auto}`,
 			Examples: []Example{
 				{
-					Data: `{"var0": {"currency": "USD", "amount": 12.99}}`,
+					Data: `var0={currency="USD" amount=12.99}`,
 					Text: `The price is $12.99`,
 				},
 			},
