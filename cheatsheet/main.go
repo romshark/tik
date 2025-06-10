@@ -25,10 +25,10 @@ func main() {
 
 	p := templatePage("TIK Cheatsheet", []Section{
 		{
-			ID:          "string",
-			Header:      `<code>{"..."}</code> String`,
-			Description: `Replaces <code>...</code> with an arbitrary string value.`,
-			ExampleTIK:  `Avoid comparing {"apples"} to {"oranges"}.`,
+			ID:          "text",
+			Header:      `{text}`,
+			Description: `Represents an arbitrary text value.`,
+			ExampleTIK:  `Avoid comparing {text} to {text}.`,
 			ICU:         `Avoid comparing {var0} to {var1}`,
 			Examples: []Example{
 				{
@@ -43,9 +43,9 @@ func main() {
 		},
 		{
 			ID:          "integer",
-			Header:      `<code>{7}</code> Integer`,
+			Header:      `{integer}`,
 			Description: `Represents an integer number value.`,
-			ExampleTIK:  `Your number is {7}`,
+			ExampleTIK:  `Your number is {integer}`,
 			ICU:         `Your number is {var0, number, integer}`,
 			Examples: []Example{
 				{
@@ -60,10 +60,10 @@ func main() {
 		},
 		{
 			ID:          "number",
-			Header:      `<code>{3.14}</code> Number`,
+			Header:      `{number}`,
 			Description: `Represents a decimal number value.`,
-			ExampleTIK:  `It's off by {3.14} degrees.`,
-			ICU:         `It's {var0, number} degrees.`,
+			ExampleTIK:  `It's off by {number} degrees.`,
+			ICU:         `It's off by {var0, number} degrees.`,
 			Examples: []Example{
 				{
 					Data: `{"var0": 42}`,
@@ -76,12 +76,12 @@ func main() {
 			},
 		},
 		{
-			ID:     "cardinal-pluralization",
-			Header: `<code>{"2 ..."}</code> Cardinal Pluralization`,
+			ID:     "cardinal-plural",
+			Header: `{# ...}`,
 			Description: `Pluralizes <code>...</code> to the correct <a
 					href="https://www.unicode.org/cldr/charts/47/supplemental/language_plural_rules.html">CLDR
 					plural form</a>.`,
-			ExampleTIK: `You have {2 unread messages} in {2 groups}.`,
+			ExampleTIK: `You have {# unread messages} in {# groups}.`,
 			ICU:        `You have {var0, plural, one{# unread message} other{# unread messages}} in {var1, plural, one{# group} other{# groups}}}`,
 			Examples: []Example{
 				{
@@ -95,8 +95,8 @@ func main() {
 			},
 		},
 		{
-			ID:     "ordinal-pluralization",
-			Header: `<code>{4th}</code> Ordinal Pluralization`,
+			ID:     "ordinal-plural",
+			Header: `{ordinal}`,
 			Description: `Represents a <a
 					href="https://www.unicode.org/cldr/charts/47/supplemental/language_plural_rules.html">CLDR
 					ordinal plural</a> value.`,
@@ -114,30 +114,8 @@ func main() {
 			},
 		},
 		{
-			ID:          "gender",
-			Header:      `<code>{They}</code> Gender`,
-			Description: `Represents a gender subject.`,
-			Aliases:     []string{"them", "their", "theirs", "themself"},
-			ExampleTIK:  `{They} received the message!`,
-			ICU:         `{var0, select, male{He} female{She} other{They}} received the message!`,
-			Examples: []Example{
-				{
-					Data: `{"var0": "male"}`,
-					Text: `He received the message`,
-				},
-				{
-					Data: `{"var0": "female"}`,
-					Text: `She received the message`,
-				},
-				{
-					Data: `{"var0": "neutral"}`,
-					Text: `They received the message`,
-				},
-			},
-		},
-		{
 			ID:          "date-short",
-			Header:      `<code>{7/16/99}</code> Date Short`,
+			Header:      `{date-short}`,
 			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR short date</a>.`,
 			ExampleTIK:  `Today is {7/16/99}`,
 			ICU:         `Today is {var0, date, short}`,
@@ -154,7 +132,7 @@ func main() {
 		},
 		{
 			ID:          "date-medium",
-			Header:      `<code>{Jul 16, 1999}</code> Date Medium`,
+			Header:      `{date-medium}`,
 			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR medium date</a>.`,
 			ExampleTIK:  `Today is {Jul 16, 1999}`,
 			ICU:         `Today is {var0, date, medium}`,
@@ -171,7 +149,7 @@ func main() {
 		},
 		{
 			ID:          "date-long",
-			Header:      `<code>{July 16, 1999}</code> Date Long`,
+			Header:      `{date-long}`,
 			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR long date</a>.`,
 			ExampleTIK:  `Today is {July 16, 1999}`,
 			ICU:         `Today is {var0, date, long}`,
@@ -188,7 +166,7 @@ func main() {
 		},
 		{
 			ID:          "date-full",
-			Header:      `<code>{Friday, July 16, 1999}</code> Date Full`,
+			Header:      `{date-full}`,
 			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR full date</a>.`,
 			ExampleTIK:  `Today is {Friday, July 16, 1999}`,
 			ICU:         `Today is {var0, date, full}`,
@@ -205,7 +183,7 @@ func main() {
 		},
 		{
 			ID:          "time-short",
-			Header:      `<code>{10:30 pm}</code> Time Short`,
+			Header:      `{time-short}`,
 			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR short time</a>.`,
 			ExampleTIK:  `It's {10:30 pm}`,
 			ICU:         `It's {var0, time, short}`,
@@ -222,7 +200,7 @@ func main() {
 		},
 		{
 			ID:          "time-medium",
-			Header:      `<code>{10:30:45 pm}</code> Time Medium`,
+			Header:      `{time-medium}`,
 			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR medium time</a>.`,
 			ExampleTIK:  `It's {10:30:45 pm}`,
 			ICU:         `It's {var0, time, medium}`,
@@ -239,7 +217,7 @@ func main() {
 		},
 		{
 			ID:          "time-long",
-			Header:      `<code>{10:30:45 pm PDT}</code> Time Long`,
+			Header:      `{time-long}`,
 			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR long time</a>.`,
 			ExampleTIK:  `It's {10:30:45 pm PDT}`,
 			ICU:         `It's {var0, time, long}`,
@@ -256,7 +234,7 @@ func main() {
 		},
 		{
 			ID:          "time-full",
-			Header:      `<code>{10:30:45 pm Pacific Daylight Time}</code> Time Full`,
+			Header:      `{time-full}`,
 			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR full time</a>.`,
 			ExampleTIK:  `It's {10:30:45 pm Pacific Daylight Time}`,
 			ICU:         `It's {var0, time, full}`,
@@ -273,7 +251,7 @@ func main() {
 		},
 		{
 			ID:          "currency",
-			Header:      `<code>{$1}</code> Currency`,
+			Header:      `{currency}`,
 			Description: `Represents an amount of money.`,
 			ExampleTIK:  `The price is {$1}`,
 			ICU:         `The price is {var0, number, ::currency/auto}`,

@@ -2,7 +2,6 @@ package main
 
 type Section struct {
 	ID, Header, Description string
-	Aliases []string
 	ExampleTIK, ICU string
 	Examples []Example
 }
@@ -85,11 +84,6 @@ templ templatePage(title string, sections []Section) {
 				color: #888;
 			}
 
-			.aliases {
-				display: flex;
-				gap: .5rem;
-			}
-
 			ul li {
 				margin: 0;
 			}
@@ -155,11 +149,6 @@ templ templatePage(title string, sections []Section) {
 				color: black;
 			}
 
-			.labeled.alias label {
-				background-color: #92f2ff;
-				color: black;
-			}
-
 			@media (prefers-color-scheme: dark) {
 				body {
 					background-color: #121212;
@@ -191,11 +180,6 @@ templ templatePage(title string, sections []Section) {
 
 				.labeled.text label {
 					background-color: #377f39;
-					color: black;
-				}
-
-				.labeled.alias label {
-					background-color: #0096ab;
 					color: black;
 				}
 
@@ -232,18 +216,10 @@ templ templatePage(title string, sections []Section) {
 templ templateSection(section Section) {
 	<section aria-labelledby={ section.ID }>
 		<div class="section-header">
-			<h2 id={ section.ID }> @templ.Raw(section.Header) </h2>
+			<h2 id={ section.ID }><code>@templ.Raw(section.Header)</code></h2>
 			<p> @templ.Raw(section.Description) </p>
 		</div>
 		<div class="section-body">
-			<div class="aliases">
-				for _, alias := range section.Aliases {
-					<div class="labeled alias">
-						<label>alias</label>
-						<span>{ alias }</span>
-					</div>
-				}
-			</div>
 			<table>
 				<tr>
 					<td>Example</td>
