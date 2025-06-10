@@ -14,7 +14,7 @@
   - [Context](#context)
     - [Context Invariants](#context-invariants)
     - [Context - Example](#context---example)
-  - [Text](#text)
+  - [Body](#body)
   - [Placeholders](#placeholders)
   - [Cardinal Pluralization](#cardinal-pluralization)
     - [Cardinal Pluralization Invariants](#cardinal-pluralization-invariants)
@@ -126,10 +126,10 @@ ICU under the hood.
 ## TIK Syntax Rules
 
 ```
-[ignored spaces] [optional context [ignored spaces]] [text body] [ignored spaces]
+[ignored spaces] [optional context [ignored spaces]] [body] [ignored spaces]
 ```
 
-A TIK consists of an optional context and the required text while the surrounding
+A TIK consists of an optional context and the required text body while the surrounding
 unicode spaces are ignored. Both the context and text body must not be empty.
 
 ### Context
@@ -224,7 +224,7 @@ i18n.Text(`[button.save] Save your planet`)
 The resulting TIK defines the context `"button.save"` and
 the text body `"Save your planet"`.
 
-### Text
+### Body
 
 The text part must always be written in
 [CLDR plural rule `other`](https://cldr.unicode.org/index/cldr-spec/plural-rules)
