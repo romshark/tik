@@ -1,6 +1,6 @@
 **Author:** Roman Scharkov <roman.scharkov@gmail.com>;
-**Version:** 0.7.0;
-**Last updated:** 2025-06-08;
+**Version:** 0.8.0;
+**Last updated:** 2025-06-10;
 
 # TIK - Textual Internationalization Key
 
@@ -14,27 +14,15 @@
   - [Context](#context)
     - [Context Invariants](#context-invariants)
     - [Context - Example](#context---example)
-  - [Text](#text)
-  - [Magic Constants](#magic-constants)
+  - [Body](#body)
+  - [Placeholders](#placeholders)
   - [Cardinal Pluralization](#cardinal-pluralization)
     - [Cardinal Pluralization Invariants](#cardinal-pluralization-invariants)
   - [String Placeholders](#string-placeholders)
-    - [String Placeholders with Gender and Pluralization](#string-placeholders-with-gender-and-pluralization)
-    - [String Placeholder Invariants](#string-placeholder-invariants)
+    - [String Placeholders with Gender](#string-placeholders-with-gender)
 - [ICU Encoding](#icu-encoding)
-- [ICU Encoding – Positional Mapping](#icu-encoding--positional-mapping)
-  - [ICU Encoding - String Placeholders](#icu-encoding---string-placeholders)
-    - [ICU Encoding - String Placeholders With Gender](#icu-encoding---string-placeholders-with-gender)
-    - [ICU Encoding - String Placeholders With Pluralization](#icu-encoding---string-placeholders-with-pluralization)
-  - [ICU Encoding - Integer](#icu-encoding---integer)
-  - [ICU Encoding - Number](#icu-encoding---number)
-  - [ICU Encoding - Gender Agreement](#icu-encoding---gender-agreement)
-  - [ICU Encoding - Cardinal Pluralization](#icu-encoding---cardinal-pluralization)
-  - [ICU Encoding - Ordinal Pluralization](#icu-encoding---ordinal-pluralization)
-  - [ICU Encoding - Date/Time Placeholders](#icu-encoding---datetime-placeholders)
-  - [ICU Encoding - Currency](#icu-encoding---currency)
+  - [Positional Argument Mapping](#positional-argument-mapping)
 - [Configuration Guidelines](#configuration-guidelines)
-  - [Magic Constant Customization](#magic-constant-customization)
   - [Domains](#domains)
 - [Limitations](#limitations)
 - [Standards and Conventions](#standards-and-conventions)
@@ -113,7 +101,7 @@ TIKs, by contrast, embed the meaning directly in the code using a naturally read
 and self-explanatory format that serves as source of truth for the i18n pipeline:
 
 ```go
-i18n.Text(`You had {2 messages} at {10:30 pm}.`, numberOfMessages, dateTime)
+reader.String(`You had {# messages} at {time-short}.`, numberOfMessages, dateTime)
 ```
 
 ### ICU Messages
@@ -126,9 +114,9 @@ Consider the following example in Go:
 
 ```go
 i18n.Text(`You had {numberOfMessages, plural,
-    =0 {no messages}
-    one {# message}
-    other {# messages}
+	=0 {no messages}
+	one {# message}
+	other {# messages}
 } at {time, date, jm}.`, numberOfMessages, dateTime)
 ```
 
@@ -138,10 +126,10 @@ ICU under the hood.
 ## TIK Syntax Rules
 
 ```
-[ignored spaces] [optional context [ignored spaces]] [text body] [ignored spaces]
+[ignored spaces] [optional context [ignored spaces]] [body] [ignored spaces]
 ```
 
-A TIK consists of an optional context and the required text while the surrounding
+A TIK consists of an optional context and the required text body while the surrounding
 unicode spaces are ignored. Both the context and text body must not be empty.
 
 ### Context
@@ -155,7 +143,7 @@ closing square bracket `]` is treated as the context.
 
 ```go
 // description.
-i18n.Text(`[context] Text.`)
+reader.String(`[context] Text.`)
 ```
 
 #### Context Invariants
@@ -236,70 +224,52 @@ i18n.Text(`[button.save] Save your planet`)
 The resulting TIK defines the context `"button.save"` and
 the text body `"Save your planet"`.
 
-### Text
+### Body
 
-The text part must always be written in
-[CLDR plural rule `other`](https://cldr.unicode.org/index/cldr-spec/plural-rules)
-and neutral gender. This allows a TIK to avoid conditional ICU select statements.
+The text body must always be written in
+[CLDR plural rule `other`](https://cldr.unicode.org/index/cldr-spec/plural-rules).
+This allows a TIK to avoid branched statements like ICU plural arguments.
 
-### Magic Constants
+### Placeholders
 
-Magic constants allow TIKs to be easily readable yet auto-translatable to ICU.
-Below is an example TIK that uses multiple magic constants.
+Placeholders allow TIKs to be easily readable yet auto-translatable to ICU message format.
+Below is an example TIK that uses multiple placeholders for different data types:
 
 ```
-Today {they} earned {$1} for completing {2 tasks} in section '{"job"}' at {10:30 pm}.
+Today {name} earned {currency} for completing {# tasks} in section '{text}' at {time-short}.
 ```
 
-- String Placeholders (see [string placeholders](#string-placeholders))
-  - `{"..."}`
-- Integer (see [integer](#icu-encoding---integer))
-  - `{7}`
-- Number (see [number](#icu-encoding---number))
-  - `{3.14}`
-- Cardinal Pluralization (see [cardinal pluralization](#icu-encoding---cardinal-pluralization)):
-  - `{2 ...}`: cardinal plural
-- Ordinal Pluralization (see [ordinal pluralization](#icu-encoding---ordinal-pluralization)):
-  - `{4th}`: ordinal plural
-- Gender (see [gender agreement](#icu-encoding---gender-agreement))
-  - `{they}` (subjective) with variants:
-    - `{them}`: objective
-    - `{their}`: possessive adjective
-    - `{theirs}`: possessive pronoun
-    - `{themself}`: reflexive
-- Date & Time (see [time placeholders](#icu-encoding---datetime-placeholders)):
-  - `{Friday, July 16, 1999}`
-  - `{July 16, 1999}`
-  - `{Jul 16, 1999}`
-  - `{7/16/99}`
-  - `{10:30 pm}`
-  - `{10:30:45 pm}`
-  - `{10:30:45 pm PDT}`
-  - `{10:30:45 pm Pacific Daylight Time}`
-- Currency (see [currency](#icu-encoding---currency))
-  - `{$1}`
-
-The constants (and any of their variants) are case insensitive.
-
-This concept is inspired by the
-[time formatting](https://cs.opensource.google/go/go/+/master:src/time/format.go;l=109)
-constants used in Go’s standard library `time` package.
+- `{text}` [Text placeholder](#string-placeholders)
+- `{name}` [Text placeholder with gender information](#string-placeholders-with-gender)
+- `{integer}` [Integer](#icu-encoding---integer)
+- `{number}` [Number](#icu-encoding---number)
+- `{# ...}` [Cardinal pluralization](#icu-encoding---cardinal-pluralization)
+- `{ordinal}` [Ordinal pluralization](#icu-encoding---ordinal-pluralization)
+- `{date-full}` [Date placeholder](#icu-encoding---datetime-placeholders)
+- `{date-long}` [Date placeholder](#icu-encoding---datetime-placeholders)
+- `{date-medium}` [Date placeholder](#icu-encoding---datetime-placeholders)
+- `{date-short}` [Date placeholder](#icu-encoding---datetime-placeholders)
+- `{time-full}` [Time placeholder](#icu-encoding---datetime-placeholders)
+- `{time-long}` [Time placeholder](#icu-encoding---datetime-placeholders)
+- `{time-medium}` [Time placeholder](#icu-encoding---datetime-placeholders)
+- `{time-short}` [Time placeholder](#icu-encoding---datetime-placeholders)
+- `{currency}` [Currency](#icu-encoding---currency)
 
 ### Cardinal Pluralization
 
-A pluralization statement `{2 ...}` begins with `{2 ` and ends with `}`.
-The `2` is the placeholder for the actual number value.
-The contents `...` may contain any text that is not explicitly forbidden
+A pluralization statement `{# ...}` begins with `{# ` and ends with `}`.
+The `#` is the placeholder for the actual number value (if any).
+The contents `...` may contain any contents that aren't explicitly forbidden
 (see [invariants](#cardinal-pluralization-invariants)).
 
-The contents may contain any number of string placeholders and magic constants:
+The contents may contain any number of placeholders:
 
 ```
-You have {2 {"apples"} and {"bananas"}}.
+You had {# messages marked as {text} at {time-long}}
 ```
 
 ```
-You had {2 of {their} tasks assigned at {10:30 pm}}
+You had {# tasks} assigned at {time-short}.
 ```
 
 #### Cardinal Pluralization Invariants
@@ -308,86 +278,70 @@ You had {2 of {their} tasks assigned at {10:30 pm}}
 (as defined by [Unicode](https://unicode.org/charts/collation/chart_Whitespace.html)):
 
 ```
-This TIK is illegal: {2  <- two spaces here}
+This TIK is illegal: {#  <- two spaces here}
 ```
 
 ```
-This TIK is illegal: {2 space here-> }
+This TIK is illegal: {# space here-> }
 ```
 
 2. Plural statements cannot be nested:
 
 ```
-This TIK is illegal: {2 first level {2 second level}}
+This TIK is illegal: {# first level {# second level}}
 ```
 
-3. Plural statement contents cannot start with a magic constant:
+3. Plural statement contents cannot start with a placeholder:
 
 ```
-This TIK is illegal: {2 {7}}
-```
-
-```
-This TIK is illegal: {2 {3.14}}
+This TIK is illegal: {# {integer}}
 ```
 
 ```
-This TIK is illegal: {2 {$1}}
+This TIK is illegal: {# {number}}
 ```
 
 ```
-This TIK is illegal: {2 {their}}
+This TIK is illegal: {# {currency}}
+```
+
+```
+This TIK is illegal: {# {date-full}}
 ```
 
 ### String Placeholders
 
-String placeholders `{"..."}` accept arbitrary string values within the quotes:
+String placeholders `{text}` represent arbitrary text.
 
 ```
-This can be {"anything"} or {"anyone"}, {"cheers"}.
+You joined group {text}.
 ```
 
-The quoted text is not literal output! It serves as a label or hint about the kind of
-content that might appear there (e.g., a person's name, an object, etc.):
-
-TIK:
-
 ```
-And so the journey began, {"John"} had embarked onto the ship.
+All articles from category: {text}.
 ```
 
-generated ICU:
+If the identifier at hand has a gender (like a person's name) then consider using
+[a string placeholder with gender](#string-placeholders-with-gender) instead because
+for gender-aware locales this might affect the grammar.
 
-```
-And so the journey began, {var0} had embarked onto the ship.
-```
+#### String Placeholders with Gender
 
-#### String Placeholders with Gender and Pluralization
-
-A string placeholder may be infused with gender and pluralization information,
-which isn't specified in the TIK but can be provided programmatically in the source code
-as in the following example in Go:
+String placeholders `{name}` must be infused with gender information.
+This placeholder still represents arbitrary strings values but should be used for
+names and identifiers to allow correct translation for gender-aware locales.
 
 ```go
-i18n.Text(
-    `And so the journey began, {"John"} had embarked onto the ship.`, // TIK
-    i18n.String{ Value: "Ada", Gender: i18n.GenderFemale },
+reader.String(
+	`The journey began, {name} had embarked onto the ship.`, // TIK
+	tokibundle.String{ Value: "John", Gender: tokibundle.GenderMale },
 )
 ```
 
-TIK doesn't define how gender or plural information is attached to placeholders.
-This is determined by the TIK processor, which inspects the provided values in the
-source code and applies grammar rules as needed.
+TIK doesn't define how gender information is attached to the placeholder.
+This is determined by the TIK processor.
 
-generated ICU:
-
-```
-And so the journey began, {var0_gender, select,
-  other { {var0} had embarked onto the ship.}
-}
-```
-
-ℹ️ Gender may affect translation in some languages:
+ℹ️ Gender may affect grammar in some languages:
 
 | Language  | masculine         | feminine            |
 | :-------- | :---------------- | :------------------ |
@@ -400,47 +354,54 @@ And so the journey began, {var0_gender, select,
 The translated ICU message for locale `uk` would be:
 
 ```
-І так розпочалася подорож, {var0_gender, select,
+Розпочалася подорож, {var0_gender, select,
   female { {var0} вирушила на корабель. }
   male { {var0} вирушив на корабель. }
   other { {var0} вирушило на корабель. }
 }
 ```
 
-#### String Placeholder Invariants
-
-The string placeholder text body (i.e., the text between the braces) must not be empty.
-
-```
-This is an invalid TIK: {""}.
-```
-
-The string placeholder text body must not start or end with a Unicode whitespace character
-(as defined by [Unicode](https://unicode.org/charts/collation/chart_Whitespace.html)):
-
-```
-This is an invalid TIK: {" foo "}.
-```
-
-The text body of a string placeholder must not contain any of: `\`, `{`, `}` and `"`.
-
-```
-This is an invalid TIK: {"abc\"def\"ghi"}.
-```
-
-```
-This is an invalid TIK: {"abc{def}ghi"}.
-```
-
 ## ICU Encoding
 
-## ICU Encoding – Positional Mapping
+| TIK placeholder | ICU equivalent                      |
+| :-------------- | :---------------------------------- |
+| `{text}`        | `{var0}`                            |
+| `{name}`        | `{var0, select, other{...}}`        |
+| `{number}`      | `{var0, number}`                    |
+| `{integer}`     | `{var0, number, integer}`           |
+| `{# ...}`       | `{var0, plural, other{# ...}}`      |
+| `{ordinal}`     | `{var0, selectordinal, other{#th}}` |
+| `{name}`        | `{var0, select, other{...}}`        |
+| `{date-full}`   | `{var0, date, full}`                |
+| `{date-long}`   | `{var0, date, long}`                |
+| `{date-medium}` | `{var0, date, medium}`              |
+| `{date-short}`  | `{var0, date, short}`               |
+| `{time-full}`   | `{var0, time, full}`                |
+| `{time-long}`   | `{var0, time, long}`                |
+| `{time-medium}` | `{var0, time, medium}`              |
+| `{time-short}`  | `{var0, time, short}`               |
+| `{time-short}`  | `{var0, time, short}`               |
+| `{currency}`    | `{var0, number, ::currency/auto}`   |
 
-All placeholders are mapped positionally, meaning that the order of occurrence in the TIK
-is the order expected for parameter inputs.
+The `...` stands for any content, meaning that the following TIK:
 
 ```
-[report] By {10:30 pm}, {"John"} received {2 emails}.
+{# messages in {# groups}}
+```
+
+Encodes to the following ICU:
+
+```
+`{var0, plural, other{# messages in {var0, plural, other{# groups}}}}`
+```
+
+### Positional Argument Mapping
+
+All placeholders are mapped positionally, meaning that the order of occurrence in the TIK
+is the order expected for argument inputs.
+
+```
+[report] By {time-short}, {name} received {# emails}.
 ```
 
 All placeholders use the `var` prefix with a following positional index.
@@ -448,366 +409,25 @@ All placeholders use the `var` prefix with a following positional index.
 generated ICU:
 ```
 By { var0, time, short }, { var1_gender, select,
-  female { {var1} received {var2, plural,
-    one {# email}
-    other {# emails}
-  }. }
-  male { {var1} received {var2, plural,
-    one {# email}
-    other {# emails}
-  }. }
-  other { {var1} received {var2, plural,
-    one {# email}
-    other {# emails}
-  }. }
-}
+  other { {var1} }
+} {var1} received {var2, plural,
+  one {# email}
+  other {# emails}
+}. 
 ```
 
 Usage example in Go:
 
 ```go
-i18n.Text(`[report] By {10:30 pm}, {"John"} received {2 emails}.`,
-  time.Now(), "Max", len(emailsReceived))
+reader.String(`[report] By {time-short}, {text} received {# emails}.`,
+	time.Now(), "Max", len(emailsReceived))
 ```
-
-### ICU Encoding - String Placeholders
-
-A simple string placeholder without any additional information produces a simple
-ICU placeholder:
-
-TIK:
-
-```
-You are on page: {"Home"}!
-```
-
-generated ICU:
-
-```
-You are on page: {var0}!
-```
-
-Usage example in Go:
-
-```go
-i18n.Text(`You are on page: {"Home"}!`,
-  "Home & Garden")
-```
-
-```go
-i18n.Text(`You are on page: {"Home"}!`,
-  i18n.String{Value: "Home & Garden"})
-```
-
-#### ICU Encoding - String Placeholders With Gender
-
-A string placeholder with gender information produces an ICU `select` expression:
-
-TIK:
-
-```
-{"John"} modified the file.
-```
-
-generated ICU:
-
-```
-{ var0_gender, select,
-  other { {var0} }
-} modified the file.
-```
-
-Usage example in Go:
-
-```go
-i18n.Text(`{"John"} modified the file.`,
-  i18n.String{Value: "Martha", Gender: i18n.GenderFemale})
-```
-
-#### ICU Encoding - String Placeholders With Pluralization
-
-A string placeholder with pluralization information produces an ICU `select` expression:
-
-TIK:
-
-```
-{"Students"} submitted the form.
-```
-
-generated ICU:
-
-```
-{ var0, plural,
-  other { {var0} }
-} submitted the form.
-```
-
-Usage example in Go:
-
-```go
-i18n.Text(`{"students"} submitted the form.`,
-  i18n.String{Value: "teachers", Number: len(teachersWhoSubmitted)})
-```
-
-Even though for English this example seems nonsensical, for translation into other
-languages this information may often be neccessary.
-
-The translated ICU message in Ukrainian would be:
-
-```
-{ var0, plural,
-  one { {var0} подав форму. }
-  few { {var0} подали форму. }
-  many { {var0} подали форму. }
-  other { {var0} подали форму. }
-}
-```
-
-And as you can see, the plurality of the string value does affect the sentence structure.
-
-### ICU Encoding - Integer
-
-The magic constant `{7}` is translated to the ICU argument `{var0, number, integer}`
-ICU argument which localizes the (signed) integer value to the appropriate format
-for the given locale:
-
-| Value           | en-US      | de-DE      | uk-UA      |
-| :-------------- | :--------- | :--------- | ---------- |
-| `int(1)`        | 1          | 1          | 1          |
-| `int(-1)`       | -1         | -1         | -1         |
-| `int(2)`        | 2          | 2          | 2          |
-| `int(1000)`     | 1,000      | 1.000      | 1 000      |
-| `int(1234567)`  | 1,234,567  | 1.234.567  | 1 234 567  |
-| `int(-1234567)` | -1,234,567 | -1.234.567 | -1 234 567 |
-
-### ICU Encoding - Number
-
-The magic constant `{3.14}` is translated to the ICU argument `{var0, number}`  
-ICU argument which localizes the floating-point value to the appropriate format
-for the given locale:
-
-| Value                | en-US         | de-DE         | uk-UA         |
-| :------------------- | :------------ | :------------ | ------------- |
-| `float(1.0)`         | 1             | 1             | 1             |
-| `float(3.14)`        | 3.14          | 3,14          | 3,14          |
-| `float(2.5)`         | 2.5           | 2,5           | 2,5           |
-| `float(1000.75)`     | 1,000.75      | 1.000,75      | 1 000,75      |
-| `float(1234567.89)`  | 1,234,567.89  | 1.234.567,89  | 1 234 567,89  |
-| `float(-1234567.89)` | -1,234,567.89 | -1.234.567,89 | -1 234 567,89 |
-
-### ICU Encoding - Gender Agreement
-
-Magic constants such as `{They}` (and all of its variations)
-produce an ICU `select` expression:
-
-```
-{They} built it {themself}
-```
-
-```
-{var0, select,
-  male {He}
-  female {She}
-  other {They}
-} built it {var1, select,
-  male {himself}
-  female {herself}
-  other {themself}
-}.
-```
-
-Casing is preserved exactly as written in the TIK:
-
-- `They` -> `He` (titled)
-- `they` -> `he` (lower case)
-- `THEY` -> `HE` (upper case)
-
-### ICU Encoding - Cardinal Pluralization
-
-The `{2 ...}` cardinal pluralization statement is encoded into an ICU `plural` expression.
-The `2` is replaced with the `#` number placeholder and the contents `...` are wrapped
-into the `other` rule
-
-TIK:
-
-```
-{2 messages are unread.} {2 are pending.}
-```
-
-ICU:
-
-```
-{numUnread, plural,
-  other {# messages are read.}
-}
-{numPending, plural,
-  other {# are pending.}
-}
-```
-
-TIK:
-
-```
-{2 slots} remaining.
-```
-
-ICU:
-
-```
-{numSlots, plural,
-  other {# slots}
-} remaining.
-```
-
-Expected information type includes both integers and floating point numbers
-(e.g. in Go `int`, `float64`, etc.).
-
-### ICU Encoding - Ordinal Pluralization
-
-The magic constant `{4th}` encodes into an ordinal plural number.
-
-| Value       | en-US   | de-DE  | uk-UA    |
-| :---------- | :------ | :----- | :------- |
-| `int(1)`    | 1st     | 1.     | 1-ше     |
-| `int(2)`    | 2nd     | 2.     | 2-ге     |
-| `int(3)`    | 3rd     | 3.     | 3-тє     |
-| `int(4)`    | 4th     | 4.     | 4-те     |
-| `int(5)`    | 5th     | 5.     | 5-те     |
-| `int(7)`    | 7th     | 7.     | 7-ме     |
-| `int(8)`    | 8th     | 8.     | 8-ме     |
-| `int(101)`  | 101st   | 101.   | 101-ше   |
-| `int(102)`  | 102nd   | 102.   | 102-ге   |
-| `int(103)`  | 103rd   | 103.   | 103-тє   |
-| `int(104)`  | 104th   | 104.   | 104-те   |
-| `int(1000)` | 1,000th | 1.000. | 1 000-не |
-
-Expected information type includes both integers and floating point numbers
-(e.g. in Go `int`, `float64`, etc.).
-
-The constant `{4th}` also accepts numbers combined with gender.
-
-| Value       | `uk-UA (f)` | `uk-UA (m)` | `uk-UA (n)` | `de-DE (f/m/n)` |
-| :---------- | :---------- | :---------- | :---------- | :-------------- |
-| `int(1)`    | `1-ша`      | `1-ший`     | `1-ше`      | `1.`            |
-| `int(2)`    | `2-га`      | `2-ий`      | `2-ге`      | `2.`            |
-| `int(3)`    | `3-тя`      | `3-ій`      | `3-тє`      | `3.`            |
-| `int(4)`    | `4-та`      | `4-ий`      | `4-те`      | `4.`            |
-| `int(5)`    | `5-та`      | `5-ий`      | `5-те`      | `5.`            |
-| `int(101)`  | `101-ша`    | `101-ший`   | `101-ше`    | `101.`          |
-| `int(102)`  | `102-га`    | `102-ий`    | `102-ге`    | `102.`          |
-| `int(103)`  | `103-тя`    | `103-ій`    | `103-тє`    | `103.`          |
-| `int(104)`  | `104-та`    | `104-ий`    | `104-те`    | `104.`          |
-| `int(1000)` | `1 000-та`  | `1 000-ий`  | `1 000-не`  | `1,000.`        |
-
-### ICU Encoding - Date/Time Placeholders
-
-Date and time placeholders are automatically localized to the appropriate CLDR format
-for the given locale.
-
-
-| Constant                              | ICU type, style |
-| :------------------------------------ | :-------------- |
-| `{Friday, July 16, 1999}`             | date, full      |
-| `{July 16, 1999}`                     | date, long      |
-| `{Jul 16, 1999}`                      | date, medium    |
-| `{7/16/99}`                           | date, short     |
-| `{10:30:45 pm Pacific Daylight Time}` | time, full      |
-| `{10:30:45 pm PDT}`                   | time, long      |
-| `{10:30:45 pm}`                       | time, medium    |
-| `{10:30 pm}`                          | time, short     |
-
-In the following examples,
-the value `Thu, 21 Oct 1999 22:03:02 PDT` (RFC1123) is represented.
-
-- `{Friday, July 16, 1999}` (ICU date full)
-  - **en-US:** `Thursday, October 21, 1999`
-  - **de-DE:** `Donnerstag, 21. Oktober 1999`
-  - **uk-UA:** `четвер, 21 жовтня 1999 р.`
-- `{July 16, 1999}` (ICU date long)
-  - **en-US:** `October 21, 1999`
-  - **de-DE:** `21. Oktober 1999`
-  - **uk-UA:** `21 жовтня 1999 р.`
-- `{July 16, 1999}` (ICU date medium)
-  - **en-US:** `Oct 21, 1999`
-  - **de-DE:** `21.10.1999`
-  - **uk-UA:** `21 жовт. 1999 р.`
-- `{7/16/99}` (ICU date short)
-  - **en-US:** `10/21/99`
-  - **de-DE:** `21.10.99`
-  - **uk-UA:** `21.10.99`
-- `{10:30:45 pm Pacific Daylight Time}` (ICU time full)
-  - **en-US:** `10:03:02 pm Pacific Daylight Time`
-  - **de-DE:** `22:03:02 Nordamerikanische Westküsten-Sommerzeit`
-  - **uk-UA:** `22:03:02 за північноамериканським тихоокеанським літнім часом`
-- `{10:30:45 pm PDT}` (ICU time long)
-  - **en-US:** `10:03:02 pm PDT`
-  - **de-DE:** `22:03:02 PDT`
-  - **uk-UA:** `22:03:02 PDT`
-- `{10:30:45 pm}` (ICU time medium)
-  - **en-US:** `10:03:02 pm`
-  - **de-DE:** `22:03:02`
-  - **uk-UA:** `22:03:02`
-- `{10:30 pm}` (ICU time short)
-  - **en-US:** `10:03 pm`
-  - **de-DE:** `22:03`
-  - **uk-UA:** `22:03`
-
-### ICU Encoding - Currency
-
-The currency constant `{$1}` is translated to the ICU argument
-`{var0, number, ::currency/auto}` which is automatically localized to the appropriate
-format for the given locale and expects both amount and currency information
-(e.g. in Go `currency.Amount`).
-
-In the examples below, `USD $39,250.45` is the value represented:
-
-- **en-US:** `$39,250.45`
-- **de-DE:** `39.250,45 $`
-- **uk-UA:** `39 250,45 USD`
-- **ru-RU:** `39 250,45 $`
-- **fr-FR:** `39 250,45 $US`
 
 ## Configuration Guidelines
 
 The TIK specification defines guidelines only
 and imposes no strict format or requirements.
 The exact configuration format is left entirely to the processor implementation.
-
-### Magic Constant Customization
-
-Not all codebases are written in English. In some cases, developers may prefer to write
-source code and comments in their native language. In such scenarios, the default
-[TIK magic constants](#magic-constants), which are English-based,
-may reduce the overall readability and coherence of the source text.
-
-This is an example in German:
-
-```
-{They} hat das Paket um {10:30 pm} bekommen.
-Heute ist das die {4th}-schnellste Lieferung.
-Die Kosten betragen {$1}.
-```
-
-Naturally, this code would benefit from overwriting the default magic constants:
-
-```json
-{
-  "magic constants": {
-    "they/them/their/theirs/themself": "er/ihn/sein/seiner/sich",
-    "{10:30 pm}": "{15:45 Uhr}",
-    "4th": "4./4te/4ter",
-    "$1": "1€"
-  }
-}
-```
-
-Finally, the german source code would look a lot more readable to german speakers:
-
-```
-{Er} hat das Paket um {15:45 Uhr} bekommen.
-Heute ist das die {4.}-schnellste Lieferung.
-Die Kosten betragen {1,20€}.
-```
 
 ### Domains
 

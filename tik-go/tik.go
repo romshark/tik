@@ -18,63 +18,63 @@ type TokenType uint8
 const (
 	_ TokenType = iota
 	TokenTypeContext
-	TokenTypeStringLiteral
+	TokenTypeLiteral
 
 	// String.
-	TokenTypeStringPlaceholder // {"..."}
+	TokenTypeText           // {text}
+	TokenTypeTextWithGender // {name}
 
 	// Numbers.
-	TokenTypeInteger // {7}
-	TokenTypeNumber  // {3.14}
+	TokenTypeInteger // {integer}
+	TokenTypeNumber  // {number}
 
 	// Pluralization.
-	TokenTypeCardinalPluralStart // `{2 `
+	TokenTypeCardinalPluralStart // `{# `
 	TokenTypeCardinalPluralEnd   // `}`
-	TokenTypeOrdinalPlural       // {4th}
-
-	// Gender agreement.
-	TokenTypeGenderPronoun // {they}, {them}, {their}, {theirs}, {themself}
+	TokenTypeOrdinalPlural       // {ordinal}
 
 	// DATE
 
 	// TokenTypeDateFull equals "EEEE, MMMM d, y"
-	TokenTypeDateFull // {Friday, July 16, 1999}
+	TokenTypeDateFull // {date-full}
 
 	// TokenTypeDateLong equals "MMMM d, y"
-	TokenTypeDateLong // {July 16, 1999}
+	TokenTypeDateLong // {date-long}
 
 	// TokenTypeDateMedium equals "MMM d, y"
-	TokenTypeDateMedium // {Jul 16, 1999}
+	TokenTypeDateMedium // {date-medium}
 
 	// TokenTypeDateShort equals "M/d/yy"
-	TokenTypeDateShort // {7/16/99}
+	TokenTypeDateShort // {date-short}
 
 	// TIME
 
-	// TokenTypeTimeShort equals "hour, minute."
-	TokenTypeTimeShort // {10:30 pm}
-
-	// TokenTypeTimeMedium equals "hour, minute, second."
-	TokenTypeTimeMedium // {10:30:45 pm}
+	// TokenTypeTimeFull equals "hour(h/H), minute(mm), second(ss), and zone(zzzz)."
+	TokenTypeTimeFull // {time-full}
 
 	// TokenTypeTimeLong equals "hour, minute, second, and zone(z)"
-	TokenTypeTimeLong // {10:30:45 pm PDT}
+	TokenTypeTimeLong // {time-long}
 
-	// TokenTypeTimeFull equals "hour(h/H), minute(mm), second(ss), and zone(zzzz)."
-	TokenTypeTimeFull // {10:30:45 pm Pacific Daylight Time}
+	// TokenTypeTimeMedium equals "hour, minute, second."
+	TokenTypeTimeMedium // {time-medium}
+
+	// TokenTypeTimeShort equals "hour, minute."
+	TokenTypeTimeShort // {time-short}
 
 	// Currency.
-	TokenTypeCurrency // {$1}
+	TokenTypeCurrency // {currency}
 )
 
 func (t TokenType) String() string {
 	switch t {
 	case TokenTypeContext:
 		return `context`
-	case TokenTypeStringLiteral:
+	case TokenTypeLiteral:
 		return `literal`
-	case TokenTypeStringPlaceholder:
-		return `string placeholder`
+	case TokenTypeText:
+		return `text`
+	case TokenTypeTextWithGender:
+		return `text with gender`
 	case TokenTypeInteger:
 		return `integer`
 	case TokenTypeNumber:
@@ -85,8 +85,6 @@ func (t TokenType) String() string {
 		return `pluralization block end`
 	case TokenTypeOrdinalPlural:
 		return `ordinal plural`
-	case TokenTypeGenderPronoun:
-		return `gender pronoun`
 	case TokenTypeTimeShort:
 		return `time short`
 	case TokenTypeTimeMedium:
@@ -133,19 +131,9 @@ var (
 	ErrTextEmpty                     = errors.New("empty text body")
 	ErrUnexpClosure                  = errors.New("unexpected directive closure")
 	ErrUknownPlaceholder             = errors.New("unknown placeholder")
-	ErrConfMagicConstantNonUnique    = errors.New("non-unique magic constant")
-	ErrConfMagicConstantInvalid      = errors.New("invalid magic constant")
-	ErrConfMissingDefault            = errors.New("missing default value")
-	ErrStringPlaceholderEmpty        = errors.New("empty string placeholder text body")
 	ErrCardinalPluralEmpty           = errors.New("empty cardinal pluralization")
 	ErrDirectiveStartsCardinalPlural = errors.New(
 		"directive starts a cardinal pluralization",
-	)
-	ErrStringPlaceholderInvSpace = errors.New(
-		"string placeholder starts or ends with a whitespace character",
-	)
-	ErrStringPlaceholderIllegalChars = errors.New(
-		"string placeholder contains illegal characters",
 	)
 	ErrUnclosedPlaceholder = errors.New("unclosed placeholder")
 	ErrNestedPluralization = errors.New("nested pluralization")
@@ -154,11 +142,20 @@ var (
 	ErrContextInvalid      = errors.New("invalid context")
 )
 
+// Config defines the TIK environment configuration.
+type Config struct {
+	OrdinalPluralOtherSuffix string
+}
+
+var DefaultConfig = Config{
+	OrdinalPluralOtherSuffix: "th",
+}
+
 type Tokenizer struct{}
 
 // Tokenize appends all tokens from input to buffer and returns the buffer.
 // If c == nil the default configuration applies.
-func (t *Tokenizer) Tokenize(buffer Tokens, s string, c *Config) (Tokens, ErrParser) {
+func (t *Tokenizer) Tokenize(buffer Tokens, s string, c Config) (Tokens, ErrParser) {
 	inPluralDirective := false
 	offset := 0
 
@@ -229,7 +226,7 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c *Config) (Tokens, ErrPar
 			return append(buffer, Token{
 				IndexStart: offset,
 				IndexEnd:   indexEnd,
-				Type:       TokenTypeStringLiteral,
+				Type:       TokenTypeLiteral,
 			}), ErrParser{}
 		}
 	}
@@ -255,7 +252,7 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c *Config) (Tokens, ErrPar
 					buffer = append(buffer, Token{
 						IndexStart: literalOffset,
 						IndexEnd:   indexEnd,
-						Type:       TokenTypeStringLiteral,
+						Type:       TokenTypeLiteral,
 					})
 				}
 				// End of TIK.
@@ -278,7 +275,7 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c *Config) (Tokens, ErrPar
 					buffer = append(buffer, Token{
 						IndexStart: literalOffset,
 						IndexEnd:   iDir,
-						Type:       TokenTypeStringLiteral,
+						Type:       TokenTypeLiteral,
 					})
 				}
 				if t := buffer[len(buffer)-1]; t.Type == TokenTypeCardinalPluralStart {
@@ -310,7 +307,7 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c *Config) (Tokens, ErrPar
 				buffer = append(buffer, Token{
 					IndexStart: literalOffset,
 					IndexEnd:   iDir,
-					Type:       TokenTypeStringLiteral,
+					Type:       TokenTypeLiteral,
 				})
 			}
 			break
@@ -323,15 +320,8 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c *Config) (Tokens, ErrPar
 		iDirClose += iDir
 
 		directive := s[iDir+1 : iDirClose+1]
-		tp, value := match(directive, c)
+		tp, ln := match(directive)
 		switch tp {
-		case TokenTypeStringPlaceholder:
-			err := validateStringPlaceholder(value)
-			if err.Err != nil {
-				// +2 for the two '"'.
-				err.Index += iDir + 2
-				return nil, err
-			}
 		case TokenTypeCardinalPluralStart:
 			if inPluralDirective {
 				return nil, err(iDir, ErrNestedPluralization)
@@ -340,10 +330,10 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c *Config) (Tokens, ErrPar
 			// +2 for the '{' and the space after.
 			buffer = append(buffer, Token{
 				IndexStart: iDir,
-				IndexEnd:   iDir + len(value) + 2,
+				IndexEnd:   iDir + ln + 2,
 				Type:       TokenTypeCardinalPluralStart,
 			})
-			offset = iDir + len(value) + 2 // Skip only the plural block start.
+			offset = iDir + ln + 2 // Skip only the plural block start.
 			continue
 		case 0:
 			return nil, err(iDir, ErrUknownPlaceholder)
@@ -362,66 +352,45 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c *Config) (Tokens, ErrPar
 	}
 }
 
-func match(s string, c *Config) (tokenType TokenType, value string) {
-	switch {
-	case s != "" && s[0] == '"':
-		return TokenTypeStringPlaceholder, s
-	case strings.EqualFold(s, c.MagicConstants.Integer):
-		return TokenTypeInteger, c.MagicConstants.Integer
-	case strings.EqualFold(s, c.MagicConstants.Number):
-		return TokenTypeNumber, c.MagicConstants.Number
-	case strings.EqualFold(s, c.MagicConstants.OrdinalPlural.Constant):
-		return TokenTypeOrdinalPlural, c.MagicConstants.OrdinalPlural.Constant
-	case strings.EqualFold(s, c.MagicConstants.TimeFull):
-		return TokenTypeTimeFull, c.MagicConstants.TimeFull
-	case strings.EqualFold(s, c.MagicConstants.TimeLong):
-		return TokenTypeTimeLong, c.MagicConstants.TimeLong
-	case strings.EqualFold(s, c.MagicConstants.TimeMedium):
-		return TokenTypeTimeMedium, c.MagicConstants.TimeMedium
-	case strings.EqualFold(s, c.MagicConstants.TimeShort):
-		return TokenTypeTimeShort, c.MagicConstants.TimeShort
-	case strings.EqualFold(s, c.MagicConstants.DateFull):
-		return TokenTypeDateFull, c.MagicConstants.DateFull
-	case strings.EqualFold(s, c.MagicConstants.DateLong):
-		return TokenTypeDateLong, c.MagicConstants.DateLong
-	case strings.EqualFold(s, c.MagicConstants.DateMedium):
-		return TokenTypeDateMedium, c.MagicConstants.DateMedium
-	case strings.EqualFold(s, c.MagicConstants.DateShort):
-		return TokenTypeDateShort, c.MagicConstants.DateShort
-	case strings.EqualFold(s, c.MagicConstants.CurrencyRounded):
-		return TokenTypeCurrency, c.MagicConstants.CurrencyRounded
+func match(s string) (tokenType TokenType, length int) {
+	switch s {
+	case "text":
+		return TokenTypeText, len("text")
+	case "name":
+		return TokenTypeTextWithGender, len("name")
+	case "integer":
+		return TokenTypeInteger, len("integer")
+	case "number":
+		return TokenTypeNumber, len("number")
+	case "ordinal":
+		return TokenTypeOrdinalPlural, len("ordinal")
+	case "time-full":
+		return TokenTypeTimeFull, len("time-full")
+	case "time-long":
+		return TokenTypeTimeLong, len("time-long")
+	case "time-medium":
+		return TokenTypeTimeMedium, len("time-medium")
+	case "time-short":
+		return TokenTypeTimeShort, len("time-short")
+	case "date-full":
+		return TokenTypeDateFull, len("date-full")
+	case "date-long":
+		return TokenTypeDateLong, len("date-long")
+	case "date-medium":
+		return TokenTypeDateMedium, len("date-medium")
+	case "date-short":
+		return TokenTypeDateShort, len("date-short")
+	case "currency":
+		return TokenTypeCurrency, len("currency")
 	}
-	for _, v := range c.MagicConstants.GenderPronouns {
-		if strings.EqualFold(s, v) {
-			return TokenTypeGenderPronoun, v
-		}
-	}
-	if p := getPrefixEqualFold(s, c.MagicConstants.CardinalPluralStart); p != "" {
-		if l, _ := utf8.DecodeRuneInString(s[len(p):]); !unicode.IsSpace(l) {
+	if strings.HasPrefix(s, "#") {
+		if l, _ := utf8.DecodeRuneInString(s[len("#"):]); !unicode.IsSpace(l) {
 			// A whitespace must follow the cardinal plural block start.
-			return 0, ""
+			return 0, 0
 		}
-		return TokenTypeCardinalPluralStart, p
+		return TokenTypeCardinalPluralStart, len("#")
 	}
-	return 0, ""
-}
-
-func getPrefixEqualFold(s, prefix string) string {
-	var i, j int
-	for i < len(s) && j < len(prefix) {
-		r1, size1 := utf8.DecodeRuneInString(s[i:])
-		r2, size2 := utf8.DecodeRuneInString(prefix[j:])
-
-		if unicode.ToLower(r1) != unicode.ToLower(r2) {
-			return ""
-		}
-
-		i, j = i+size1, j+size2
-	}
-	if j == len(prefix) {
-		return s[:i]
-	}
-	return ""
+	return 0, 0
 }
 
 // isEscaped expects i to point to index -1 relative to the subject byte.
@@ -447,7 +416,7 @@ func (t TIK) Placeholders() iter.Seq2[int, Token] {
 		i := 0
 		for _, t := range t.Tokens {
 			switch t.Type {
-			case TokenTypeContext, TokenTypeStringLiteral, TokenTypeCardinalPluralEnd:
+			case TokenTypeContext, TokenTypeLiteral, TokenTypeCardinalPluralEnd:
 				continue
 			}
 			if !yield(i, t) {
@@ -462,14 +431,11 @@ func (t TIK) Placeholders() iter.Seq2[int, Token] {
 type Parser struct {
 	t      Tokenizer
 	tokBuf Tokens
-	conf   *Config
+	conf   Config
 }
 
 // NewParser creates a new TIK parser instance.
-func NewParser(conf *Config) *Parser {
-	if conf == nil {
-		conf = DefaultConfig()
-	}
+func NewParser(conf Config) *Parser {
 	return &Parser{
 		tokBuf: make(Tokens, 0, 16),
 		conf:   conf,
@@ -516,33 +482,6 @@ func (p *Parser) Parse(input string) (tik TIK, err error) {
 		return TIK{}, errParser
 	}
 	return tik, nil
-}
-
-func validateStringPlaceholder(s string) ErrParser {
-	if s[len(s)-1] != '"' || len(s) < 2 {
-		return err(len(s)-1, ErrStringPlaceholderIllegalChars)
-	}
-
-	s = s[1 : len(s)-1]
-	if s == "" {
-		return err(0, ErrStringPlaceholderEmpty)
-	}
-
-	runeL, _ := utf8.DecodeRuneInString(s)         // First.
-	runeR, rSize := utf8.DecodeLastRuneInString(s) // Last.
-
-	if unicode.IsSpace(runeL) {
-		return err(0, ErrStringPlaceholderInvSpace)
-	}
-	if unicode.IsSpace(runeR) {
-		return err(len(s)-rSize, ErrStringPlaceholderInvSpace)
-	}
-
-	if i := strings.IndexAny(s, "\\{}\""); i != -1 {
-		return err(i, ErrStringPlaceholderIllegalChars)
-	}
-
-	return ErrParser{}
 }
 
 func err(index int, err error) ErrParser {

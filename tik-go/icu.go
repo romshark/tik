@@ -9,66 +9,11 @@ import (
 // ICUTranslator is a reusable TIK to ICU message translator.
 type ICUTranslator struct {
 	b    bytes.Buffer
-	conf *Config
+	conf Config
 }
 
-func NewICUTranslator(conf *Config) *ICUTranslator {
-	if conf == nil {
-		conf = defaultConfig
-	}
+func NewICUTranslator(conf Config) *ICUTranslator {
 	return &ICUTranslator{conf: conf}
-}
-
-type ICUModifier struct{ Gender, Plural bool }
-
-func (i *ICUTranslator) writeModifiers(
-	pos int, modifiers map[int]ICUModifier,
-	gender, plural bool, writeContent func(),
-) {
-	if modifiers == nil {
-		writeContent()
-		return
-	}
-	m, ok := modifiers[pos]
-	if !ok {
-		writeContent()
-		return
-	}
-
-	applyGender := gender && m.Gender
-	applyPlural := plural && m.Plural
-
-	if !applyGender && !applyPlural {
-		writeContent()
-		return
-	}
-
-	if applyGender {
-		i.write("{")
-		i.writePositionalPlaceholder(pos, "_gender")
-		i.write(", select, ")
-		i.write("other {")
-		if applyPlural {
-			// Apply both gender and pluralization.
-			i.write("{")
-			i.writePositionalPlaceholder(pos, "_plural")
-			i.write(", plural, ")
-			i.write("other {")
-			writeContent()
-			i.write("}}")
-		} else {
-			writeContent()
-			i.write("}}")
-		}
-	} else if applyPlural {
-		// Apply only pluralization.
-		i.write("{")
-		i.writePositionalPlaceholder(pos, "_plural")
-		i.write(", plural, ")
-		i.write("other {")
-		writeContent()
-		i.write("}}")
-	}
 }
 
 func (i *ICUTranslator) writePositionalPlaceholder(index int, suffix string) {
@@ -88,7 +33,7 @@ var replacerEscapeQuote = strings.NewReplacer("'", "''")
 //
 // WARNING: Never use or alias buf outside fn!
 func (i *ICUTranslator) TIK2ICUBuf(
-	tik TIK, modifiers map[int]ICUModifier, fn func(buf *bytes.Buffer),
+	tik TIK, fn func(buf *bytes.Buffer),
 ) {
 	i.b.Reset()
 
@@ -96,42 +41,37 @@ func (i *ICUTranslator) TIK2ICUBuf(
 
 	for _, token := range tik.Tokens {
 		switch token.Type {
-		case TokenTypeStringLiteral:
+		case TokenTypeLiteral:
 			s := token.String(tik.Raw)
 			s = replacerEscapeQuote.Replace(s)
 			i.write(s)
-		case TokenTypeStringPlaceholder:
+		case TokenTypeText, TokenTypeTextWithGender:
 			pos := positionalIndex
 			positionalIndex++
-			i.writeModifiers(pos, modifiers, true, true, func() {
-				i.write("{")
-				i.writePositionalPlaceholder(pos, "")
-				i.write("}")
-			})
+			i.write("{")
+			i.writePositionalPlaceholder(pos, "")
+			i.write("}")
+
 		case TokenTypeInteger:
 			pos := positionalIndex
 			positionalIndex++
-			i.writeModifiers(pos, modifiers, true, true, func() {
-				i.write("{")
-				i.writePositionalPlaceholder(pos, "")
-				i.write(", number, integer}")
-			})
+			i.write("{")
+			i.writePositionalPlaceholder(pos, "")
+			i.write(", number, integer}")
+
 		case TokenTypeNumber:
 			pos := positionalIndex
 			positionalIndex++
-			i.writeModifiers(pos, modifiers, true, true, func() {
-				i.write("{")
-				i.writePositionalPlaceholder(pos, "")
-				i.write(", number}")
-			})
+			i.write("{")
+			i.writePositionalPlaceholder(pos, "")
+			i.write(", number}")
+
 		case TokenTypeCurrency:
 			pos := positionalIndex
 			positionalIndex++
-			i.writeModifiers(pos, modifiers, true, true, func() {
-				i.write("{")
-				i.writePositionalPlaceholder(pos, "")
-				i.write(", number, ::currency/auto}")
-			})
+			i.write("{")
+			i.writePositionalPlaceholder(pos, "")
+			i.write(", number, ::currency/auto}")
 
 		case TokenTypeTimeFull,
 			TokenTypeTimeLong,
@@ -164,15 +104,14 @@ func (i *ICUTranslator) TIK2ICUBuf(
 			default:
 				panic("unexpected token type")
 			}
-			i.writeModifiers(pos, modifiers, true, true, func() {
-				i.write("{") // Start placeholder.
-				i.writePositionalPlaceholder(pos, "")
-				i.write(", ")
-				i.write(varType)
-				i.write(", ")
-				i.write(style)
-				i.write("}")
-			})
+
+			i.write("{") // Start placeholder.
+			i.writePositionalPlaceholder(pos, "")
+			i.write(", ")
+			i.write(varType)
+			i.write(", ")
+			i.write(style)
+			i.write("}")
 
 		case TokenTypeOrdinalPlural:
 			pos := positionalIndex
@@ -182,7 +121,7 @@ func (i *ICUTranslator) TIK2ICUBuf(
 			i.writePositionalPlaceholder(pos, "")
 			i.write(", selectordinal, ")
 			i.write("other {#")
-			i.write(i.conf.MagicConstants.OrdinalPlural.DefaultICUSuffix)
+			i.write(i.conf.OrdinalPluralOtherSuffix)
 			i.write("}}")
 
 		case TokenTypeCardinalPluralStart:
@@ -197,20 +136,6 @@ func (i *ICUTranslator) TIK2ICUBuf(
 
 		case TokenTypeCardinalPluralEnd:
 			i.write("}}") // Finish both other and plural blocks.
-
-		case TokenTypeGenderPronoun:
-			pos := positionalIndex
-			positionalIndex++
-
-			i.writeModifiers(pos, modifiers, false, true, func() {
-				i.write("{")
-				i.writePositionalPlaceholder(pos, "")
-				i.write(", select, ")
-				i.write("other {")
-				pronoun := token.String(tik.Raw)
-				i.write(pronoun[1 : len(pronoun)-1])
-				i.write("}}")
-			})
 		}
 	}
 
@@ -222,7 +147,7 @@ func (i *ICUTranslator) TIK2ICUBuf(
 // (See https://unicode-org.github.io/icu/userguide/format_parse/messages/)
 // modifiers define positional modifiers such as gender and pluralization
 // that weren't defined in the tik.
-func (i *ICUTranslator) TIK2ICU(tik TIK, modifiers map[int]ICUModifier) (str string) {
-	i.TIK2ICUBuf(tik, modifiers, func(buf *bytes.Buffer) { str = buf.String() })
+func (i *ICUTranslator) TIK2ICU(tik TIK) (str string) {
+	i.TIK2ICUBuf(tik, func(buf *bytes.Buffer) { str = buf.String() })
 	return str
 }
