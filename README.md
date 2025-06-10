@@ -21,7 +21,7 @@
   - [String Placeholders](#string-placeholders)
     - [String Placeholders with Gender](#string-placeholders-with-gender)
 - [ICU Encoding](#icu-encoding)
-- [ICU Encoding – Positional Mapping](#icu-encoding--positional-mapping)
+  - [Positional Argument Mapping](#positional-argument-mapping)
 - [Configuration Guidelines](#configuration-guidelines)
   - [Domains](#domains)
 - [Limitations](#limitations)
@@ -395,10 +395,10 @@ Encodes to the following ICU:
 `{var0, plural, other{# messages in {var0, plural, other{# groups}}}}`
 ```
 
-## ICU Encoding – Positional Mapping
+### Positional Argument Mapping
 
 All placeholders are mapped positionally, meaning that the order of occurrence in the TIK
-is the order expected for parameter inputs.
+is the order expected for argument inputs.
 
 ```
 [report] By {time-short}, {name} received {# emails}.
