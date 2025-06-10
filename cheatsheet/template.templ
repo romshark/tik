@@ -27,8 +27,13 @@ templ templatePage(title string, sections []Section) {
 				max-width: 900px;
 				margin: auto;
 				margin-top: 1rem;
+				margin-bottom: 3rem;
 				padding: 1rem;
 				box-sizing: border-box;
+			}
+
+			footer {
+				margin-top: 2rem;
 			}
 
 			hr {
@@ -201,13 +206,9 @@ templ templatePage(title string, sections []Section) {
 			@templateSection(section)
 		}
 
-		<ul>
-			<li>TIK's <a target="_blank" href="https://github.com/romshark/tik?tab=readme-ov-file#magic-constants">magic
-					constants</a> (and
-				any of their variants) are case insensitive.</li>
-			<li><a target="_blank" href="https://unicode-org.github.io/icu/userguide/format_parse/messages/">ICU Message
-					Format</a></li>
-		</ul>
+		<footer>
+			Also see <a target="_blank" href="https://unicode-org.github.io/icu/userguide/format_parse/messages/">ICU Message Format</a>
+		</footer>
 	</body>
 
 	</html>

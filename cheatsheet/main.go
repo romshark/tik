@@ -104,6 +104,7 @@ func main() {
 			ID:     "cardinal-plural",
 			Header: `{# ...}`,
 			Description: `Pluralizes <code>...</code> to the correct <a
+					target="_blank"
 					href="https://www.unicode.org/cldr/charts/47/supplemental/language_plural_rules.html">CLDR
 					plural form</a>.`,
 			ExampleTIK: `You have {# unread messages} in {# groups}.`,
@@ -123,6 +124,7 @@ func main() {
 			ID:     "ordinal-plural",
 			Header: `{ordinal}`,
 			Description: `Represents a <a
+					target="_blank"
 					href="https://www.unicode.org/cldr/charts/47/supplemental/language_plural_rules.html">CLDR
 					ordinal plural</a> value.`,
 			ExampleTIK: `You are {4th} in the queue.`,
@@ -141,7 +143,7 @@ func main() {
 		{
 			ID:          "date-short",
 			Header:      `{date-short}`,
-			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR short date</a>.`,
+			Description: `Represents a <a target="_blank" href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR short date</a>.`,
 			ExampleTIK:  `Today is {7/16/99}`,
 			ICU:         `Today is {var0, date, short}`,
 			Examples: []Example{
@@ -158,7 +160,7 @@ func main() {
 		{
 			ID:          "date-medium",
 			Header:      `{date-medium}`,
-			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR medium date</a>.`,
+			Description: `Represents a <a target="_blank" href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR medium date</a>.`,
 			ExampleTIK:  `Today is {Jul 16, 1999}`,
 			ICU:         `Today is {var0, date, medium}`,
 			Examples: []Example{
@@ -175,7 +177,7 @@ func main() {
 		{
 			ID:          "date-long",
 			Header:      `{date-long}`,
-			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR long date</a>.`,
+			Description: `Represents a <a target="_blank" href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR long date</a>.`,
 			ExampleTIK:  `Today is {July 16, 1999}`,
 			ICU:         `Today is {var0, date, long}`,
 			Examples: []Example{
@@ -192,7 +194,7 @@ func main() {
 		{
 			ID:          "date-full",
 			Header:      `{date-full}`,
-			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR full date</a>.`,
+			Description: `Represents a <a target="_blank" href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-date-formats">CLDR full date</a>.`,
 			ExampleTIK:  `Today is {Friday, July 16, 1999}`,
 			ICU:         `Today is {var0, date, full}`,
 			Examples: []Example{
@@ -209,7 +211,7 @@ func main() {
 		{
 			ID:          "time-short",
 			Header:      `{time-short}`,
-			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR short time</a>.`,
+			Description: `Represents a <a target="_blank" href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR short time</a>.`,
 			ExampleTIK:  `It's {10:30 pm}`,
 			ICU:         `It's {var0, time, short}`,
 			Examples: []Example{
@@ -226,7 +228,7 @@ func main() {
 		{
 			ID:          "time-medium",
 			Header:      `{time-medium}`,
-			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR medium time</a>.`,
+			Description: `Represents a <a target="_blank" href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR medium time</a>.`,
 			ExampleTIK:  `It's {10:30:45 pm}`,
 			ICU:         `It's {var0, time, medium}`,
 			Examples: []Example{
@@ -243,7 +245,7 @@ func main() {
 		{
 			ID:          "time-long",
 			Header:      `{time-long}`,
-			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR long time</a>.`,
+			Description: `Represents a <a target="_blank" href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR long time</a>.`,
 			ExampleTIK:  `It's {10:30:45 pm PDT}`,
 			ICU:         `It's {var0, time, long}`,
 			Examples: []Example{
@@ -260,7 +262,7 @@ func main() {
 		{
 			ID:          "time-full",
 			Header:      `{time-full}`,
-			Description: `Represents a <a href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR full time</a>.`,
+			Description: `Represents a <a target="_blank" href="https://cldr.unicode.org/translation/date-time/date-time-patterns#basic-time-formats">CLDR full time</a>.`,
 			ExampleTIK:  `It's {10:30:45 pm Pacific Daylight Time}`,
 			ICU:         `It's {var0, time, full}`,
 			Examples: []Example{
