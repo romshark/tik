@@ -108,7 +108,7 @@ func main() {
 					href="https://www.unicode.org/cldr/charts/47/supplemental/language_plural_rules.html">CLDR
 					plural form</a>.`,
 			ExampleTIK: `You have {# unread messages} in {# groups}.`,
-			ICU:        `You have {var0, plural, one{# unread message} other{# unread messages}} in {var1, plural, one{# group} other{# groups}}}`,
+			ICU:        `You have {var0, plural, one{# unread message} other{# unread messages}} in {var1, plural, one{# group} other{# groups}}`,
 			Examples: []Example{
 				{
 					Data: `var0=4 var1=3`,
