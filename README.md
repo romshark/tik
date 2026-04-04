@@ -135,7 +135,7 @@ unicode spaces are ignored. Both the context and text body must not be empty.
 ### Context
 
 The TIK context is an optional namespace used to disambiguate message keys.
-It is not part of the message’s text body and hence must not be included in the
+It is not part of the message’s text body and hence must not be included in the generated ICU message.
 If a TIK starts with an opening square bracket `[` then everything up to the next
 closing square bracket `]` is treated as the context.
 
