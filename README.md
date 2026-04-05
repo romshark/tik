@@ -475,24 +475,87 @@ The exact configuration format is left entirely to the processor implementation.
 
 ### Domains
 
-In large-scale projects with lots of translations it might make sense to group
-extracted texts into domains by defining the scopes of the domains in the configuration:
+A domain is the scope within which TIKs must be unique. The mechanism by which
+sources are assigned to a domain is left entirely to the TIK processor implementation:
+the specification does not mandate a configuration format, a discovery strategy,
+or a default boundary. Implementations are free to treat the entire project as a
+single domain, derive domains from the directory layout, or accept explicit mappings.
+
+Large-scale projects with many translations can benefit from partitioning TIKs into
+multiple domains. One implementation defines domain scopes through a central
+configuration file:
 
 ```json
 {
   "domains": {
+    "domain_common": [
+      {
+        "dir": "/...",
+        "description": "Messages use a neutral, product-wide tone."
+      }
+    ],
     "domain_A": [
-      "/domain_a/...",
-      "/templates/domain_a/_"
+      {
+        "dir": "/domain_a/...",
+        "description": "Customer-facing online storefront. Messages address end customers in a welcoming, persuasive tone."
+      },
+      {
+        "dir": "/templates/domain_a/_"
+      }
     ],
     "domain_B": [
-      "/domain_b/...",
-      "/templates/domain_b/_",
-      "/models/domain_b/_"
+      {
+        "dir": "/domain_b/...",
+        "description": "Internal warehouse and order-management tooling. Messages address operations staff in a precise, operational tone."
+      }
     ]
   }
 }
 ```
+
+Another implementation might derive domains from marker files placed in the
+source tree. For example, a `.tikdomain` file could mark a domain boundary that
+covers its containing directory and all descendants, with nested `.tikdomain`
+files establishing child domains whose descriptions append onto the parent's:
+
+```
+repo/
+├── .tikdomain
+├── domain_a/
+│   ├── .tikdomain
+│   └── page.html
+├── domain_b/
+│   ├── .tikdomain
+│   └── page.html
+└── shared/
+    └── widget.html
+```
+
+**repo/.tikdomain**:
+
+```
+Messages use a neutral, product-wide tone.
+```
+
+**repo/domain_a/.tikdomain**:
+
+```
+Customer-facing online storefront.
+Messages address end customers in a welcoming, persuasive tone.
+```
+
+**repo/domain_b/.tikdomain**:
+
+```
+Internal warehouse and order-management tooling.
+Messages address operations staff in a precise, operational tone.
+```
+
+Beyond enforcing TIK uniqueness, domains may carry a human-readable description
+that characterizes the scope, audience, or tone of the messages they contain.
+Processors can forward these descriptions to LLM or human translators as
+additional context, improving the accuracy of translations that would otherwise
+be produced from the TIK alone.
 
 ## Limitations
 
