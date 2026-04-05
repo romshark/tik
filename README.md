@@ -1,6 +1,6 @@
 **Author:** Roman Scharkov <roman.scharkov@gmail.com>;
-**Version:** 0.8.0;
-**Last updated:** 2025-06-10;
+**Version:** 0.9.0;
+**Last updated:** 2026-04-05;
 
 # TIK - Textual Internationalization Key
 
@@ -175,54 +175,98 @@ The context must not be empty:
 
 #### Context - Example
 
-TIKs are unique message keys within a domain. However, the same original message text can
-have different meanings depending on usage. In such cases, context must be added to
-separate two TIKs with a similar text body.
+TIKs are unique message keys within a domain. The same TIK must not be declared more than
+once in the source code of a domain unless every occurrence shares the exact same context.
+TIK processors enforce this by raising a build-time error for any redeclaration, so
+unintended collisions cannot silently collapse into a single ICU message and lose
+translation information.
 
-Example: a 
+Human language is ambiguous and context-dependent - the same original message text can
+have different meanings depending on usage. In such cases, a distinct context must be
+added to disambiguate each occurrence.
+
+Example: the word "Order" can mean a sort order, a purchase-order action, or a customer
+order, and many languages require different translations for each meaning:
+
+| Meaning           | German          | French        | Russian        |
+| :---------------- | :-------------- | :------------ | :------------- |
+| sort order        | `"Reihenfolge"` | `"Ordre"`     | `"Порядок"`    |
+| place a purchase  | `"Bestellen"`   | `"Commander"` | `"Заказать"`   |
+| a customer order  | `"Bestellung"`  | `"Commande"`  | `"Заказ"`      |
+
+The following source code therefore produces build-time errors because the TIK `Order`
+is declared three times in the same domain without a disambiguating context:
 
 ```html
+<!-- orders_page.html -->
 <body>
-  <h1>{
-    // "save" as in "save from danger".  <--- HERE
-    i18n.Text(`Save your planet`)
-  }</h1>
-  <p>{ i18n.Text(`Your planet is in grave danger. Be the hero who saves it!`) }</p>
-  <dialog>
-    <p>You're about to exit the simulation.</p>
-    <form method="dialog">
-      <button>{
-        // "save" as in "save to file".  <--- HERE
-        i18n.Text(`Save your planet`)
-      }</button>
-      <button>{
-        // Cancel exiting the simulation.
-        i18n.Text(`Cancel`)
-      }</button>
-    </form>
-  </dialog>
+  <table>
+    <thead>
+      <tr>
+        <th>{ i18n.Text(`Name`) }</th>
+        <th>{
+          // "order" as a sort-order column header.  <--- HERE
+          i18n.Text(`Order`)
+        }</th>
+      </tr>
+    </thead>
+    <!-- ... -->
+  </table>
+  <button>{
+    // "order" as in "place a purchase order".  <--- HERE
+    i18n.Text(`Order`)
+  }</button>
 </body>
 ```
 
-In the example above, the web page contains two TIKs that will result in 1 ICU message
-being produced: `Save your planet`. In English, the meaning of the word "save" depends
-on context, which allows this message to be reused across different contexts. But other
-languages such as German might require two separate messages:
-
-- `"Rette deinen Planeten"` (as in "save your planet from danger")
-- `"Speichere deinen Planeten"` (as in "save your planet to file")
-
-Since 1 TIK can never refer to 2 different messages a new TIK must be created yet
-sometimes the original text must be preserved. In this case we can apply a context
-to either (or both) messages to disambiguate them:
-
-```
-// "save" as in "save to file".
-i18n.Text(`[button.save] Save your planet`)
+```html
+<!-- confirmation_page.html -->
+<body>
+  <h1>{
+    // "order" as in "a customer order".  <--- HERE
+    i18n.Text(`Order`)
+  }</h1>
+  <p>{ i18n.Text(`Dispatched on {date-short}.`) }</p>
+</body>
 ```
 
-The resulting TIK defines the context `"button.save"` and
-the text body `"Save your planet"`.
+Each occurrence must therefore carry its own distinct context:
+
+```go
+// "order" as a sort-order column header.
+i18n.Text(`[table sort column] Order`)
+```
+
+```go
+// "order" as in "place a purchase order".
+i18n.Text(`[order submission] Order`)
+```
+
+```go
+// "order" as in "a customer order".
+i18n.Text(`[order confirmation] Order`)
+```
+
+Each of the resulting TIKs defines a distinct context over the shared text body
+`"Order"` and produces a separate ICU message.
+
+Conversely, the same TIK may appear any number of times within a 
+domain as long as every occurrence shares the exact same context and
+body, since all such occurrences refer to the same message.
+For example, the order-submission button may be placed on
+both a cart page and a checkout page:
+
+```html
+<!-- cart_page.html -->
+<button>{ i18n.Text(`[order submission] Order`) }</button>
+```
+
+```html
+<!-- checkout_page.html -->
+<button>{ i18n.Text(`[order submission] Order`) }</button>
+```
+
+Both occurrences resolve to the same TIK and therefore to a single shared ICU message.
 
 ### Body
 
@@ -472,6 +516,11 @@ As with any technology, TIK introduces both advantages and trade-offs.
     produce ICU messages for translation.
   - ⚠️ **Source Language Translation**: Messages written in the source language
     (e.g., English) must also be extracted and passed through the translation pipeline.
+  - ⚠️ **Static Analysis Scope**: Duplicate-TIK detection is limited to what the
+    processor can see in the source code. If a TIK is wrapped in a helper function
+    and reused across call sites, the processor observes only a single declaration
+    and cannot warn about unintended reuse of the returned message in conflicting
+    contexts.
 
 ## Standards and Conventions
 
