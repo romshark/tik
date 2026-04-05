@@ -84,31 +84,11 @@ With TIK, developers write simple, readable keys and still get the full power of
 
 ## Limitations
 
-As with any technology, TIK introduces both advantages and trade-offs.
-
-- Advantages
-  - ✅ **Readability**: TIK keys convey the intent of the message
-    in a clear and human-readable format.
-  - ✅ **Automation**: The TIK syntax can be programmatically converted into
-    ICU message structures and translation can mostly be automated through LLMs.
-  - ✅ **Simplicity**: The format is relatively straightforward to learn
-    and apply consistently.
-- Limitations
-  - ⚠️ **Learning Curve**: Developers must become familiar
-    with the TIK syntax conventions.
-  - ⚠️ **Developer Responsibility**: Developers must write somewhat meaningful texts and
-    can't fully rely on translators. They can only rely on translators and software
-    to improve those texts later in the translation pipeline.
-  - ⚠️ **Tooling Requirements**: A dedicated extractor tool (referred to as TIK processor
-    through this document) is required to parse and process TIK keys to eventually
-    produce ICU messages for translation.
-  - ⚠️ **Source Language Translation**: Messages written in the source language
-    (e.g., English) must also be extracted and passed through the translation pipeline.
-  - ⚠️ **Static Analysis Scope**: Duplicate-TIK detection is limited to what the
-    processor can see in the source code. If a TIK is wrapped in a helper function
-    and reused across call sites, the processor observes only a single declaration
-    and cannot warn about unintended reuse of the returned message in conflicting
-    contexts.
+  - ⚠️ **Learning Curve**: Developers must learn the TIK syntax and conventions.
+  - ⚠️ **Source of Truth in Code**: The TIK in the source code is the source of truth for every translation derived from it. This keeps translations from drifting away from the original intent, but it also means translators cannot fix a poor source TIK directly. Corrections must flow back to developers and be applied in code.
+  - ⚠️ **Language-specific Tooling Requirements**: A dedicated extractor tool (referred to as TIK processor through this document) is required to parse and process TIK keys from source code to eventually produce ICU messages for translation.
+  - ⚠️ **Source Language Translation**: TIKs with branching (such as plural or gender-dependent forms) cannot produce _complete_ ICU messages and must pass through the translation pipeline too. The TIK only encodes the `other` cases.
+  - ⚠️ **Static Analysis Scope**: Duplicate-TIK detection is limited to what the processor can see in the source code. If a TIK is wrapped in a helper function and reused across call sites, the processor observes only a single declaration and cannot warn about unintended reuse of the returned message in conflicting contexts.
 
 ## FAQ
 
