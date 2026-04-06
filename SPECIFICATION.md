@@ -78,7 +78,7 @@ The context must not be empty:
 
 #### Context Uniqueness
 
-The same TIK must not be declared more than once in the source code of a [domain](#domains) unless every occurrence shares the exact same [context](#context) and body, in which case all occurrences resolve to a single shared ICU message. TIK processors enforce this by raising a build-time error for any non-identical redeclaration.
+A TIK without a [context](#context) must not be declared more than once in the source code of a [domain](#domains). A TIK with a context may appear multiple times within the same domain as long as every occurrence shares the exact same context and body, in which case all occurrences resolve to a single shared ICU message. TIK processors enforce these rules by raising a build-time error for any violation.
 
 #### Context - Example
 
@@ -125,7 +125,19 @@ Each occurrence must carry its own distinct context:
 [order confirmation] Order
 ```
 
-Each resulting TIK produces a separate ICU message. Conversely, `[order submission] Order` may appear on both a cart page and a checkout page - both occurrences resolve to the same TIK and a single shared ICU message.
+Each resulting TIK produces a separate ICU message.
+
+Conversely, a TIK with context may be reused across files. Both pages below share a single ICU message because the context and body are identical:
+
+```html
+<!-- cart_page.html -->
+<button>{ i18n.Text(`[order submission] Order`) }</button>
+```
+
+```html
+<!-- checkout_page.html -->
+<button>{ i18n.Text(`[order submission] Order`) }</button>
+```
 
 ### Body
 
