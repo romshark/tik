@@ -195,7 +195,7 @@ You had {# tasks} assigned at {time-short}.
 
 #### Cardinal Pluralization Invariants
 
-1. Plural statements must not begin and end with a Unicode whitespace character (as defined by [Unicode](https://unicode.org/charts/collation/chart_Whitespace.html)):
+1. Plural statements must not begin or end with a Unicode whitespace character (as defined by [Unicode](https://unicode.org/charts/collation/chart_Whitespace.html)):
 
 ```
 This TIK is illegal: {#  <- two spaces here}
