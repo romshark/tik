@@ -418,4 +418,4 @@ Beyond enforcing TIK uniqueness, a domain may carry a human-readable description
 - Currency codes follow [ISO 4217](https://www.iso.org/iso-4217-currency-codes.html)
 - Timestamps follow [RFC3339](https://www.rfc-editor.org/rfc/rfc3339.html)
 - JSON examples follow [RFC8259](https://datatracker.ietf.org/doc/html/rfc8259)
-- Date/Time [RFC1123](https://datatracker.ietf.org/doc/html/rfc1123)
+- Date/Time formats follow [RFC1123](https://datatracker.ietf.org/doc/html/rfc1123)
