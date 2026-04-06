@@ -341,7 +341,7 @@ The TIK specification defines guidelines only and imposes no strict format or re
 
 ### Domains
 
-A domain is the scope within which TIKs must be unique. The mechanism by which sources are assigned to a domain is left entirely to the TIK processor implementation: the specification does not mandate a configuration format, a discovery strategy, or a default boundary. 
+A domain is the scope within which TIKs must be unique. The mechanism by which sources are assigned to a domain is left entirely to the TIK processor implementation: the specification does not mandate a configuration format, a discovery strategy, or a default boundary.
 Implementations are free to treat the entire project as a single domain, derive domains from the directory layout, or accept explicit mappings.
 
 Partitioning TIKs into multiple domains serves large-scale projects with many translations. One implementation defines domain scopes through a central configuration file:
