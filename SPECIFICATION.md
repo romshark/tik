@@ -46,7 +46,7 @@ reader.String(`[context] Text.`)
 
 #### Context - Syntactic Invariants
 
-Curly braces `{` `}`, square brackets `[` `]` and reverse-solidus `\` are not allowed inside the context:
+Unlike the [body](#body), the context does not support escape sequences. Curly braces `{` `}`, square brackets `[` `]` and reverse-solidus `\` are not allowed inside the context:
 
 ```
 [{invalid} context] Text.
@@ -142,6 +142,15 @@ Conversely, a TIK with context may be reused across files. Both pages below shar
 ### Body
 
 The text body must always be written in [CLDR plural rule `other`](https://cldr.unicode.org/index/cldr-spec/plural-rules). This allows a TIK to avoid branched statements like ICU plural arguments.
+
+Outside of [placeholders](#placeholders), the body is free-form text with no further syntactic restrictions. Curly braces `{` and `}` are reserved for placeholder syntax. To include a literal `{`, `}`, or `\` in the body, it must be escaped with a preceding reverse-solidus `\`:
+
+- `\{` = literal `{`
+- `\}` = literal `}`
+- `\\` = literal `\`
+- `\\\{\}` = literal `\{}`
+
+Square brackets `[` and `]` may appear freely in the body (they are only special at the start of a TIK).
 
 ### Placeholders
 
