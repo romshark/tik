@@ -58,7 +58,7 @@ func TestParse(t *testing.T) {
 		Token{"[c]", tik.TokenTypeContext},
 		Token{"hello world", tik.TokenTypeLiteral},
 	)
-	f(t, "[c][b]okay",
+	f(t, "[c] [b]okay",
 		Token{"[c]", tik.TokenTypeContext},
 		Token{"[b]okay", tik.TokenTypeLiteral},
 	)
@@ -72,7 +72,7 @@ func TestParse(t *testing.T) {
 		Token{"{integer}", tik.TokenTypeInteger},
 		Token{" suffix", tik.TokenTypeLiteral},
 	)
-	f(t, "[context]{integer} suffix",
+	f(t, "[context] {integer} suffix",
 		Token{"[context]", tik.TokenTypeContext},
 		Token{"{integer}", tik.TokenTypeInteger},
 		Token{" suffix", tik.TokenTypeLiteral},
@@ -92,7 +92,7 @@ func TestParse(t *testing.T) {
 		Token{"{number}", tik.TokenTypeNumber},
 		Token{" suffix", tik.TokenTypeLiteral},
 	)
-	f(t, "[context]{number} suffix",
+	f(t, "[context] {number} suffix",
 		Token{"[context]", tik.TokenTypeContext},
 		Token{"{number}", tik.TokenTypeNumber},
 		Token{" suffix", tik.TokenTypeLiteral},
@@ -130,20 +130,20 @@ func TestParse(t *testing.T) {
 		Token{"You're ", tik.TokenTypeLiteral},
 		Token{"{ordinal}", tik.TokenTypeOrdinalPlural},
 		Token{" out of ", tik.TokenTypeLiteral},
-		Token{"{# ", tik.TokenTypeCardinalPluralStart},
-		Token{"contenders", tik.TokenTypeLiteral},
+		Token{"{#", tik.TokenTypeCardinalPluralStart},
+		Token{" contenders", tik.TokenTypeLiteral},
 		Token{"}", tik.TokenTypeCardinalPluralEnd},
 	)
 	f(t, `{# files are being copied to folder '{text}'}`,
-		Token{"{# ", tik.TokenTypeCardinalPluralStart},
-		Token{"files are being copied to folder '", tik.TokenTypeLiteral},
+		Token{"{#", tik.TokenTypeCardinalPluralStart},
+		Token{" files are being copied to folder '", tik.TokenTypeLiteral},
 		Token{`{text}`, tik.TokenTypeText},
 		Token{"'", tik.TokenTypeLiteral},
 		Token{"}", tik.TokenTypeCardinalPluralEnd},
 	)
 	f(t, `{# messages from {text}} at {time-medium} on {date-short}`,
-		Token{"{# ", tik.TokenTypeCardinalPluralStart},
-		Token{"messages from ", tik.TokenTypeLiteral},
+		Token{"{#", tik.TokenTypeCardinalPluralStart},
+		Token{" messages from ", tik.TokenTypeLiteral},
 		Token{`{text}`, tik.TokenTypeText},
 		Token{"}", tik.TokenTypeCardinalPluralEnd},
 		Token{" at ", tik.TokenTypeLiteral},
@@ -152,11 +152,45 @@ func TestParse(t *testing.T) {
 		Token{"{date-short}", tik.TokenTypeDateShort},
 	)
 	f(t, `{# new files in}{# folders}`,
-		Token{"{# ", tik.TokenTypeCardinalPluralStart},
-		Token{"new files in", tik.TokenTypeLiteral},
+		Token{"{#", tik.TokenTypeCardinalPluralStart},
+		Token{" new files in", tik.TokenTypeLiteral},
 		Token{"}", tik.TokenTypeCardinalPluralEnd},
-		Token{"{# ", tik.TokenTypeCardinalPluralStart},
-		Token{`folders`, tik.TokenTypeLiteral},
+		Token{"{#", tik.TokenTypeCardinalPluralStart},
+		Token{" folders", tik.TokenTypeLiteral},
+		Token{"}", tik.TokenTypeCardinalPluralEnd},
+	)
+
+	// Blank pluralization (no content after #).
+	f(t, `{#}`,
+		Token{"{#", tik.TokenTypeCardinalPluralStart},
+		Token{"}", tik.TokenTypeCardinalPluralEnd},
+	)
+	f(t, `あなたには{#}件のメッセージがあります。`,
+		Token{"あなたには", tik.TokenTypeLiteral},
+		Token{"{#", tik.TokenTypeCardinalPluralStart},
+		Token{"}", tik.TokenTypeCardinalPluralEnd},
+		Token{"件のメッセージがあります。", tik.TokenTypeLiteral},
+	)
+
+	// Adjacent content (no space after #).
+	f(t, `{#件のメッセージ}`,
+		Token{"{#", tik.TokenTypeCardinalPluralStart},
+		Token{"件のメッセージ", tik.TokenTypeLiteral},
+		Token{"}", tik.TokenTypeCardinalPluralEnd},
+	)
+	f(t, `{#abc}`,
+		Token{"{#", tik.TokenTypeCardinalPluralStart},
+		Token{"abc", tik.TokenTypeLiteral},
+		Token{"}", tik.TokenTypeCardinalPluralEnd},
+	)
+	f(t, `{#026}`,
+		Token{"{#", tik.TokenTypeCardinalPluralStart},
+		Token{"026", tik.TokenTypeLiteral},
+		Token{"}", tik.TokenTypeCardinalPluralEnd},
+	)
+	f(t, `{#_abc}`,
+		Token{"{#", tik.TokenTypeCardinalPluralStart},
+		Token{"_abc", tik.TokenTypeLiteral},
 		Token{"}", tik.TokenTypeCardinalPluralEnd},
 	)
 
@@ -213,6 +247,9 @@ func TestParseErr(t *testing.T) {
 	f(t, tik.ErrTextEmpty, `[context]`)
 	f(t, tik.ErrTextEmpty, `[context]   `)
 	f(t, tik.ErrTextEmpty, "\t\r\n ")
+	f(t, tik.ErrContextNoSeparator, `[context]Text`)
+	f(t, tik.ErrContextNoSeparator, `[c][b]okay`)
+	f(t, tik.ErrContextNoSeparator, `[контекст]Текст`)
 	f(t, tik.ErrContextEmpty, `[] Text`)
 	f(t, tik.ErrContextEmpty, "[]")
 	f(t, tik.ErrContextEmpty, `[  ] Text`)
@@ -228,8 +265,9 @@ func TestParseErr(t *testing.T) {
 	f(t, tik.ErrContextUnclosed, "[")
 	f(t, tik.ErrContextUnclosed, "[abc")
 	f(t, tik.ErrContextUnclosed, "[\t\r\n ")
-	f(t, tik.ErrUknownPlaceholder, `no space after cardinal plural: {#abc}`)
-	f(t, tik.ErrUknownPlaceholder, `unknown placeholder: {#026}`)
+	f(t, tik.ErrCardinalPluralTrailingSpace, `trailing space: {# messages }`)
+	f(t, tik.ErrCardinalPluralTrailingSpace, `trailing space: {#messages }`)
+	f(t, tik.ErrCardinalPluralTrailingSpace, "trailing tab: {# messages\t}")
 	f(t, tik.ErrUknownPlaceholder, `unknown placeholder: {April 21}`)
 	f(t, tik.ErrUknownPlaceholder, `unknown placeholder: {8/16/99}`)
 	f(t, tik.ErrUnclosedPlaceholder, `unexpected EOF: {`)
@@ -237,6 +275,8 @@ func TestParseErr(t *testing.T) {
 	f(t, tik.ErrUnclosedPlaceholder, `unexpected EOF: {{`)
 	f(t, tik.ErrNestedPluralization, `nested pluralization: {# messages in {# folders}}`)
 	f(t, tik.ErrCardinalPluralEmpty, `empty pluralization: {# }`)
+	f(t, tik.ErrCardinalPluralEmpty, "empty pluralization: {#\t}")
+	f(t, tik.ErrCardinalPluralEmpty, `empty pluralization: {#  }`)
 	f(t, tik.ErrDirectiveStartsCardinalPlural,
 		`illegal pluralization: {# {date-full}}`)
 	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {# {date-full}}`)
@@ -251,6 +291,9 @@ func TestParseErr(t *testing.T) {
 	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {# {integer}}`)
 	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {# {number}}`)
 	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal pluralization: {# {ordinal}}`)
+	// No-space variants.
+	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal: {#{integer}}`)
+	f(t, tik.ErrDirectiveStartsCardinalPlural, `illegal: {#{currency}}`)
 }
 
 func TestTokenizeErrMsg(t *testing.T) {
@@ -379,6 +422,7 @@ func TestICUTranslator(t *testing.T) {
 	f(t, "hello world", "[context] hello world")
 	f(t, "hello {var0}", `hello {text}`)
 	f(t, "hello {var0}", `[more context] hello {text}`)
+	f(t, "Привiт, земля", "Привiт, земля")
 	f(t,
 		"today''s lucky number is {var0, number, integer}",
 		`today's lucky number is {integer}`)
@@ -431,6 +475,22 @@ func TestICUTranslator(t *testing.T) {
 		"You have {var0, plural, other {# messages}} "+
 			"in {var1, plural, other {# folders}}.",
 		`You have {# messages} in {# folders}.`)
+
+	// Blank pluralization.
+	f(t,
+		"{var0, plural, other {#}}",
+		`{#}`)
+	f(t,
+		"{var0, plural, other {#}}{var1, plural, other {#}}",
+		`{#}{#}`)
+	f(t,
+		"あなたには{var0, plural, other {#}}件のメッセージがあります。",
+		`あなたには{#}件のメッセージがあります。`)
+
+	// Context
+	f(t, `Message`, `[context] Message`)
+	// Context
+	f(t, `Текст сообщения.`, `[текст контекста] Текст сообщения.`)
 }
 
 func FuzzTokenize(f *testing.F) {

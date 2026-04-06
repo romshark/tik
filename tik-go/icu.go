@@ -132,7 +132,7 @@ func (i *ICUTranslator) TIK2ICUBuf(
 			i.writePositionalPlaceholder(pos, "")
 			i.write(", plural, ")
 			i.write("other {")
-			i.write("# ") // Number placeholder.
+			i.write("#") // Number placeholder.
 
 		case TokenTypeCardinalPluralEnd:
 			i.write("}}") // Finish both other and plural blocks.

@@ -29,7 +29,7 @@ const (
 	TokenTypeNumber  // {number}
 
 	// Pluralization.
-	TokenTypeCardinalPluralStart // `{# `
+	TokenTypeCardinalPluralStart // `{#`
 	TokenTypeCardinalPluralEnd   // `}`
 	TokenTypeOrdinalPlural       // {ordinal}
 
@@ -128,18 +128,20 @@ func (t Token) String(source string) string {
 }
 
 var (
-	ErrTextEmpty                     = errors.New("empty text body")
-	ErrUnexpClosure                  = errors.New("unexpected directive closure")
-	ErrUknownPlaceholder             = errors.New("unknown placeholder")
-	ErrCardinalPluralEmpty           = errors.New("empty cardinal pluralization")
+	ErrTextEmpty                   = errors.New("empty text body")
+	ErrUnexpClosure                = errors.New("unexpected directive closure")
+	ErrUknownPlaceholder           = errors.New("unknown placeholder")
+	ErrCardinalPluralEmpty         = errors.New("empty cardinal pluralization")
+	ErrUnclosedPlaceholder         = errors.New("unclosed placeholder")
+	ErrNestedPluralization         = errors.New("nested pluralization")
+	ErrContextUnclosed             = errors.New("unclosed context")
+	ErrContextEmpty                = errors.New("empty context")
+	ErrContextInvalid              = errors.New("invalid context")
+	ErrContextNoSeparator          = errors.New("missing whitespace after context")
+	ErrCardinalPluralTrailingSpace = errors.New(
+		"cardinal pluralization ends with whitespace")
 	ErrDirectiveStartsCardinalPlural = errors.New(
-		"directive starts a cardinal pluralization",
-	)
-	ErrUnclosedPlaceholder = errors.New("unclosed placeholder")
-	ErrNestedPluralization = errors.New("nested pluralization")
-	ErrContextUnclosed     = errors.New("unclosed context")
-	ErrContextEmpty        = errors.New("empty context")
-	ErrContextInvalid      = errors.New("invalid context")
+		"directive starts a cardinal pluralization")
 )
 
 // Config defines the TIK environment configuration.
@@ -195,7 +197,8 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c Config) (Tokens, ErrPars
 			Type:       TokenTypeContext,
 		})
 
-		// Skip spaces before the start of the text.
+		// At least one whitespace character must separate the context from the body.
+		contextEndOffset := offset
 		for offset < len(s) {
 			l, size := utf8.DecodeRuneInString(s[offset:])
 			if !unicode.IsSpace(l) {
@@ -206,6 +209,9 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c Config) (Tokens, ErrPars
 
 		if offset >= len(s) {
 			return buffer, ErrParser{Index: offset, Err: ErrTextEmpty}
+		}
+		if offset == contextEndOffset {
+			return buffer, ErrParser{Index: offset, Err: ErrContextNoSeparator}
 		}
 	}
 
@@ -271,16 +277,21 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c Config) (Tokens, ErrPars
 					return nil, err(iDir, ErrUnexpClosure)
 				}
 				if literalOffset != iDir {
+					content := s[literalOffset:iDir]
+					if strings.TrimSpace(content) == "" {
+						// Whitespace-only content is invalid.
+						return nil, err(literalOffset, ErrCardinalPluralEmpty)
+					}
+					// Content must not end with whitespace.
+					if l, _ := utf8.DecodeLastRuneInString(content); unicode.IsSpace(l) {
+						return nil, err(iDir-1, ErrCardinalPluralTrailingSpace)
+					}
 					// End of string literal.
 					buffer = append(buffer, Token{
 						IndexStart: literalOffset,
 						IndexEnd:   iDir,
 						Type:       TokenTypeLiteral,
 					})
-				}
-				if t := buffer[len(buffer)-1]; t.Type == TokenTypeCardinalPluralStart {
-					// Cardinal plural blocks must contain at least 1 token.
-					return nil, err(t.IndexStart, ErrCardinalPluralEmpty)
 				}
 				buffer = append(buffer, Token{
 					IndexStart: iDir,
@@ -327,21 +338,32 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c Config) (Tokens, ErrPars
 				return nil, err(iDir, ErrNestedPluralization)
 			}
 			inPluralDirective = true
-			// +2 for the '{' and the space after.
+			// +1 for the '{'.
 			buffer = append(buffer, Token{
 				IndexStart: iDir,
-				IndexEnd:   iDir + ln + 2,
+				IndexEnd:   iDir + ln + 1,
 				Type:       TokenTypeCardinalPluralStart,
 			})
-			offset = iDir + ln + 2 // Skip only the plural block start.
+			offset = iDir + ln + 1 // Skip only the plural block start.
 			continue
 		case 0:
 			return nil, err(iDir, ErrUknownPlaceholder)
 		}
 
-		if b := buffer; len(b) > 0 && b[len(b)-1].Type == TokenTypeCardinalPluralStart {
-			// Cardinal pluralization block must not begin with another directive.
-			return nil, err(iDir, ErrDirectiveStartsCardinalPlural)
+		if b := buffer; len(b) > 0 && inPluralDirective {
+			last := b[len(b)-1]
+			startsPlural := last.Type == TokenTypeCardinalPluralStart
+			if !startsPlural && last.Type == TokenTypeLiteral && len(b) > 1 &&
+				b[len(b)-2].Type == TokenTypeCardinalPluralStart &&
+				strings.TrimSpace(s[last.IndexStart:last.IndexEnd]) == "" {
+				// A whitespace-only literal between plural start and directive
+				// still counts as "starts with a directive".
+				startsPlural = true
+			}
+			if startsPlural {
+				// Cardinal pluralization block must not begin with another directive.
+				return nil, err(iDir, ErrDirectiveStartsCardinalPlural)
+			}
 		}
 		buffer = append(buffer, Token{
 			IndexStart: iDir,
@@ -384,10 +406,6 @@ func match(s string) (tokenType TokenType, length int) {
 		return TokenTypeCurrency, len("currency")
 	}
 	if strings.HasPrefix(s, "#") {
-		if l, _ := utf8.DecodeRuneInString(s[len("#"):]); !unicode.IsSpace(l) {
-			// A whitespace must follow the cardinal plural block start.
-			return 0, 0
-		}
 		return TokenTypeCardinalPluralStart, len("#")
 	}
 	return 0, 0

@@ -35,8 +35,8 @@ func ExampleParser() {
 	// TOKENS: 9
 	// 0-6: "{name}" (text with gender)
 	// 6-11: " had " (literal)
-	// 11-14: "{# " (pluralization)
-	// 14-22: "messages" (literal)
+	// 11-13: "{#" (pluralization)
+	// 13-22: " messages" (literal)
 	// 22-23: "}" (pluralization block end)
 	// 23-27: " on " (literal)
 	// 27-40: "{date-medium}" (date medium)
