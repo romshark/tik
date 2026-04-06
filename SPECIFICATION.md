@@ -286,7 +286,6 @@ The translated ICU message for locale `uk` would be:
 | `{integer}`     | `{var0, number, integer}`           |
 | `{# ...}`       | `{var0, plural, other{# ...}}`      |
 | `{ordinal}`     | `{var0, selectordinal, other{#th}}` |
-| `{name}`        | `{var0, select, other{...}}`        |
 | `{date-full}`   | `{var0, date, full}`                |
 | `{date-long}`   | `{var0, date, long}`                |
 | `{date-medium}` | `{var0, date, medium}`              |
@@ -294,7 +293,6 @@ The translated ICU message for locale `uk` would be:
 | `{time-full}`   | `{var0, time, full}`                |
 | `{time-long}`   | `{var0, time, long}`                |
 | `{time-medium}` | `{var0, time, medium}`              |
-| `{time-short}`  | `{var0, time, short}`               |
 | `{time-short}`  | `{var0, time, short}`               |
 | `{currency}`    | `{var0, number, ::currency/auto}`   |
 
