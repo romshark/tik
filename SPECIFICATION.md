@@ -35,7 +35,7 @@ A TIK consists of an optional context followed by a required text body. Unicode 
 
 ### Context
 
-The TIK context is an optional namespace used to disambiguate message keys. It is not part of the message’s text body and hence must not be included in the generated ICU message. If a TIK starts with an opening square bracket `[` then everything up to the next closing square bracket `]` is treated as the context.
+The TIK context is an optional namespace used to disambiguate message keys. It is not part of the message’s text body and hence must not be included in the generated ICU message. If a TIK starts with an opening square bracket `[`, then everything up to the next closing square bracket `]` is treated as the context. If no closing `]` is found, the TIK is invalid.
 
 The TIK context is distinct from the message description and is not interchangeable with it.
 
@@ -58,6 +58,12 @@ Curly braces `{` `}`, square brackets `[` `]` and reverse-solidus `\` are not al
 
 ```
 [invalid\context] Text.
+```
+
+An opening `[` without a matching `]` is invalid:
+
+```
+[unclosed context Text.
 ```
 
 The context must not be empty:
