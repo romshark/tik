@@ -10,12 +10,13 @@ This document is the normative specification for the Textual Internationalizatio
 
 - [TIK Syntax Rules](#tik-syntax-rules)
   - [Context](#context)
-    - [Context Invariants](#context-invariants)
+    - [Context - Syntactic Invariants](#context---syntactic-invariants)
+    - [Context Uniqueness](#context-uniqueness)
     - [Context - Example](#context---example)
   - [Body](#body)
   - [Placeholders](#placeholders)
   - [Cardinal Pluralization](#cardinal-pluralization)
-    - [Cardinal Pluralization Invariants](#cardinal-pluralization-invariants)
+    - [Cardinal Pluralization - Syntactic Invariants](#cardinal-pluralization---syntactic-invariants)
   - [String Placeholders](#string-placeholders)
     - [String Placeholders with Gender](#string-placeholders-with-gender)
 - [ICU Encoding](#icu-encoding)
@@ -43,7 +44,7 @@ The TIK context is distinct from the message description and is not interchangea
 reader.String(`[context] Text.`)
 ```
 
-#### Context Invariants
+#### Context - Syntactic Invariants
 
 Curly braces `{` `}`, square brackets `[` `]` and reverse-solidus `\` are not allowed inside the context:
 
@@ -69,13 +70,15 @@ The context must not be empty:
 [] This context is invalid.
 ```
 
-#### Context - Example
+#### Context Uniqueness
 
-TIKs are unique message keys within a domain. The same TIK must not be declared more than once in the source code of a domain unless every occurrence shares the exact same context. TIK processors enforce this by raising a build-time error for any redeclaration, so unintended collisions cannot silently collapse into a single ICU message and lose translation information.
+The same TIK must not be declared more than once in the source code of a [domain](#domains) unless every occurrence shares the exact same [context](#context) and body, in which case all occurrences resolve to a single shared ICU message. TIK processors enforce this by raising a build-time error for any non-identical redeclaration.
+
+#### Context - Example
 
 Human language is ambiguous and context-dependent - the same original message text can have different meanings depending on usage. In such cases, a distinct context must be added to disambiguate each occurrence.
 
-Example: the word "Order" can mean a sort order, a purchase-order action, or a customer order, and many languages require different translations for each meaning:
+The word "Order" can mean a sort order, a purchase-order action, or a customer order, and many languages require different translations for each meaning:
 
 | Meaning           | German          | French        | Russian        |
 | :---------------- | :-------------- | :------------ | :------------- |
@@ -83,7 +86,7 @@ Example: the word "Order" can mean a sort order, a purchase-order action, or a c
 | place a purchase  | `"Bestellen"`   | `"Commander"` | `"Заказать"`   |
 | a customer order  | `"Bestellung"`  | `"Commande"`  | `"Заказ"`      |
 
-The following source code therefore produces build-time errors because the TIK `Order` is declared three times in the same domain without a disambiguating context:
+The following source code produces build-time errors because the TIK `Order` is declared three times in the same domain without a disambiguating context:
 
 ```html
 <!-- orders_page.html -->
@@ -92,64 +95,31 @@ The following source code therefore produces build-time errors because the TIK `
     <thead>
       <tr>
         <th>{ i18n.Text(`Name`) }</th>
-        <th>{
-          // "order" as a sort-order column header.  <--- HERE
-          i18n.Text(`Order`)
-        }</th>
+        <th>{ i18n.Text(`Order`) }</th>       <!-- HERE -->
       </tr>
     </thead>
-    <!-- ... -->
   </table>
-  <button>{
-    // "order" as in "place a purchase order".  <--- HERE
-    i18n.Text(`Order`)
-  }</button>
+  <button>{ i18n.Text(`Order`) }</button>     <!-- HERE -->
 </body>
 ```
 
 ```html
 <!-- confirmation_page.html -->
 <body>
-  <h1>{
-    // "order" as in "a customer order".  <--- HERE
-    i18n.Text(`Order`)
-  }</h1>
+  <h1>{ i18n.Text(`Order`) }</h1>             <!-- HERE -->
   <p>{ i18n.Text(`Dispatched on {date-short}.`) }</p>
 </body>
 ```
 
-Each occurrence must therefore carry its own distinct context:
+Each occurrence must carry its own distinct context:
 
-```go
-// "order" as a sort-order column header.
-i18n.Text(`[table sort column] Order`)
+```
+[table sort column] Order
+[order submission] Order
+[order confirmation] Order
 ```
 
-```go
-// "order" as in "place a purchase order".
-i18n.Text(`[order submission] Order`)
-```
-
-```go
-// "order" as in "a customer order".
-i18n.Text(`[order confirmation] Order`)
-```
-
-Each of the resulting TIKs defines a distinct context over the shared text body `"Order"` and produces a separate ICU message.
-
-Conversely, the same TIK may appear any number of times within a domain as long as every occurrence shares the exact same context and body, since all such occurrences refer to the same message. For example, the order-submission button may be placed on both a cart page and a checkout page:
-
-```html
-<!-- cart_page.html -->
-<button>{ i18n.Text(`[order submission] Order`) }</button>
-```
-
-```html
-<!-- checkout_page.html -->
-<button>{ i18n.Text(`[order submission] Order`) }</button>
-```
-
-Both occurrences resolve to the same TIK and therefore to a single shared ICU message.
+Each resulting TIK produces a separate ICU message. Conversely, `[order submission] Order` may appear on both a cart page and a checkout page - both occurrences resolve to the same TIK and a single shared ICU message.
 
 ### Body
 
@@ -181,7 +151,7 @@ Today {name} earned {currency} for completing {# tasks} in section '{text}' at {
 
 ### Cardinal Pluralization
 
-A pluralization statement `{# ...}` begins with `{# ` and ends with `}`. The `#` denotes the placeholder for the actual number value (if any). The contents `...` may include anything that is not explicitly forbidden (see [invariants](#cardinal-pluralization-invariants)).
+A pluralization statement `{# ...}` begins with `{# ` and ends with `}`. The `#` denotes the placeholder for the actual number value (if any). The contents `...` may include anything that is not explicitly forbidden (see [invariants](#cardinal-pluralization---syntactic-invariants)).
 
 The contents may contain any number of placeholders:
 
@@ -193,7 +163,7 @@ You had {# messages marked as {text} at {time-long}}
 You had {# tasks} assigned at {time-short}.
 ```
 
-#### Cardinal Pluralization Invariants
+#### Cardinal Pluralization - Syntactic Invariants
 
 1. Plural statements must not begin or end with a Unicode whitespace character (as defined by [Unicode](https://unicode.org/charts/collation/chart_Whitespace.html)):
 
