@@ -46,3 +46,22 @@ func ExampleParser() {
 	// ICU Message:
 	// {var0} had {var1, plural, other {# messages}} on {var2, date, medium} at {var3, time, full}
 }
+
+func ExampleParser_error() {
+	parser := tik.NewParser(tik.DefaultConfig)
+
+	inputs := []string{
+		`{unknown}`,
+		`[context]No separator`,
+		`{# messages }`,
+	}
+	for _, input := range inputs {
+		_, err := parser.Parse(input)
+		fmt.Println(err)
+	}
+
+	// Output:
+	// at index 0: unknown placeholder
+	// at index 9: missing whitespace after context
+	// at index 11: cardinal pluralization ends with whitespace
+}

@@ -157,7 +157,7 @@ type Tokenizer struct{}
 
 // Tokenize appends all tokens from input to buffer and returns the buffer.
 // If c == nil the default configuration applies.
-func (t *Tokenizer) Tokenize(buffer Tokens, s string, c Config) (Tokens, ErrParser) {
+func (t *Tokenizer) Tokenize(buffer Tokens, s string, c Config) (Tokens, ParseError) {
 	inPluralDirective := false
 	offset := 0
 
@@ -179,16 +179,16 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c Config) (Tokens, ErrPars
 		// TIK has context.
 		contextEnd := strings.IndexByte(s[offset:], ']')
 		if contextEnd == -1 {
-			return buffer, ErrParser{Err: ErrContextUnclosed}
+			return buffer, err(start, ErrContextUnclosed)
 		}
 
 		context := s[offset : offset+contextEnd]
 		if strings.TrimSpace(context) == "" {
-			return buffer, ErrParser{Err: ErrContextEmpty}
+			return buffer, err(start, ErrContextEmpty)
 		}
 		if strings.ContainsAny(context, "{}[]\\") {
 			// Contains either of: { } [ ] \
-			return buffer, ErrParser{Err: ErrContextInvalid}
+			return buffer, err(start, ErrContextInvalid)
 		}
 		offset += contextEnd + 1
 		buffer = append(buffer, Token{
@@ -208,10 +208,10 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c Config) (Tokens, ErrPars
 		}
 
 		if offset >= len(s) {
-			return buffer, ErrParser{Index: offset, Err: ErrTextEmpty}
+			return buffer, err(offset, ErrTextEmpty)
 		}
 		if offset == contextEndOffset {
-			return buffer, ErrParser{Index: offset, Err: ErrContextNoSeparator}
+			return buffer, err(offset, ErrContextNoSeparator)
 		}
 	}
 
@@ -233,7 +233,7 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c Config) (Tokens, ErrPars
 				IndexStart: offset,
 				IndexEnd:   indexEnd,
 				Type:       TokenTypeLiteral,
-			}), ErrParser{}
+			}), ParseError{}
 		}
 	}
 
@@ -262,7 +262,7 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c Config) (Tokens, ErrPars
 					})
 				}
 				// End of TIK.
-				return buffer, ErrParser{}
+				return buffer, ParseError{}
 			}
 
 			iDir += offset
@@ -460,30 +460,30 @@ func NewParser(conf Config) *Parser {
 	}
 }
 
-type ErrParser struct {
+type ParseError struct {
 	Index int
 	Err   error
 }
 
-func (e ErrParser) Error() string {
+func (e ParseError) Error() string {
 	return fmt.Sprintf("at index %d: %v", e.Index, e.Err)
 }
 
-func (e ErrParser) Unwrap() error { return e.Err }
+func (e ParseError) Unwrap() error { return e.Err }
 
-// ParseFn is similar to Parse but avoid copying the token buffer
+// ParseFn is similar to Parse but avoids copying the token buffer
 // and instead uses the original buffer of the parser in the tik provided to fn.
 //
 // WARNING: Do not alias and use the token slice once fn returns!
-func (p *Parser) ParseFn(input string, fn func(tik TIK)) ErrParser {
+func (p *Parser) ParseFn(input string, fn func(tik TIK)) ParseError {
 	p.tokBuf = p.tokBuf[:0] // Reset buffer.
-	var err ErrParser
+	var err ParseError
 	p.tokBuf, err = p.t.Tokenize(p.tokBuf, input, p.conf)
 	if err.Err != nil {
 		return err
 	}
 	fn(TIK{Raw: input, Tokens: p.tokBuf})
-	return ErrParser{}
+	return ParseError{}
 }
 
 // Parse parses input and returns a validated TIK, otherwise returns an error.
@@ -502,6 +502,6 @@ func (p *Parser) Parse(input string) (tik TIK, err error) {
 	return tik, nil
 }
 
-func err(index int, err error) ErrParser {
-	return ErrParser{Index: index, Err: err}
+func err(index int, err error) ParseError {
+	return ParseError{Index: index, Err: err}
 }
