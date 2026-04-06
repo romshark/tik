@@ -305,7 +305,7 @@ The `...` stands for any content, meaning that the following TIK:
 Encodes to the following ICU:
 
 ```
-`{var0, plural, other{# messages}} in {var0, plural, other{# groups}}`
+{var0, plural, other{# messages}} in {var0, plural, other{# groups}}
 ```
 
 ### Positional Argument Mapping
