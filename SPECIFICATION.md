@@ -325,7 +325,7 @@ By { var0, time, short }, { var1_gender, select,
 } {var1} received {var2, plural,
   one {# email}
   other {# emails}
-}. 
+}.
 ```
 
 Usage example in Go:
