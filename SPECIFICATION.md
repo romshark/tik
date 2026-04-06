@@ -318,7 +318,7 @@ All placeholders are mapped positionally, meaning that the order of occurrence i
 
 All placeholders use the `var` prefix with a following positional index.
 
-generated ICU:
+Generated ICU:
 ```
 By { var0, time, short }, { var1_gender, select,
   other { {var1} }
