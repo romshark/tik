@@ -165,19 +165,19 @@ Today {name} earned {currency} for completing {# tasks} in section '{text}' at {
 
 - `{text}` [Text placeholder](#string-placeholders)
 - `{name}` [Text placeholder with gender information](#string-placeholders-with-gender)
-- `{integer}` [Integer](#icu-encoding---integer)
-- `{number}` [Number](#icu-encoding---number)
-- `{# ...}` [Cardinal pluralization](#icu-encoding---cardinal-pluralization)
-- `{ordinal}` [Ordinal pluralization](#icu-encoding---ordinal-pluralization)
-- `{date-full}` [Date placeholder](#icu-encoding---datetime-placeholders)
-- `{date-long}` [Date placeholder](#icu-encoding---datetime-placeholders)
-- `{date-medium}` [Date placeholder](#icu-encoding---datetime-placeholders)
-- `{date-short}` [Date placeholder](#icu-encoding---datetime-placeholders)
-- `{time-full}` [Time placeholder](#icu-encoding---datetime-placeholders)
-- `{time-long}` [Time placeholder](#icu-encoding---datetime-placeholders)
-- `{time-medium}` [Time placeholder](#icu-encoding---datetime-placeholders)
-- `{time-short}` [Time placeholder](#icu-encoding---datetime-placeholders)
-- `{currency}` [Currency](#icu-encoding---currency)
+- `{integer}` Integer
+- `{number}` Number
+- `{# ...}` [Cardinal pluralization](#cardinal-pluralization)
+- `{ordinal}` Ordinal pluralization
+- `{date-full}` Date placeholder
+- `{date-long}` Date placeholder
+- `{date-medium}` Date placeholder
+- `{date-short}` Date placeholder
+- `{time-full}` Time placeholder
+- `{time-long}` Time placeholder
+- `{time-medium}` Time placeholder
+- `{time-short}` Time placeholder
+- `{currency}` Currency
 
 ### Cardinal Pluralization
 
