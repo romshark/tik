@@ -130,7 +130,7 @@ func (t Token) String(source string) string {
 var (
 	ErrTextEmpty                   = errors.New("empty text body")
 	ErrUnexpClosure                = errors.New("unexpected directive closure")
-	ErrUknownPlaceholder           = errors.New("unknown placeholder")
+	ErrUnknownPlaceholder          = errors.New("unknown placeholder")
 	ErrCardinalPluralEmpty         = errors.New("empty cardinal pluralization")
 	ErrUnclosedPlaceholder         = errors.New("unclosed placeholder")
 	ErrNestedPluralization         = errors.New("nested pluralization")
@@ -347,7 +347,7 @@ func (t *Tokenizer) Tokenize(buffer Tokens, s string, c Config) (Tokens, ParseEr
 			offset = iDir + ln + 1 // Skip only the plural block start.
 			continue
 		case 0:
-			return nil, err(iDir, ErrUknownPlaceholder)
+			return nil, err(iDir, ErrUnknownPlaceholder)
 		}
 
 		if b := buffer; len(b) > 0 && inPluralDirective {
