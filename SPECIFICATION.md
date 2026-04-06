@@ -299,13 +299,13 @@ The translated ICU message for locale `uk` would be:
 The `...` stands for any content, meaning that the following TIK:
 
 ```
-{# messages in {# groups}}
+{# messages} in {# groups}
 ```
 
 Encodes to the following ICU:
 
 ```
-`{var0, plural, other{# messages in {var0, plural, other{# groups}}}}`
+`{var0, plural, other{# messages}} in {var0, plural, other{# groups}}`
 ```
 
 ### Positional Argument Mapping
