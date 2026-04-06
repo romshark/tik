@@ -331,7 +331,7 @@ By { var0, time, short }, { var1_gender, select,
 Usage example in Go:
 
 ```go
-reader.String(`[report] By {time-short}, {text} received {# emails}.`,
+reader.String(`[report] By {time-short}, {name} received {# emails}.`,
 	time.Now(), "Max", len(emailsReceived))
 ```
 
