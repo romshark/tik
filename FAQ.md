@@ -10,4 +10,4 @@ Preloading reveals the message in the IDE but does not enable static analysis or
 
 ## Could Fluent be used instead of ICU?
 
-[Fluent](https://projectfluent.org/) is a newer alternative to [ICU MessageFormat](https://github.com/projectfluent/fluent/wiki/Fluent-and-ICU-MessageFormat) but ICU was selected due to wider adoption.
+[Fluent](https://projectfluent.org/) is a newer alternative to [ICU MessageFormat](https://github.com/projectfluent/fluent/wiki/Fluent-and-ICU-MessageFormat), but ICU was selected due to wider adoption.

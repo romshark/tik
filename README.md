@@ -3,7 +3,7 @@
 "TIK" is an abbreviation for "Textual Internationalization Key".
 A TIK is simultaneously the source of truth for translation and a unique message identifier within a domain.
 
-TIKs make translation keys human-readable by closely reflecting the actual text shown to the end users in the source code. This improves context for translators, enables programmatic generation of
+TIKs make translation keys human-readable by closely reflecting, in the source code, the actual text shown to end users. This improves context for translators, enables programmatic generation of
 [ICU messages](https://unicode-org.github.io/icu/userguide/format_parse/messages/), and supports better automation and CI/CD integration.
 
 TIK enables more efficient workflows by integrating TIK processors with CI and LLMs to give developers immediate feedback on i18n issues before they hit production. It reduces costs by minimizing reliance on human translators and eases pressure on them by offloading routine tasks, allowing experts to focus more on quality assurance.
@@ -18,6 +18,10 @@ TIP: Check out the official [TIK cheatsheet](https://romshark.github.io/tik-chea
 
 - [Specification](#specification)
 - [Problem](#problem)
+  - [Problem: Translators often work with vague context, leading to broken translations.](#problem-translators-often-work-with-vague-context-leading-to-broken-translations)
+  - [Problem: Messages get over-abstracted for reuse, breaking grammar and structure in translations.](#problem-messages-get-over-abstracted-for-reuse-breaking-grammar-and-structure-in-translations)
+  - [Problem: Automation is limited by missing metadata and pipelines developers lack control over.](#problem-automation-is-limited-by-missing-metadata-and-pipelines-developers-lack-control-over)
+  - [Problem: The feedback loop is slow, brittle, and disconnected from CI/CD.](#problem-the-feedback-loop-is-slow-brittle-and-disconnected-from-cicd)
   - [Key-based Translation](#key-based-translation)
   - [ICU Messages](#icu-messages)
 - [Limitations](#limitations)
@@ -32,13 +36,24 @@ The normative rules for TIK syntax, ICU encoding, and configuration guidelines a
 
 Internationalization (i18n) and localization (l10n) are hard — and most developers avoid them. Supporting multiple languages and regions demands significant effort, expensive tooling, complex error-prone workflows with slow feedback loops, and discipline that many teams are unable to take on.
 
-- Translators often work with vague context, leading to broken translations.
-- Messages get over-abstracted for reuse breaking grammar and structure in many languages.
-- Automation is limited by missing metadata and pipelines developers lack control over.
-- The feedback loop is slow, brittle, and disconnected from CI/CD.
+Poor i18n/l10n signals lack of polish, undermines user trust, alienates global audiences and subsequently blocks adoption and growth.
 
-The result is missing or poor i18n and l10n that signals lack of polish, undermines
-user trust, alienates global audiences and subsequently blocks adoption and growth.
+
+### Problem: Translators often work with vague context, leading to broken translations.
+
+For example, a lone button labeled `Book` gives the translator no clue whether it means the noun (something you read) or the verb (to reserve a room) - different words in most languages - so a translator who can't see how it's used can easily pick the wrong one.
+
+### Problem: Messages get over-abstracted for reuse, breaking grammar and structure in translations.
+
+For example, a phrase like `red car` might be split into a reusable `red` fragment and a reusable `car` fragment and concatenated in code as `red` + `car`. This reads fine in English, but the translator only ever sees the two pieces in that fixed order — so in French, where the adjective follows the noun (`voiture rouge`), the concatenation is stuck producing the wrong order `rouge voiture`.
+
+### Problem: Automation is limited by missing metadata and pipelines developers lack control over.
+
+For example, a message like `{user} shared a photo` looks complete in English, but a Russian translation needs to know the sharer's gender — `поделился` for a man, `поделилась` for a woman. If the `{user}` argument passed to the translation reader is just a plain string with no gender attached, no amount of tooling can produce grammatically correct Russian: the program is simply missing the input it needs.
+
+### Problem: The feedback loop is slow, brittle, and disconnected from CI/CD.
+
+For example, the code passes two arguments but the translated German string references a third placeholder `{count}` that was never supplied. Because translations are just strings loaded at runtime, CI stays green and the build ships — the bug only surfaces as a crash, or worse: a raw `{count}` on screen, for German users in production.
 
 ### Key-based Translation
 
@@ -86,8 +101,8 @@ With TIK, developers write simple, readable keys and still get the full power of
 
   - ⚠️ **Learning Curve**: Developers must learn the TIK syntax and conventions.
   - ⚠️ **Source of Truth in Code**: The TIK in the source code is the source of truth for every translation derived from it. This keeps translations from drifting away from the original intent, but it also means translators cannot fix a poor source TIK directly. Corrections must flow back to developers and be applied in code.
-  - ⚠️ **Language-specific Tooling Requirements**: A dedicated extractor tool (referred to as TIK processor through this document) is required to parse and process TIK keys from source code to eventually produce ICU messages for translation.
-  - ⚠️ **Source Language Translation**: TIKs with branching (such as plural or gender-dependent forms) cannot produce _complete_ ICU messages and must pass through the translation pipeline too. The TIK only encodes the `other` cases.
+  - ⚠️ **Language-specific Tooling Requirements**: A dedicated extractor tool (referred to as a TIK processor throughout this document) is required to parse and process TIK keys from source code to eventually produce ICU messages for translation.
+  - ⚠️ **Source Language Translation**: TIKs with branching (such as plural or gender-dependent forms) cannot produce _complete_ ICU messages and must pass through the translation pipeline too. The TIK only encodes the `other` case.
   - ⚠️ **Static Analysis Scope**: Duplicate-TIK detection is limited to what the processor can see in the source code. If a TIK is wrapped in a helper function and reused across call sites, the processor observes only a single declaration and cannot warn about unintended reuse of the returned message in conflicting contexts.
 
 ## FAQ
