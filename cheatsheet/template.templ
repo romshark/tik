@@ -2,8 +2,8 @@ package main
 
 type Section struct {
 	ID, Header, Description string
-	ExampleTIK, ICU string
-	Examples []Example
+	ExampleTIK, ICU         string
+	Examples                []Example
 }
 
 type Example struct {
@@ -12,16 +12,16 @@ type Example struct {
 }
 
 templ templatePage(title string, sections []Section) {
-    <!DOCTYPE html>
+	<!DOCTYPE html>
 	<html>
-	<head>
-		<title>{ title }</title>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<meta name="description" content="A textual internationalization key (TIK) cheatsheet." />
-		<meta name="keywords" content="i18n, TIK, cheatsheet" />
-		<meta name="author" content="Roman Scharkov (roman.scharkov@gmail.com)" />
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<style>
+		<head>
+			<title>{ title }</title>
+			<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+			<meta name="description" content="A textual internationalization key (TIK) cheatsheet."/>
+			<meta name="keywords" content="i18n, TIK, cheatsheet"/>
+			<meta name="author" content="Roman Scharkov (roman.scharkov@gmail.com)"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<style>
 			body {
 				font-family: sans-serif;
 				max-width: 900px;
@@ -111,7 +111,6 @@ templ templatePage(title string, sections []Section) {
 
 			.labeled {
 				display: inline-flex;
-				align-items: baseline;
 				padding-bottom: .3rem;
 				padding-top: .3rem;
 				font-size: 0;
@@ -193,32 +192,34 @@ templ templatePage(title string, sections []Section) {
 				}
 			}
 		</style>
-	</head>
-
-	<body>
-		<h1>TIK Cheatsheet</h1>
-		This cheatsheet will help you write
-		<a target="_blank" href=" https://github.com/romshark/tik">
-			textual internationalization keys (TIKs)
-		</a>.
-
-		for _, section := range sections {
-			@templateSection(section)
-		}
-
-		<footer>
-			Also see <a target="_blank" href="https://unicode-org.github.io/icu/userguide/format_parse/messages/">ICU Message Format</a>
-		</footer>
-	</body>
-
+		</head>
+		<body>
+			<h1>TIK Cheatsheet</h1>
+			This cheatsheet will help you write
+			<a target="_blank" href="https://github.com/romshark/tik">
+				textual internationalization keys (TIKs)
+			</a>.
+			for _, section := range sections {
+				@templateSection(section)
+			}
+			<footer>
+				Also see <a target="_blank" href="https://unicode-org.github.io/icu/userguide/format_parse/messages/">ICU Message Format</a>
+			</footer>
+		</body>
 	</html>
 }
 
 templ templateSection(section Section) {
 	<section aria-labelledby={ section.ID }>
 		<div class="section-header">
-			<h2 id={ section.ID }><code>@templ.Raw(section.Header)</code></h2>
-			<p> @templ.Raw(section.Description) </p>
+			<h2 id={ section.ID }>
+				<code>
+					@templ.Raw(section.Header)
+				</code>
+			</h2>
+			<p>
+				@templ.Raw(section.Description)
+			</p>
 		</div>
 		<div class="section-body">
 			<table>
