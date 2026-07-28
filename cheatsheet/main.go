@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
@@ -13,15 +14,6 @@ func main() {
 
 	fOutFile := flag.String("o", defaultOutPath, "output file path")
 	flag.Parse()
-
-	dir := filepath.Dir(*fOutFile)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		panic(err)
-	}
-	of, err := os.OpenFile(*fOutFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
-	if err != nil {
-		panic(err)
-	}
 
 	p := templatePage("TIK Cheatsheet", []Section{
 		{
@@ -294,7 +286,16 @@ func main() {
 			},
 		},
 	})
-	if err := p.Render(context.Background(), of); err != nil {
+	// Render to memory first so a failure can't leave a truncated file behind.
+	var buf bytes.Buffer
+	if err := p.Render(context.Background(), &buf); err != nil {
+		panic(err)
+	}
+
+	if err := os.MkdirAll(filepath.Dir(*fOutFile), 0o755); err != nil {
+		panic(err)
+	}
+	if err := os.WriteFile(*fOutFile, buf.Bytes(), 0o644); err != nil {
 		panic(err)
 	}
 	fmt.Println("written to", *fOutFile)
