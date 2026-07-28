@@ -29,15 +29,15 @@ func main() {
 			Header:      `{text}`,
 			Description: `Represents an arbitrary text value.`,
 			ExampleTIK:  `Avoid comparing {text} to {text}.`,
-			ICU:         `Avoid comparing {var0} to {var1}`,
+			ICU:         `Avoid comparing {var0} to {var1}.`,
 			Examples: []Example{
 				{
 					Data: `var0="cats 🐈" var1="dogs 🐕"`,
-					Text: `Avoid comparing cats 🐈 to dogs 🐕`,
+					Text: `Avoid comparing cats 🐈 to dogs 🐕.`,
 				},
 				{
 					Data: `var0="bananas" var1="anything really"`,
-					Text: `Avoid comparing bananas to anything really`,
+					Text: `Avoid comparing bananas to anything really.`,
 				},
 			},
 		},
@@ -108,15 +108,15 @@ func main() {
 					href="https://www.unicode.org/cldr/charts/47/supplemental/language_plural_rules.html">CLDR
 					plural form</a>.`,
 			ExampleTIK: `You have {# unread messages} in {# groups}.`,
-			ICU:        `You have {var0, plural, one{# unread message} other{# unread messages}} in {var1, plural, one{# group} other{# groups}}`,
+			ICU:        `You have {var0, plural, one{# unread message} other{# unread messages}} in {var1, plural, one{# group} other{# groups}}.`,
 			Examples: []Example{
 				{
 					Data: `var0=4 var1=3`,
-					Text: `You have 4 unread messages in 3 groups`,
+					Text: `You have 4 unread messages in 3 groups.`,
 				},
 				{
 					Data: `var0=1 var1=1`,
-					Text: `You have 1 unread message in 1 group`,
+					Text: `You have 1 unread message in 1 group.`,
 				},
 			},
 		},
