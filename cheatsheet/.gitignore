@@ -8,6 +8,9 @@
 *.so
 *.dylib
 
+# Binary produced by `go build` in the repository root
+/tik-cheatsheet
+
 # Test binary, built with `go test -c`
 *.test
 
