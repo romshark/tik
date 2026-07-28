@@ -272,7 +272,7 @@ func main() {
 			Examples: []Example{
 				{
 					Data: `var0="2025-01-26T16:20:50Z"`,
-					Text: `It's 4:20:50 pm UTC`,
+					Text: `It's 4:20:50 pm Coordinated Universal Time`,
 				},
 				{
 					Data: `var0="1998-09-02T20:20:50-07:00"`,
