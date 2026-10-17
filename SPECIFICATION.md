@@ -368,8 +368,12 @@ By { var0, time, short }, { var1_gender, select,
 Usage example in Go:
 
 ```go
-reader.String(`[report] By {time-short}, {name} received {# emails}.`,
-	time.Now(), "Max", len(emailsReceived))
+reader.String(
+	`[report] By {time-short}, {name} received {# emails}.`,
+	time.Now(),
+	tokibundle.String{Value: "Max", Gender: tokibundle.GenderMale},
+	len(emailsReceived),
+)
 ```
 
 ## Configuration Guidelines
