@@ -6,14 +6,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Go 1.26.1
-        uses: actions/setup-go@v6
+      - name: Install Go 1.27.2
+        uses: actions/setup-go@v7
         with:
-          go-version: "1.26.1"
+          go-version: "1.27.2"
           check-latest: true
           cache-dependency-path: tik-go/go.sum
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Test
       - name: Run tests with coverage
@@ -21,7 +21,7 @@ jobs:
         run: go test -covermode=atomic -coverprofile=coverage.out ./...
 
       - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@v2.3.6
+        uses: coverallsapp/github-action@v2.3.8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: tik-go/coverage.out
