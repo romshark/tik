@@ -308,9 +308,9 @@ The translated ICU message for locale `uk` would be:
 
 ```
 Розпочалася подорож, {var0_gender, select,
-  female { {var0} вирушила на корабель. }
-  male { {var0} вирушив на корабель. }
-  other { {var0} вирушило на корабель. }
+  female {{var0} вирушила на корабель.}
+  male {{var0} вирушив на корабель.}
+  other {{var0} вирушило на корабель.}
 }
 ```
 
@@ -359,9 +359,8 @@ All placeholders use the `var` prefix with a following positional index.
 Generated ICU:
 ```
 By { var0, time, short }, { var1_gender, select,
-  other { {var1} }
-} {var1} received {var2, plural,
-  one {# email}
+  other {{var1}}
+} received {var2, plural,
   other {# emails}
 }.
 ```
