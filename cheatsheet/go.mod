@@ -1,4 +1,4 @@
-module github.com/romshark/tik-cheatsheet
+module github.com/romshark/tik/cheatsheet
 
 go 1.27.2
 

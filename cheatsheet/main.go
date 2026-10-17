@@ -3,19 +3,34 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
+
+	"github.com/a-h/templ"
 )
 
 func main() {
-	defaultOutPath := filepath.Join("dist", "index.html")
-
-	fOutFile := flag.String("o", defaultOutPath, "output file path")
+	fSiteDir := flag.String("o", filepath.Join("..", "site"), "site directory to write the pages into")
+	fServe := flag.String("serve", "", "serve the site on this address instead of writing the pages")
+	fSpecVersion := flag.String("spec-version", "", "spec release to link to (default: latest v* git tag)")
 	flag.Parse()
 
-	p := templatePage("TIK Cheatsheet", []Section{
+	specVersion := *fSpecVersion
+	if specVersion == "" {
+		var err error
+		if specVersion, err = latestSpecVersion(); err != nil {
+			panic(err)
+		}
+	}
+
+	landing := landingPage(specVersion)
+	cheatsheet := templatePage("TIK Cheatsheet", []Section{
 		{
 			ID:          "text",
 			Header:      `{text}`,
@@ -286,17 +301,45 @@ func main() {
 			},
 		},
 	})
-	// Render to memory first so a failure can't leave a truncated file behind.
-	var buf bytes.Buffer
-	if err := p.Render(context.Background(), &buf); err != nil {
-		panic(err)
+
+	if *fServe != "" {
+		// Render on every request so templ's watch mode can update the pages live.
+		http.Handle("/{$}", templ.Handler(landing))
+		http.Handle("/cheatsheet/{$}", templ.Handler(cheatsheet))
+		http.Handle("/", http.FileServer(http.Dir(*fSiteDir)))
+		fmt.Println("serving", *fSiteDir, "on", *fServe)
+		panic(http.ListenAndServe(*fServe, nil))
 	}
 
-	if err := os.MkdirAll(filepath.Dir(*fOutFile), 0o755); err != nil {
+	writePage(filepath.Join(*fSiteDir, "index.html"), landing)
+	writePage(filepath.Join(*fSiteDir, "cheatsheet", "index.html"), cheatsheet)
+}
+
+// writePage renders c to path. It renders to memory first
+// so a failure can't leave a truncated file behind.
+func writePage(path string, c templ.Component) {
+	var buf bytes.Buffer
+	if err := c.Render(context.Background(), &buf); err != nil {
 		panic(err)
 	}
-	if err := os.WriteFile(*fOutFile, buf.Bytes(), 0o644); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		panic(err)
 	}
-	fmt.Println("written to", *fOutFile)
+	if err := os.WriteFile(path, buf.Bytes(), 0o644); err != nil {
+		panic(err)
+	}
+	fmt.Println("written to", path)
+}
+
+// latestSpecVersion returns the newest spec release tag.
+func latestSpecVersion() (string, error) {
+	out, err := exec.Command("git", "tag", "--list", "v*", "--sort=-v:refname").Output()
+	if err != nil {
+		return "", fmt.Errorf("listing git tags: %w", err)
+	}
+	latest, _, _ := strings.Cut(string(out), "\n")
+	if latest == "" {
+		return "", errors.New("no v* git tag found, fetch tags or pass -spec-version")
+	}
+	return latest, nil
 }

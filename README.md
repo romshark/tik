@@ -12,7 +12,7 @@ TIK enables more efficient workflows by integrating TIK processors with CI and L
 
 TIK is designed to be agnostic to both programming languages and natural languages used in application source code.
 
-TIP: Check out the official [TIK cheatsheet](https://romshark.github.io/tik-cheatsheet/).
+Check out the official [TIK cheatsheet](https://romshark.github.io/tik/cheatsheet/).
 
 **Table of Contents**
 

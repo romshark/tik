@@ -25,3 +25,31 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: tik-go/coverage.out
+
+  cheatsheet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go 1.27.2
+        uses: actions/setup-go@v7
+        with:
+          go-version: "1.27.2"
+          check-latest: true
+          cache-dependency-path: cheatsheet/go.sum
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          # Tags determine the spec version the landing page links to.
+          fetch-depth: 0
+
+      # Generate
+      - name: Generate site
+        working-directory: cheatsheet
+        run: make all
+
+      - name: Check for uncommitted changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "::error::Generated files are out of date. Please rerun 'make all' in cheatsheet/."
+            git diff
+            exit 1
+          fi

@@ -1,3 +1,5 @@
+TEMPL = go run github.com/a-h/templ/cmd/templ@v0.3.1070
+
 all: gomod templ gendist
 
 gomod:
@@ -7,4 +9,7 @@ gendist:
 	go run .
 
 templ:
-	go run github.com/a-h/templ/cmd/templ@v0.3.1070 generate
+	$(TEMPL) generate
+
+dev:
+	$(TEMPL) generate --watch --proxy=http://127.0.0.1:8080 --cmd="go run . -serve 127.0.0.1:8080"

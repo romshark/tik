@@ -25,3 +25,17 @@ jobs:
         with:
           version: latest
           working-directory: tik-go
+  golangci-cheatsheet:
+    name: lint (cheatsheet)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.27.2"
+          check-latest: true
+      - uses: actions/checkout@v7
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
+          working-directory: cheatsheet

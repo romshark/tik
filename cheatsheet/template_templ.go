@@ -53,20 +53,20 @@ func templatePage(title string, sections []Section) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"><meta name=\"description\" content=\"A textual internationalization key (TIK) cheatsheet.\"><meta name=\"keywords\" content=\"i18n, TIK, cheatsheet\"><meta name=\"author\" content=\"Roman Scharkov (roman.scharkov@gmail.com)\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><style>\n\t\t\tbody {\n\t\t\t\tfont-family: sans-serif;\n\t\t\t\tmax-width: 900px;\n\t\t\t\tmargin: auto;\n\t\t\t\tmargin-top: 1rem;\n\t\t\t\tmargin-bottom: 3rem;\n\t\t\t\tpadding: 1rem;\n\t\t\t\tbox-sizing: border-box;\n\t\t\t}\n\n\t\t\tfooter {\n\t\t\t\tmargin-top: 2rem;\n\t\t\t}\n\n\t\t\thr {\n\t\t\t\tcolor: #333;\n\t\t\t}\n\n\t\t\th1 {\n\t\t\t\tfont-size: 1.5rem;\n\t\t\t}\n\n\t\t\tcode {\n\t\t\t\tbackground-color: #efefef;\n\t\t\t\tcolor: black;\n\t\t\t\tborder-radius: .3rem;\n\t\t\t\tpadding: .3rem;\n\t\t\t\tline-height: 2rem;\n\t\t\t\twhite-space: pre;\n\t\t\t}\n\n\t\t\tsection {\n\t\t\t\tborder: 1px solid #efefef;\n\t\t\t\tborder-radius: 1rem;\n\t\t\t\tmargin-top: 1rem;\n\t\t\t\tmargin-bottom: .5rem;\n\t\t\t\toverflow: hidden;\n\t\t\t}\n\n\t\t\tsection h2 {\n\t\t\t\tmargin: 0;\n\t\t\t\tfont-size: large;\n\t\t\t}\n\n\t\t\tsection p {\n\t\t\t\tmargin: 0;\n\t\t\t}\n\n\t\t\t.section-header {\n\t\t\t\tborder-bottom: 1px solid #333;\n\t\t\t\tpadding: .5rem;\n\t\t\t\tbackground-color: #fbfbfb;\n\t\t\t\tdisplay: flex;\n\t\t\t\tflex-direction: row;\n\t\t\t\tgap: 1rem;\n\t\t\t\talign-items: center;\n\t\t\t}\n\n\t\t\t.section-body {\n\t\t\t\tpadding: .5rem;\n\t\t\t\toverflow: auto;\n\t\t\t}\n\n\t\t\t.section-header p {\n\t\t\t\tcolor: #888;\n\t\t\t}\n\n\t\t\tul li {\n\t\t\t\tmargin: 0;\n\t\t\t}\n\n\t\t\tul.examples {\n\t\t\t\tmargin: 0;\n\t\t\t\tpadding-left: 1.5rem;\n\t\t\t}\n\n\t\t\t.example {\n\t\t\t\tdisplay: flex;\n\t\t\t\talign-items: center;\n\t\t\t\tgap: .5rem;\n\t\t\t}\n\n\t\t\t.arrow {\n\t\t\t\tfont-size: 1.1rem;\n\t\t\t\tline-height: 1;\n\t\t\t}\n\n\t\t\t.labeled {\n\t\t\t\tdisplay: inline-flex;\n\t\t\t\tpadding-bottom: .3rem;\n\t\t\t\tpadding-top: .3rem;\n\t\t\t\tfont-size: 0;\n\t\t\t\tfont-family: monospace;\n\t\t\t\tvertical-align: baseline;\n\t\t\t\talign-items: stretch;\n\t\t\t}\n\n\t\t\t.labeled label {\n\t\t\t\tdisplay: block;\n\t\t\t\tfont-size: small;\n\t\t\t\tfont-weight: bold;\n\t\t\t\tpadding: .3rem;\n\t\t\t\tpadding-left: .5rem;\n\t\t\t\tpadding-right: .5rem;\n\t\t\t\tborder-top-left-radius: .5rem;\n\t\t\t\tborder-bottom-left-radius: .5rem;\n\t\t\t\tmargin: 0;\n\t\t\t}\n\n\t\t\t.labeled span {\n\t\t\t\tdisplay: block;\n\t\t\t\tfont-size: small;\n\t\t\t\tbackground-color: #efefef;\n\t\t\t\tpadding: .3rem;\n\t\t\t\tpadding-left: .5rem;\n\t\t\t\tpadding-right: .5rem;\n\t\t\t\tmargin: 0;\n\t\t\t\tborder-top-right-radius: .5rem;\n\t\t\t\tborder-bottom-right-radius: .5rem;\n\t\t\t}\n\n\t\t\t.labeled.data label {\n\t\t\t\tbackground-color: rgb(255, 234, 117);\n\t\t\t\tcolor: black;\n\t\t\t}\n\n\t\t\t.labeled.text label {\n\t\t\t\tbackground-color: lightgreen;\n\t\t\t\tcolor: black;\n\t\t\t}\n\n\t\t\t@media (prefers-color-scheme: dark) {\n\t\t\t\tbody {\n\t\t\t\t\tbackground-color: #121212;\n\t\t\t\t\tcolor: #e0e0e0;\n\t\t\t\t}\n\n\t\t\t\tsection {\n\t\t\t\t\tborder-color: #333;\n\t\t\t\t}\n\n\t\t\t\t.section-header {\n\t\t\t\t\tbackground-color: #161616;\n\t\t\t\t}\n\n\t\t\t\tcode {\n\t\t\t\t\tbackground-color: #212121;\n\t\t\t\t\tcolor: #f1f1f1;\n\t\t\t\t}\n\n\t\t\t\t.labeled span {\n\t\t\t\t\tbackground-color: #212121;\n\t\t\t\t\tcolor: #e0e0e0;\n\t\t\t\t}\n\n\t\t\t\t.labeled.data label {\n\t\t\t\t\tbackground-color: #ab9400;\n\t\t\t\t\tcolor: black;\n\t\t\t\t}\n\n\t\t\t\t.labeled.text label {\n\t\t\t\t\tbackground-color: #377f39;\n\t\t\t\t\tcolor: black;\n\t\t\t\t}\n\n\t\t\t\ta {\n\t\t\t\t\tcolor: #90caf9;\n\t\t\t\t}\n\t\t\t}\n\t\t</style></head><body><h1>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"><meta name=\"description\" content=\"A textual internationalization key (TIK) cheatsheet.\"><meta name=\"keywords\" content=\"i18n, TIK, cheatsheet\"><meta name=\"author\" content=\"Roman Scharkov (roman.scharkov@gmail.com)\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><link rel=\"stylesheet\" href=\"../theme.css\"><script src=\"../theme.js\"></script><style>\n\t\t\tbody {\n\t\t\t\tfont-family: sans-serif;\n\t\t\t\tmax-width: 900px;\n\t\t\t\tmargin: auto;\n\t\t\t\tmargin-top: 1rem;\n\t\t\t\tmargin-bottom: 3rem;\n\t\t\t\tpadding: 1rem;\n\t\t\t\tbox-sizing: border-box;\n\t\t\t\tbackground-color: var(--background);\n\t\t\t\tcolor: var(--foreground);\n\t\t\t}\n\n\t\t\tfooter {\n\t\t\t\tmargin-top: 2rem;\n\t\t\t}\n\n\t\t\ta {\n\t\t\t\tcolor: var(--primary);\n\t\t\t}\n\n\t\t\th1 {\n\t\t\t\tfont-size: 1.5rem;\n\t\t\t}\n\n\t\t\tcode {\n\t\t\t\tbackground-color: var(--code-background);\n\t\t\t\tborder-radius: .3rem;\n\t\t\t\tpadding: .3rem;\n\t\t\t\tline-height: 2rem;\n\t\t\t\twhite-space: pre;\n\t\t\t}\n\n\t\t\tsection {\n\t\t\t\tborder: 1px solid var(--border);\n\t\t\t\tborder-radius: 1rem;\n\t\t\t\tmargin-top: 1rem;\n\t\t\t\tmargin-bottom: .5rem;\n\t\t\t\toverflow: hidden;\n\t\t\t\tbackground-color: var(--surface);\n\t\t\t}\n\n\t\t\tsection h2 {\n\t\t\t\tmargin: 0;\n\t\t\t\tfont-size: large;\n\t\t\t}\n\n\t\t\tsection p {\n\t\t\t\tmargin: 0;\n\t\t\t}\n\n\t\t\t.section-header {\n\t\t\t\tborder-bottom: 1px solid var(--border);\n\t\t\t\tpadding: .5rem;\n\t\t\t\tdisplay: flex;\n\t\t\t\tflex-direction: row;\n\t\t\t\tgap: 1rem;\n\t\t\t\talign-items: center;\n\t\t\t}\n\n\t\t\t.section-body {\n\t\t\t\tpadding: .5rem;\n\t\t\t\toverflow: auto;\n\t\t\t}\n\n\t\t\t.section-header p {\n\t\t\t\tcolor: var(--muted);\n\t\t\t}\n\n\t\t\tul li {\n\t\t\t\tmargin: 0;\n\t\t\t}\n\n\t\t\tul.examples {\n\t\t\t\tmargin: 0;\n\t\t\t\tpadding: 0;\n\t\t\t\tlist-style: none;\n\t\t\t}\n\n\t\t\t.example {\n\t\t\t\tdisplay: flex;\n\t\t\t\talign-items: center;\n\t\t\t\tgap: .5rem;\n\t\t\t}\n\n\t\t\t.arrow {\n\t\t\t\tfont-size: 1.1rem;\n\t\t\t\tline-height: 1;\n\t\t\t}\n\n\t\t\t.labeled {\n\t\t\t\tdisplay: inline-flex;\n\t\t\t\tpadding-bottom: .3rem;\n\t\t\t\tpadding-top: .3rem;\n\t\t\t\tfont-size: 0;\n\t\t\t\tfont-family: monospace;\n\t\t\t\tvertical-align: baseline;\n\t\t\t\talign-items: stretch;\n\t\t\t}\n\n\t\t\t.labeled label {\n\t\t\t\tdisplay: block;\n\t\t\t\tfont-size: small;\n\t\t\t\tfont-weight: bold;\n\t\t\t\tpadding: .3rem;\n\t\t\t\tpadding-left: .5rem;\n\t\t\t\tpadding-right: .5rem;\n\t\t\t\tborder-top-left-radius: .5rem;\n\t\t\t\tborder-bottom-left-radius: .5rem;\n\t\t\t\tmargin: 0;\n\t\t\t}\n\n\t\t\t.labeled span {\n\t\t\t\tdisplay: block;\n\t\t\t\tfont-size: small;\n\t\t\t\tbackground-color: var(--code-background);\n\t\t\t\tpadding: .3rem;\n\t\t\t\tpadding-left: .5rem;\n\t\t\t\tpadding-right: .5rem;\n\t\t\t\tmargin: 0;\n\t\t\t\tborder-top-right-radius: .5rem;\n\t\t\t\tborder-bottom-right-radius: .5rem;\n\t\t\t}\n\n\t\t\t.labeled.data label {\n\t\t\t\tbackground-color: var(--primary);\n\t\t\t\tcolor: var(--primary-foreground);\n\t\t\t}\n\n\t\t\t.labeled.text label {\n\t\t\t\tbackground-color: var(--secondary);\n\t\t\t\tcolor: var(--primary-foreground);\n\t\t\t}\n\n\t\t\t/* Below the width that fits the widest example on one line,\n\t\t\t   stack each data and text pair vertically. */\n\t\t\t@media (max-width: 50rem) {\n\t\t\t\tul.examples {\n\t\t\t\t\tdisplay: flex;\n\t\t\t\t\tflex-direction: column;\n\t\t\t\t\tgap: 1rem;\n\t\t\t\t\tmargin-top: .5rem;\n\t\t\t\t}\n\n\t\t\t\t.example {\n\t\t\t\t\tflex-direction: column;\n\t\t\t\t\talign-items: flex-start;\n\t\t\t\t\tgap: .25rem;\n\t\t\t\t}\n\n\t\t\t\t.labeled {\n\t\t\t\t\tpadding-top: 0;\n\t\t\t\t\tpadding-bottom: 0;\n\t\t\t\t}\n\n\t\t\t\t.arrow {\n\t\t\t\t\tdisplay: none;\n\t\t\t\t}\n\t\t\t}\n\t\t</style></head><body><h1>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `template.templ`, Line: 197, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `template.templ`, Line: 188, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</h1>This cheatsheet will help you write <a target=\"_blank\" href=\"https://github.com/romshark/tik\">textual internationalization keys (TIKs)</a>. ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</h1>This cheatsheet will help you write <a href=\"../\">textual internationalization keys (TIKs)</a>. ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -112,7 +112,7 @@ func templateSection(section Section) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(section.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `template.templ`, Line: 213, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `template.templ`, Line: 204, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -125,7 +125,7 @@ func templateSection(section Section) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(section.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `template.templ`, Line: 215, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `template.templ`, Line: 206, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -154,7 +154,7 @@ func templateSection(section Section) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(section.ExampleTIK)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `template.templ`, Line: 228, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `template.templ`, Line: 219, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -167,7 +167,7 @@ func templateSection(section Section) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(section.ICU)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `template.templ`, Line: 232, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `template.templ`, Line: 223, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -185,7 +185,7 @@ func templateSection(section Section) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(example.Data)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `template.templ`, Line: 241, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `template.templ`, Line: 232, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -198,7 +198,7 @@ func templateSection(section Section) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(example.Text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `template.templ`, Line: 246, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `template.templ`, Line: 237, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
