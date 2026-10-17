@@ -316,23 +316,23 @@ The translated ICU message for locale `uk` would be:
 
 ## ICU Encoding
 
-| TIK placeholder | ICU equivalent                      |
-| :-------------- | :---------------------------------- |
-| `{text}`        | `{var0}`                            |
-| `{name}`        | `{var0, select, other{...}}`        |
-| `{number}`      | `{var0, number}`                    |
-| `{integer}`     | `{var0, number, integer}`           |
-| `{# ...}`       | `{var0, plural, other{# ...}}`      |
-| `{ordinal}`     | `{var0, selectordinal, other{#th}}` |
-| `{date-full}`   | `{var0, date, full}`                |
-| `{date-long}`   | `{var0, date, long}`                |
-| `{date-medium}` | `{var0, date, medium}`              |
-| `{date-short}`  | `{var0, date, short}`               |
-| `{time-full}`   | `{var0, time, full}`                |
-| `{time-long}`   | `{var0, time, long}`                |
-| `{time-medium}` | `{var0, time, medium}`              |
-| `{time-short}`  | `{var0, time, short}`               |
-| `{currency}`    | `{var0, number, ::currency/auto}`   |
+| TIK placeholder | ICU equivalent                         |
+| :-------------- | :------------------------------------- |
+| `{text}`        | `{var0}`                               |
+| `{name}`        | `{var0_gender, select, other{{var0}}}` |
+| `{number}`      | `{var0, number}`                       |
+| `{integer}`     | `{var0, number, integer}`              |
+| `{# ...}`       | `{var0, plural, other{# ...}}`         |
+| `{ordinal}`     | `{var0, selectordinal, other{#th}}`    |
+| `{date-full}`   | `{var0, date, full}`                   |
+| `{date-long}`   | `{var0, date, long}`                   |
+| `{date-medium}` | `{var0, date, medium}`                 |
+| `{date-short}`  | `{var0, date, short}`                  |
+| `{time-full}`   | `{var0, time, full}`                   |
+| `{time-long}`   | `{var0, time, long}`                   |
+| `{time-medium}` | `{var0, time, medium}`                 |
+| `{time-short}`  | `{var0, time, short}`                  |
+| `{currency}`    | `{var0, number, ::currency/auto}`      |
 
 The `...` stands for any content, meaning that the following TIK:
 
@@ -354,7 +354,7 @@ All placeholders are mapped positionally, meaning that the order of occurrence i
 [report] By {time-short}, {name} received {# emails}.
 ```
 
-All placeholders use the `var` prefix with a following positional index.
+All placeholders use the `var` prefix followed by their zero-based positional index (`var0`, `var1`, and so on). The gender carried by a `{name}` argument is exposed as an additional ICU argument with the `_gender` suffix (for example `var1_gender`), which `select` uses to choose gender-specific forms.
 
 Generated ICU:
 ```
